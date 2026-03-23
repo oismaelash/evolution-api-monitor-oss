@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Pilot Status Monitor — Evolution API instance health',
+  title: 'Evolution API Monitor — Evolution API instance health',
   description:
     'Monitor WhatsApp numbers connected through Evolution API. Health checks, automated recovery, alerts, and structured logs—self-hosted or cloud.',
   metadataBase: new URL('https://evolutionapi.online'),

@@ -7,7 +7,7 @@ description: >-
   quando citarem pilotstatus.online ou llms.txt.
 ---
 
-# Pilot Status — integração (API + produto)
+# Pilot Status — integração no Evolution API Monitor (API + produto externo)
 
 Fonte resumida oficial: [llms.txt](https://pilotstatus.online/llms.txt). Detalhes na [documentação](https://pilotstatus.online/docs). [Terms](https://pilotstatus.online/terms) / [Privacy](https://pilotstatus.online/privacy).
 
@@ -93,7 +93,7 @@ Resposta típica **202** com `id`, `correlationId`, `status`, `createdAt` (e dem
 5. Enviar com `POST /v1/messages/send`.
 6. Acompanhar com `GET /v1/messages/<messageId>`.
 
-## Boas práticas (Pilot Status Monitor)
+## Boas práticas (Evolution API Monitor)
 
 1. Chamar Pilot só de **worker** ou **servidor** — nunca do browser.
 2. Encapsular em **AlertProvider**; env (`PILOT_STATUS_API_KEY` ou nome validado no projeto).

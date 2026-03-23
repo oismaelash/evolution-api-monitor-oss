@@ -13,7 +13,7 @@ export function MarketingFooter() {
     <footer className="border-t border-[var(--color-border)] py-12" role="contentinfo">
       <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-[var(--color-text-muted)]">
-          <span className="font-medium text-[var(--color-text-primary)]">Pilot Status Monitor</span>
+          <span className="font-medium text-[var(--color-text-primary)]">Evolution API Monitor</span>
           {' · '}
           evolutionapi.online
         </p>

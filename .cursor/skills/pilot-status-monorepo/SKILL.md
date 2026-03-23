@@ -1,13 +1,13 @@
 ---
 name: pilot-status-monorepo
 description: >-
-  Contexto do monorepo Pilot Status Monitor (npm workspaces): apps/api Next.js 14, apps/worker BullMQ,
+  Contexto do monorepo Evolution API Monitor (npm workspaces): apps/api Next.js 14, apps/worker BullMQ,
   packages/database Prisma, shared/config. Regras absolutas (session, Evolution só no servidor, Redis lock,
   logs JSON, ErrorType). Use ao criar features, onboarding no repo, ou ao citarem estrutura de pastas,
   workspaces, evolutionapi.online / cloud.evolutionapi.online.
 ---
 
-# Pilot Status Monitor — monorepo
+# Evolution API Monitor — monorepo
 
 ## O que é
 

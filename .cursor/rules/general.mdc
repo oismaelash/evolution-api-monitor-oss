@@ -1,10 +1,10 @@
 ---
-description: Índice das Cursor Rules do Pilot Status Monitor — uso do Cursor, skills e snippet HTTP (o conteúdo das regras está nos arquivos 000–010)
+description: Índice das Cursor Rules do Evolution API Monitor — uso do Cursor, skills e snippet HTTP (o conteúdo das regras está nos arquivos 000–010)
 globs: .cursor/rules/**
 alwaysApply: false
 ---
 
-# Cursor Rules — Pilot Status Monitor
+# Cursor Rules — Evolution API Monitor
 
 ## Estrutura de arquivos
 

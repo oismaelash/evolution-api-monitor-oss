@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.gitignore
+*.log
+npm-debug.log*
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage
+.turbo
+*.md
+docs

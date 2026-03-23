@@ -19,7 +19,7 @@ description: >-
 
 - Não confiar em `userId` do cliente para ownership — checagem no **service**.
 - Não vazar mensagens cruas do Prisma ao cliente.
-- Não acoplar Evolution/Pilot Status no handler — usar serviços que já encapsulam HTTP.
+- Não acoplar chamadas HTTP a Evolution nem Pilot Status no handler — usar serviços que já encapsulam integrações.
 
 ## Erros
 

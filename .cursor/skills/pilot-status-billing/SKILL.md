@@ -6,7 +6,7 @@ description: >-
   tocar billing, webhooks, assinaturas, ou skills stripe/stripe-best-practices em conjunto com este repo.
 ---
 
-# Billing — Pilot Status
+# Billing — Evolution API Monitor (cloud)
 
 ## Abstração
 

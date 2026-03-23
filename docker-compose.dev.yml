@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      # File watching inside Docker (macOS, Windows, some WSL setups)
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      # Source hot reload
+      - .:/app
+      # Keep node_modules from the image (avoid empty host overlay)
+      - /app/node_modules
+    working_dir: /app
+    command: npm run dev --workspace=api

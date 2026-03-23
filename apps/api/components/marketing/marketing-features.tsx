@@ -1,28 +1,28 @@
-import { Cpu, DocumentText, Health, Notification } from 'iconsax-react';
+import { DocumentText, Health, Notification, RefreshCircle } from 'iconsax-react';
 
 const features = [
   {
-    title: 'Health & presence checks',
+    title: 'Catch problems before they hurt revenue',
     description:
-      'Periodic pings against your Evolution instances so you see connection issues before users do.',
+      'Regular health checks on every instance so silent disconnects and flaky sessions surface early—not after someone complains.',
     Icon: Health,
   },
   {
-    title: 'Worker & queues',
+    title: 'Recovery that runs while you sleep',
     description:
-      'Background jobs with BullMQ and Redis—retries, delays, and safe locking around instance state.',
-    Icon: Cpu,
+      'Automatic retries and restarts in a safe sequence—so your team spends less time firefighting in admin panels.',
+    Icon: RefreshCircle,
   },
   {
-    title: 'Alerts that reach you',
+    title: 'Alerts where your team already is',
     description:
-      'WhatsApp via Pilot Status, email, and webhooks—templates you control, with fallbacks.',
+      'Send notifications over WhatsApp, email, or your own endpoint—templates you control, with fallbacks if one path fails.',
     Icon: Notification,
   },
   {
-    title: 'Structured logs',
+    title: 'Answers when you ask “what happened?”',
     description:
-      'Filter by project or number, export when you need to—JSON logs built for operators.',
+      'Filter history by project or number, see the full story of checks and incidents, and export when stakeholders need proof.',
     Icon: DocumentText,
   },
 ] as const;
@@ -35,10 +35,11 @@ export function MarketingFeatures() {
           id="features-heading"
           className="text-3xl font-semibold tracking-tight text-[var(--color-text-primary)]"
         >
-          Built for production Evolution deployments
+          What you get
         </h2>
         <p className="mt-4 text-[var(--color-text-muted)]">
-          One place to monitor numbers, automate recovery, and notify your team.
+          Fewer surprises, faster recovery, and a clear record of every incident—so operations stays
+          ahead of customer support.
         </p>
       </div>
       <ul className="mt-14 grid gap-6 sm:grid-cols-2">

@@ -13,7 +13,7 @@ Ao **concluir** uma atividade importante no repositório, em uma única sessão 
 - Nova feature ou endpoint / rota
 - Correção de bug ou regressão
 - Migration Prisma ou alteração de schema
-- Mudança em worker, filas, lock Redis ou integração Evolution / Pilot Status
+- Mudança em worker, filas, lock Redis ou integração Evolution / Pilot Status (alertas WhatsApp)
 - Ajuste de segurança, billing, ou variáveis de ambiente documentadas no código
 - Refatoração que altera comportamento ou contratos públicos
 

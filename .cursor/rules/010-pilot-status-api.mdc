@@ -1,10 +1,10 @@
 ---
-description: Integração Pilot Status (API pública WhatsApp) — auth, TEST/LIVE, endpoints v1, opt-in, erros HTTP
+description: Evolution API Monitor — integração Pilot Status (API pública WhatsApp): auth, TEST/LIVE, endpoints v1, opt-in, erros HTTP
 globs: apps/worker/**/*.ts, packages/shared/**/*.ts, apps/api/**/webhooks/**/*.ts
 alwaysApply: false
 ---
 
-# Pilot Status — API pública
+# Pilot Status — API pública (integração no Evolution API Monitor)
 
 Referências oficiais: [documentação](https://pilotstatus.online/docs), resumo para integração/LLM: [llms.txt](https://pilotstatus.online/llms.txt). SDKs: [Python `pilot-status`](https://pypi.org/project/pilot-status/), [Node `@pilot-status/sdk`](https://www.npmjs.com/package/@pilot-status/sdk).
 

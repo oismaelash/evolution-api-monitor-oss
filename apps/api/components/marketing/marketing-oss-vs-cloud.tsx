@@ -25,8 +25,8 @@ export function MarketingOssVsCloud() {
             Run it on your stack
           </p>
           <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
-            Deploy the monitor alongside your Evolution API. Bring your own Postgres, Redis, and
-            credentials—full control, no vendor lock-in for the core product.
+            Run the monitor next to your Evolution stack on infrastructure you choose. Keep full
+            control of data and deployment—no lock-in on the core product.
           </p>
           <a
             href="https://github.com"
@@ -46,8 +46,8 @@ export function MarketingOssVsCloud() {
             Managed at cloud.evolutionapi.online
           </p>
           <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
-            Hosted monitoring with billing when you need it—14-day trial, Stripe and PIX where
-            enabled, and the same feature set with less ops overhead.
+            We host it for you: start with a trial, scale with straightforward billing, and spend less
+            time running infrastructure—same capabilities, less ops overhead.
           </p>
           <a
             href={CLOUD_URL}

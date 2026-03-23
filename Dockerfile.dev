@@ -1,0 +1,15 @@
+# Dev image: Next.js with dependencies installed (hot reload via bind mount in compose)
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/api/package.json ./apps/api/
+
+RUN npm ci
+
+EXPOSE 3000
+
+WORKDIR /app
+
+CMD ["npm", "run", "dev", "--workspace=api"]

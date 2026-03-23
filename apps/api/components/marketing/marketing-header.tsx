@@ -8,7 +8,7 @@ export function MarketingHeader() {
   return (
     <header className="flex flex-col gap-6 border-b border-[var(--color-border)] py-8 sm:flex-row sm:items-center sm:justify-between">
       <Link href="/" className="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">
-        Pilot Status Monitor
+        Evolution API Monitor
       </Link>
       <nav
         className="flex flex-wrap items-center gap-6 text-sm text-[var(--color-text-muted)]"

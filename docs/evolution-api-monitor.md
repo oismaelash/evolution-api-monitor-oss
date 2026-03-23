@@ -1,4 +1,4 @@
-**Pilot Status Monitor**
+**Evolution API Monitor**
 
 Complete Technical Documentation
 
@@ -8,7 +8,7 @@ Version 1.0 · March 2026 · evolutionapi.online · cloud.evolutionapi.online
 
 # **1\. PRD - Product Requirements Document**
 
-**Product: Pilot Status Monitor (evolutionapi.online / cloud.evolutionapi.online)**
+**Product: Evolution API Monitor (evolutionapi.online / cloud.evolutionapi.online)**
 
 Version: 1.0 | Status: In Review | Date: March 2026
 
@@ -37,7 +37,7 @@ Current pain points:
 
 "Never lose a WhatsApp session silently again."
 
-Pilot Status Monitor gives teams full observability and auto-healing for Evolution API instances - with per-number uptime tracking, automatic restart cycles, multi-channel alerting (WhatsApp, email, webhook), and structured audit logs. The cloud version requires zero infrastructure; the open-source version is fully self-hostable.
+Evolution API Monitor gives teams full observability and auto-healing for Evolution API instances - with per-number uptime tracking, automatic restart cycles, multi-channel alerting (WhatsApp, email, webhook), and structured audit logs. The cloud version requires zero infrastructure; the open-source version is fully self-hostable.
 
 ## **1.4 Core Features**
 
@@ -374,7 +374,7 @@ If failureCount >= maxRetries: AlertJob enqueued
 
 ## **3.6 Monorepo Directory Structure**
 
-pilot-status-monitor/
+evolution-api-monitor/
 
 ├── apps/
 
@@ -1239,9 +1239,9 @@ In self-hosted mode (CLOUD_BILLING=false env var), the billing module is complet
 
 \# 1. Clone repository
 
-git clone <https://github.com/evolutionapi/pilot-status-monitor>
+git clone <https://github.com/evolutionapi/evolution-api-monitor>
 
-cd pilot-status-monitor
+cd evolution-api-monitor
 
 \# 2. Install dependencies (all workspaces)
 

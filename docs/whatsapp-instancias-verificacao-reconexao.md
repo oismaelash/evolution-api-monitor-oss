@@ -1,6 +1,6 @@
 # Evolution API: verificar conexão e reconectar instância
 
-Referência dos **endpoints da Evolution API** usados no Pilot Status para saber se uma instância está conectada e para **reconectar** (QR / pairing). Substitua `{base}` pela URL base configurada em `EVOLUTION_API_URL` (sem barra final) e `{instanceName}` pelo nome da instância na Evolution (URL-encoded se tiver espaços ou caracteres especiais).
+Referência dos **endpoints da Evolution API** usados no Evolution API Monitor para saber se uma instância está conectada e para **reconectar** (QR / pairing). Substitua `{base}` pela URL base configurada em `EVOLUTION_API_URL` (sem barra final) e `{instanceName}` pelo nome da instância na Evolution (URL-encoded se tiver espaços ou caracteres especiais).
 
 Autenticação padrão da Evolution: header **`apikey`** com a chave da API (`EVOLUTION_API_KEY`).
 

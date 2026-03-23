@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=api",
+    "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
     "build": "npm run build --workspace=api",
     "lint": "npm run lint --workspace=api",
     "start": "npm run start --workspace=api"
