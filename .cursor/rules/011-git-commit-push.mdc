@@ -1,0 +1,38 @@
+---
+description: Após atividades importantes — commit com mensagem clara e push ao remote
+globs: **/*
+alwaysApply: true
+---
+
+# Git — commit e push após trabalho relevante
+
+## Quando aplicar
+
+Ao **concluir** uma atividade importante no repositório, em uma única sessão ou entrega coerente:
+
+- Nova feature ou endpoint / rota
+- Correção de bug ou regressão
+- Migration Prisma ou alteração de schema
+- Mudança em worker, filas, lock Redis ou integração Evolution / Pilot Status
+- Ajuste de segurança, billing, ou variáveis de ambiente documentadas no código
+- Refatoração que altera comportamento ou contratos públicos
+
+Não é obrigatório commitar por cada arquivo editado em isolamento; o critério é **fechamento de uma unidade de trabalho** que valha histórico e backup remoto.
+
+## O que fazer
+
+1. `git status` — revisar o que mudou.
+2. `git add` apenas o necessário (evitar `.env`, secrets, artefatos gerados fora do esperado).
+3. `git commit -m "..."` com mensagem no imperativo, escopo claro (ex.: `fix(worker): classificar timeout como ErrorType`).
+4. `git push` para o branch atual (upstream configurado).
+
+## Exceções e limites
+
+- **Sem repositório Git** ou **sem `remote`**: fazer commit local se aplicável e avisar o usuário que o push não foi feito e o motivo.
+- **Branch protegido / CI falhando**: não forçar push; informar o estado e deixar o usuário decidir.
+- **Mudança experimental ou WIP** explicitamente pedida pelo usuário: não commitar até ele pedir para consolidar.
+
+## Anti-padrões
+
+- Deixar dias de alterações locais sem commit após uma entrega “pronta”.
+- Um único commit gigante com temas misturados quando dois commits separados deixariam o histórico legível.
