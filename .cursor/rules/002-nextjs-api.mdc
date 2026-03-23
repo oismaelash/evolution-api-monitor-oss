@@ -1,0 +1,87 @@
+---
+description: Padrões para API routes do Next.js (App Router)
+globs: apps/api/app/api/**/*.ts
+alwaysApply: false
+---
+
+# Next.js API Routes Standards
+
+## Estrutura de uma route handler
+```typescript
+// apps/api/app/api/projects/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { ProjectService } from '@/services/project.service';
+import { createProjectSchema } from '@pilot/shared';
+
+export async function GET(req: NextRequest) {
+  // 1. Auth — SEMPRE primeiro
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // 2. Parse/validate query params
+  const { searchParams } = req.nextUrl;
+  const page = Number(searchParams.get('page') ?? 1);
+
+  // 3. Chamar service — NUNCA lógica aqui
+  const result = await ProjectService.listByUser(session.user.id, { page });
+
+  // 4. Response
+  return NextResponse.json(result);
+}
+
+export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const parsed = createProjectSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const project = await ProjectService.create(session.user.id, parsed.data);
+  return NextResponse.json(project, { status: 201 });
+}
+```
+
+## Regras de API routes
+- Route handler = apenas auth + parse + delegate para service + response
+- Ownership check SEMPRE no service, nunca apenas no handler
+- Retorne SEMPRE `{ error: string }` para erros, nunca mensagens brutas do Prisma
+- Use try/catch global via middleware, não em cada handler
+- Paginação padrão: `{ data: [], meta: { page, limit, total, totalPages } }`
+
+## Middleware de erros
+```typescript
+// apps/api/src/lib/api-handler.ts
+export function withErrorHandler(
+  handler: (req: NextRequest, ctx: unknown) => Promise<NextResponse>
+) {
+  return async (req: NextRequest, ctx: unknown) => {
+    try {
+      return await handler(req, ctx);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return NextResponse.json(
+          { error: error.message, code: error.code },
+          { status: error.statusCode }
+        );
+      }
+      logger.error('Unhandled API error', { error });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
+  };
+}
+```
+
+## Encryption de API keys da Evolution
+- Evolution API keys e SMTP passwords DEVEM ser encriptados antes de salvar
+- Use AES-256-GCM com ENCRYPTION_KEY env var
+- Helper em `packages/shared/src/crypto.ts`: `encrypt(text)` / `decrypt(ciphertext)`
+- NUNCA logar API keys descriptografadas

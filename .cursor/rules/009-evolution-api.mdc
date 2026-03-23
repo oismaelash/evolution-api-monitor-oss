@@ -1,0 +1,136 @@
+---
+description: Padrões para integração com a Evolution API
+globs: apps/worker/src/evolution/**/*.ts
+alwaysApply: false
+---
+
+# Evolution API Client Standards
+
+## Client wrapper
+```typescript
+// apps/worker/src/evolution/client.ts
+export class EvolutionClient {
+  constructor(
+    private readonly baseUrl: string,  // sem barra final
+    private readonly apiKey: string,   // descriptografado
+  ) {}
+
+  private get headers() {
+    return { 'apikey': this.apiKey, 'Content-Type': 'application/json' };
+  }
+
+  async getConnectionState(instanceName: string): Promise<ConnectionStateResult> {
+    const encoded = encodeURIComponent(instanceName);
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}/instance/connectionState/${encoded}`,
+      { headers: this.headers },
+      5_000 // ping timeout
+    );
+    return this.parseConnectionState(response);
+  }
+
+  async setPresence(instanceName: string): Promise<PresenceResult> {
+    const encoded = encodeURIComponent(instanceName);
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}/instance/setPresence/${encoded}`,
+      { method: 'POST', headers: this.headers, body: JSON.stringify({ presence: 'available' }) },
+      5_000
+    );
+    return this.parsePresence(response);
+  }
+
+  async restart(instanceName: string): Promise<void> {
+    const encoded = encodeURIComponent(instanceName);
+    await fetchWithTimeout(
+      `${this.baseUrl}/instance/restart/${encoded}`,
+      { method: 'POST', headers: this.headers },
+      10_000 // restart timeout
+    );
+  }
+
+  async getConnectQR(instanceName: string, phoneNumber?: string): Promise<QRResult> {
+    const encoded = encodeURIComponent(instanceName);
+    const url = phoneNumber
+      ? `${this.baseUrl}/instance/connect/${encoded}?number=${phoneNumber}`
+      : `${this.baseUrl}/instance/connect/${encoded}`;
+    const response = await fetchWithTimeout(url, { headers: this.headers }, 10_000);
+    return this.parseQR(response);
+  }
+
+  async fetchInstances(): Promise<EvolutionInstance[]> {
+    const response = await fetchWithTimeout(
+      `${this.baseUrl}/instance/fetchInstances`,
+      { headers: this.headers },
+      10_000
+    );
+    if (!response.ok) throw new AppError('NETWORK_ERROR', 'Failed to fetch instances');
+    return response.json();
+  }
+}
+```
+
+## Health check duplo — AMBOS devem passar
+```typescript
+export async function checkInstanceHealth(number: NumberWithProject): Promise<HealthResult> {
+  const client = new EvolutionClient(
+    number.project.evolutionUrl,
+    decrypt(number.project.evolutionApiKey)
+  );
+
+  // Step 1: connectionState
+  const stateResult = await client.getConnectionState(number.instanceName);
+  if (stateResult.errorType) {
+    return { healthy: false, errorType: stateResult.errorType };
+  }
+  if (stateResult.state !== 'open') {
+    return { healthy: false, errorType: 'UNKNOWN', detail: `state=${stateResult.state}` };
+  }
+
+  // Step 2: setPresence (apenas se state=open)
+  const presenceResult = await client.setPresence(number.instanceName);
+  if (!presenceResult.ok) {
+    return { healthy: false, errorType: presenceResult.errorType ?? 'UNKNOWN' };
+  }
+
+  return { healthy: true };
+}
+```
+
+## Parsing das respostas da Evolution
+```typescript
+// connectionState response: { instance: { state: 'open' | 'close' | 'connecting' } }
+// OU (versões antigas): { state: 'open' | ... } no topo
+private parseConnectionState(response: Response, body: unknown): ConnectionStateResult {
+  if (!response.ok) {
+    return { state: null, errorType: classifyEvolutionError(response, body) };
+  }
+  const state = (body as any)?.instance?.state ?? (body as any)?.state;
+  return { state: state?.toLowerCase() ?? null, errorType: null };
+}
+
+// setPresence: sucesso = HTTP 201 e body NÃO contém 'close'
+private parsePresence(response: Response, body: unknown): PresenceResult {
+  if (response.status !== 201) {
+    return { ok: false, errorType: classifyEvolutionError(response, body) };
+  }
+  const bodyStr = JSON.stringify(body).toLowerCase();
+  if (bodyStr.includes('close')) {
+    return { ok: false, errorType: 'UNKNOWN' };
+  }
+  return { ok: true };
+}
+
+// connect response: { pairingCode, base64, code, count }
+// OU (algumas versões): { qrcode: { base64 } }
+private parseQR(response: Response, body: unknown): QRResult {
+  const b = body as any;
+  const qrBase64 = b?.base64 ?? b?.qrcode?.base64 ?? null;
+  const pairingCode = b?.pairingCode ?? null;
+  return { qrBase64, pairingCode };
+}
+```
+
+## instanceName encoding
+- SEMPRE usar `encodeURIComponent(instanceName)` na URL
+- instanceName pode ter espaços e caracteres especiais
+- O nome na Evolution é case-sensitive — guardar exatamente como vem da fetchInstances

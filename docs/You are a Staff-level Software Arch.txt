@@ -1,0 +1,373 @@
+You are a Staff-level Software Architect, Senior Product Manager, and DevOps Engineer.
+
+Your task is to generate a COMPLETE, PRODUCTION-READY set of documents for a SaaS + Open Source system.
+
+This system must be designed to scale, be maintainable, and be directly usable by another AI to generate the entire codebase.
+
+Be EXTREMELY detailed. Avoid generic explanations. Think like you are designing a real startup product.
+
+---
+
+# 🧠 PROJECT OVERVIEW
+
+We are building a platform to monitor WhatsApp numbers connected via Evolution API:
+https://github.com/EvolutionAPI/evolution-api
+
+Each "instance" = one WhatsApp number.
+
+---
+
+# 🧩 CORE CONCEPT
+
+* Each User can have multiple Projects
+* Each Project can have multiple Numbers (instances)
+* Each Number is monitored continuously for health
+
+---
+
+# 🔁 HEALTH CHECK LOGIC
+
+Every configurable interval (default: 5 minutes):
+
+1. Send:
+
+   * status check
+   * presence check
+
+2. If both succeed:
+   → mark as HEALTHY (CONNECTED)
+
+3. If failure occurs:
+   → increment failure counter
+
+4. If 3 consecutive failures:
+   → trigger restart
+
+5. Restart flow:
+
+   * restart instance
+   * wait 1 minute
+   * run health check again
+
+6. If still failing:
+   → second restart attempt
+
+7. After second failure:
+   → send alert
+
+---
+
+# 🚨 ALERT SYSTEM
+
+Alerts must include:
+
+* affected number
+* project name
+* error type
+* QR Code for reconnection
+* pairing code
+
+Alert channels:
+
+* WhatsApp via Pilot Status (primary)
+* Email (SMTP, Gmail)
+* Webhook
+
+Cooldown:
+
+* Prevent alert spam (default: 30 minutes per number)
+
+---
+
+# ⚙️ CONFIGURATION (PER PROJECT)
+
+* ping interval
+* max retries
+* delay between retries
+* retry strategy:
+
+  * fixed
+  * exponential with jitter
+* alert channels
+* alert template customization
+
+---
+
+# 🔄 FAILURE CLASSIFICATION
+
+All failures must be categorized:
+
+* NETWORK_ERROR
+* AUTH_ERROR
+* INSTANCE_NOT_FOUND
+* RATE_LIMIT
+* UNKNOWN
+
+---
+
+# 🔁 STATE MACHINE (MANDATORY)
+
+States:
+
+* CONNECTED
+* DISCONNECTED
+* CONNECTING
+* RESTARTING
+* ERROR
+
+You MUST define all transitions explicitly.
+
+---
+
+# ⚡ CONCURRENCY & IDEMPOTENCY
+
+* Only ONE active job per number
+* Use Redis locks:
+  key: number:{id}:lock
+  TTL: 2x job duration
+
+---
+
+# ⏱ TIMEOUTS
+
+* ping timeout: 5 seconds
+* restart timeout: 10 seconds
+
+---
+
+# 🧱 SYSTEM ARCHITECTURE
+
+Monorepo using workspaces:
+
+Apps:
+
+* API (Next.js)
+* Frontend (Next.js)
+* Worker (Node.js)
+
+Tech stack:
+
+* TypeScript
+* PostgreSQL
+* Prisma
+* Redis
+* BullMQ
+* Docker + Docker Compose (dev with hot reload)
+* GHCR (image registry)
+
+Deployment:
+
+* VPS
+* API + Frontend (monolith)
+* Worker separate service
+
+---
+
+# 🔐 AUTHENTICATION
+
+Using NextAuth:
+
+* WhatsApp login
+* Google
+* GitHub
+
+---
+
+# 💰 BILLING
+
+* R$1 per monitored number
+* 14-day free trial
+* Charge even if disconnected
+
+Providers:
+
+* Stripe (cards)
+* Pague.dev (PIX)
+
+---
+
+# 📊 OBSERVABILITY
+
+* Structured logs (JSON)
+* Filter by:
+
+  * number
+  * project
+* Uptime calculation per number
+
+---
+
+# 🧪 TESTING
+
+* Unit tests (Vitest)
+* Integration tests
+* Worker testing with queue simulation
+
+---
+
+# 🔌 PROVIDER ABSTRACTION (MANDATORY)
+
+Define interfaces for:
+
+* AlertProvider
+* PaymentProvider
+
+---
+
+# 🌍 PRODUCT VERSIONS
+
+## Open Source:
+
+* self-hosted
+* limited features
+
+## Cloud:
+
+* managed
+* billing enabled
+* advanced alerts
+
+Domains:
+
+* evolutionapi.online (main)
+* cloud.evolutionapi.online (SaaS)
+
+---
+
+# 🎨 FRONTEND REQUIREMENTS
+
+Design inspired by:
+https://resend.com
+
+Icons:
+https://docs.iconsax.io/
+
+Define:
+
+* layout
+* components
+* pages
+* UX flows
+* loading / error / empty states
+
+---
+
+# 📦 REQUIRED OUTPUT (VERY IMPORTANT)
+
+Generate the following documents in SEPARATE SECTIONS:
+
+---
+
+## 1. PRD (Product Requirements Document)
+
+* problem
+* ICP
+* value proposition
+* features
+* UX flows
+* monetization
+
+---
+
+## 2. ADR (Architecture Decision Records)
+
+Explain decisions for:
+
+* monorepo
+* database
+* queue system (BullMQ)
+* Redis usage
+* retry strategy
+* multi-tenancy
+
+---
+
+## 3. SYSTEM ARCHITECTURE
+
+* components
+* data flow
+* sequence diagrams (text-based)
+
+---
+
+## 4. DATABASE DESIGN (PRISMA)
+
+Full schema including:
+
+* User
+* Project
+* Number
+* HealthCheck
+* Logs
+* Alerts
+* Subscription
+
+---
+
+## 5. WORKER DESIGN
+
+* job types
+* scheduling
+* retries
+* dead letter queue
+* idempotency
+
+---
+
+## 6. API DESIGN
+
+* endpoints
+* authentication
+* filtering logs
+* pagination
+
+---
+
+## 7. FRONTEND SPEC
+
+* layout
+* pages
+* components
+* UX behavior
+
+---
+
+## 8. BILLING ARCHITECTURE
+
+* subscription lifecycle
+* webhooks
+* failure handling
+
+---
+
+## 9. DEV EXPERIENCE
+
+* local setup
+* docker usage
+* env variables
+* seed scripts
+
+---
+
+## 10. OPEN SOURCE VS CLOUD STRATEGY
+
+* feature differences
+* monetization boundaries
+
+---
+
+## 11. FUTURE ROADMAP
+
+* public API
+* webhooks
+* integrations (n8n, etc)
+
+---
+
+# 🚨 FINAL INSTRUCTIONS
+
+* Be extremely detailed
+* Use real-world architecture patterns
+* Avoid simplifications
+* Output must be directly usable by another AI to generate the full codebase
+* No fluff, no high-level summaries — go deep

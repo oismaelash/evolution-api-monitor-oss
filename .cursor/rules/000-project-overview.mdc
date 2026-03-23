@@ -1,0 +1,38 @@
+---
+description: Visão geral do projeto Pilot Status Monitor — lida em TODAS as conversas
+globs: **/*
+alwaysApply: true
+---
+
+# Pilot Status Monitor — Project Context
+
+## O que é
+Plataforma SaaS + Open Source para monitorar instâncias WhatsApp conectadas via Evolution API.
+- Cada instância Evolution = um número WhatsApp
+- Usuários têm múltiplos Projetos, cada projeto tem múltiplos Numbers
+
+## Stack técnica
+- **Monorepo**: npm workspaces
+- **apps/api**: Next.js 14 (App Router) — API + Frontend juntos
+- **apps/worker**: Node.js + BullMQ — health checks, restarts, alertas
+- **packages/database**: Prisma + PostgreSQL
+- **packages/shared**: tipos, DTOs, interfaces de providers, utils de retry
+- **packages/config**: tsconfig base, eslint config compartilhado
+
+## Regras absolutas do projeto
+1. NUNCA colocar lógica de negócio em route handlers — sempre em service/lib
+2. NUNCA usar `userId` vindo do body/params — sempre da session NextAuth
+3. NUNCA fazer fetch direto para Evolution API no frontend — sempre via API interna
+4. NUNCA commit de secrets — usar variáveis de ambiente com validação em runtime
+5. Toda falha de job worker DEVE ser classificada como ErrorType enum
+6. Todo log DEVE ser structured JSON (nunca console.log com string)
+7. Redis lock OBRIGATÓRIO antes de qualquer operação de estado em Number
+
+## Variáveis de ambiente críticas
+- DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, ENCRYPTION_KEY (obrigatórias em todos os ambientes)
+- CLOUD_BILLING=true ativa módulo de cobrança (Stripe + Pague.dev)
+- Sem CLOUD_BILLING: usar NoOpPaymentProvider
+
+## Domínios
+- Open source / landing: evolutionapi.online
+- Cloud SaaS: cloud.evolutionapi.online

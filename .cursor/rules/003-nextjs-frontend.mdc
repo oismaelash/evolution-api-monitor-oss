@@ -1,0 +1,94 @@
+---
+description: Padrões para componentes e páginas do frontend Next.js
+globs: apps/api/app/(dashboard)/**/*.tsx, apps/api/components/**/*.tsx
+alwaysApply: false
+---
+
+# Frontend Standards (Next.js App Router)
+
+## Design System
+Inspirado em resend.com — dark, developer-focused, clean.
+
+### Tokens CSS (globals.css)
+```css
+:root {
+  --color-bg:           #0F172A; /* slate-900 — page background */
+  --color-surface:      #1E293B; /* slate-800 — cards, sidebar */
+  --color-border:       #334155; /* slate-700 — borders */
+  --color-text-primary: #F8FAFC; /* slate-50  — main text */
+  --color-text-muted:   #94A3B8; /* slate-400 — labels, meta */
+  --color-accent:       #6366F1; /* indigo-500 — CTA, active nav */
+  --color-success:      #10B981; /* emerald-500 — CONNECTED */
+  --color-warning:      #F59E0B; /* amber-500  — CONNECTING, RESTARTING */
+  --color-error:        #EF4444; /* red-500    — ERROR, DISCONNECTED */
+}
+```
+
+### Icons
+SEMPRE usar Iconsax React: `import { MonitorMobbile, Wifi, WifiSquare } from 'iconsax-react'`
+Tamanho padrão: 20px (inline), 24px (standalone), 16px (in badge)
+Variant preferida: `variant="Bold"` para ícones de estado, `variant="Linear"` para ação
+
+## Layout obrigatório
+- Sidebar fixa 240px à esquerda
+- Main content com `min-h-screen` e padding `p-8`
+- NUNCA top navbar global
+- Breadcrumb no topo de cada página
+
+## State Badge Component
+```tsx
+// components/ui/state-badge.tsx
+import { NumberState } from '@pilot/shared';
+import { Wifi, WifiSquare, RefreshCircle, Warning2, MinusCircle } from 'iconsax-react';
+
+const STATE_CONFIG = {
+  CONNECTED:    { label: 'Connected',    color: 'var(--color-success)', Icon: Wifi },
+  DISCONNECTED: { label: 'Disconnected', color: 'var(--color-error)',   Icon: WifiSquare },
+  CONNECTING:   { label: 'Connecting',   color: 'var(--color-warning)', Icon: RefreshCircle },
+  RESTARTING:   { label: 'Restarting',   color: 'var(--color-warning)', Icon: RefreshCircle },
+  ERROR:        { label: 'Error',        color: 'var(--color-error)',   Icon: Warning2 },
+} satisfies Record<NumberState, unknown>;
+
+export function StateBadge({ state }: { state: NumberState }) {
+  const { label, color, Icon } = STATE_CONFIG[state];
+  return (
+    <span style={{ color }} className="inline-flex items-center gap-1 text-sm font-medium">
+      <Icon size={14} variant="Bold" color={color} />
+      {label}
+    </span>
+  );
+}
+```
+
+## Data fetching
+- Server Components: use `prisma` diretamente (dentro de `app/(dashboard)`)
+- Client Components: use SWR para polling de estados (health check status atualiza a cada 30s)
+- NUNCA `useEffect` + `fetch` puro — sempre SWR ou React Query
+- Mutations: Server Actions para formulários simples, fetch para ações com feedback imediato
+
+## Empty States
+```tsx
+// components/ui/empty-state.tsx — OBRIGATÓRIO em toda lista vazia
+export function EmptyState({ icon: Icon, title, description, action }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <Icon size={48} variant="Bold" color="var(--color-text-muted)" />
+      <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
+      <p className="mt-2 text-sm text-[var(--color-text-muted)] max-w-sm">{description}</p>
+      {action && <div className="mt-6">{action}</div>}
+    </div>
+  );
+}
+```
+
+## Loading States
+- SEMPRE skeleton loaders, NUNCA spinner solto no centro da página
+- Skeleton deve ter exatamente a mesma estrutura visual do conteúdo real
+- Use `animate-pulse` do Tailwind
+
+## Regras gerais
+- NUNCA inline styles de cores — sempre CSS variables ou classes Tailwind
+- Tailwind: use apenas classes utilitárias base (sem customização de config para prod)
+- Formulários: react-hook-form + Zod resolver
+- Toasts: sonner (bottom-right, dark theme)
+- Modais/Slide-overs: Headless UI Dialog

@@ -1,0 +1,68 @@
+---
+description: Padrões para integração de billing (Stripe + Pague.dev)
+globs: apps/api/app/api/billing/**/*.ts, apps/api/app/api/webhooks/**/*.ts, apps/api/src/lib/billing/**/*.ts
+alwaysApply: false
+---
+
+# Billing Standards
+
+## PaymentProvider interface — NUNCA acoplar ao Stripe/Pague.dev diretamente
+```typescript
+// packages/shared/src/providers/payment.provider.ts
+export interface PaymentProvider {
+  createCustomer(userId: string, email: string): Promise<string>;
+  createSubscription(customerId: string, quantity: number): Promise<{
+    subscriptionId: string;
+    status: SubscriptionStatus;
+    currentPeriodEnd: Date;
+  }>;
+  updateQuantity(subscriptionId: string, quantity: number): Promise<void>;
+  cancelSubscription(subscriptionId: string, atPeriodEnd: boolean): Promise<void>;
+  handleWebhook(rawBody: Buffer, signature: string): Promise<BillingWebhookEvent>;
+}
+
+// NoOp para OSS / desenvolvimento
+export class NoOpPaymentProvider implements PaymentProvider {
+  async createCustomer() { return 'noop_customer'; }
+  async createSubscription() { return { subscriptionId: 'noop', status: 'ACTIVE', currentPeriodEnd: new Date(9999, 0) }; }
+  async updateQuantity() {}
+  async cancelSubscription() {}
+  async handleWebhook() { throw new Error('No billing in OSS mode'); }
+}
+```
+
+## Webhook handler — verificação HMAC obrigatória
+```typescript
+// apps/api/app/api/webhooks/stripe/route.ts
+export async function POST(req: NextRequest) {
+  const rawBody = await req.arrayBuffer();
+  const signature = req.headers.get('stripe-signature') ?? '';
+
+  let event: BillingWebhookEvent;
+  try {
+    event = await paymentProvider.handleWebhook(Buffer.from(rawBody), signature);
+  } catch {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
+
+  // Idempotência: checar se evento já processado
+  const processed = await redis.get(`webhook:processed:${event.id}`);
+  if (processed) return NextResponse.json({ ok: true });
+
+  await processWebhookEvent(event);
+  await redis.set(`webhook:processed:${event.id}`, '1', 'EX', 86400); // 24h TTL
+
+  return NextResponse.json({ ok: true });
+}
+```
+
+## Sync de quantidade de números
+- Trigado em: add number, remove number, toggle monitored
+- Trigado em: background job diário (reconciliação)
+- NUNCA confiar apenas no contador — sempre recalcular com COUNT query
+- Após sync: chamar paymentProvider.updateQuantity() se CLOUD_BILLING=true
+
+## Grace period
+- PAST_DUE: monitoramento continua por 7 dias
+- UNPAID após grace: pausar novos health checks, preservar dados históricos
+- CANCELED: monitoramento continua até currentPeriodEnd

@@ -1,0 +1,67 @@
+---
+description: Padrões TypeScript para todo o monorepo
+globs: **/*.ts, **/*.tsx
+alwaysApply: false
+---
+
+# TypeScript Standards
+
+## Config base (packages/config/tsconfig.base.json)
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022"]
+  }
+}
+```
+
+## Padrões obrigatórios
+- **NUNCA** usar `any` — use `unknown` e faça type narrowing
+- **NUNCA** usar non-null assertion `!` — use optional chaining ou type guard
+- Enums DEVEM ser definidos em `packages/shared/src/enums.ts` e importados de lá
+- DTOs de request/response DEVEM usar Zod schemas (não interfaces soltas)
+- Erros customizados DEVEM estender `AppError` de `packages/shared/src/errors.ts`
+
+## Padrão de error handling
+```typescript
+// packages/shared/src/errors.ts
+export class AppError extends Error {
+  constructor(
+    public readonly code: ErrorType,
+    message: string,
+    public readonly statusCode: number = 500,
+    public readonly meta?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
+// Uso
+throw new AppError('NETWORK_ERROR', 'Evolution API unreachable', 502, { url });
+```
+
+## Imports
+- Use path aliases: `@/` para apps/api/src, `@pilot/shared` para packages/shared
+- Imports de packages SEMPRE por barrel (index.ts), nunca path interno
+- Ordem: node built-ins → external packages → internal packages → relative
+
+## Validação de env vars
+```typescript
+// Valide em startup, nunca em runtime
+import { z } from 'zod';
+const envSchema = z.object({
+  DATABASE_URL: z.string().url(),
+  REDIS_URL: z.string(),
+  NEXTAUTH_SECRET: z.string().min(32),
+  ENCRYPTION_KEY: z.string().length(64), // 32 bytes hex
+});
+export const env = envSchema.parse(process.env);
+```

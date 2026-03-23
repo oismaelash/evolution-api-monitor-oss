@@ -1,0 +1,173 @@
+---
+description: Padrões para o Worker (BullMQ + Redis + Evolution API)
+globs: apps/worker/**/*.ts
+alwaysApply: false
+---
+
+# Worker Standards
+
+## Estrutura de um Job Handler
+```typescript
+// apps/worker/src/jobs/health-check.job.ts
+import { Job } from 'bullmq';
+import { HealthCheckJobData } from '@pilot/shared';
+import { acquireLock, releaseLock } from '../lib/redis-lock';
+import { checkInstanceHealth } from '../evolution/health-checker';
+import { stateMachine } from '../state-machine';
+import { logger } from '../lib/logger';
+
+export async function processHealthCheck(job: Job<HealthCheckJobData>): Promise<void> {
+  const { numberId } = job.data;
+  const lockKey = `number:${numberId}:lock`;
+  const lockTTL = 60; // seconds — 2x expected job duration
+
+  // 1. Acquire lock — OBRIGATÓRIO
+  const lock = await acquireLock(lockKey, lockTTL);
+  if (!lock) {
+    logger.warn('health_check_lock_miss', { numberId });
+    // Requeue with delay ao invés de falhar
+    await job.moveToDelayed(Date.now() + 5_000);
+    return;
+  }
+
+  try {
+    // 2. Fetch state from DB — não confiar no job.data para estado mutável
+    const number = await prisma.number.findUnique({
+      where: { id: numberId },
+      include: { project: { include: { config: true } } },
+    });
+
+    if (!number || !number.monitored) return;
+
+    // 3. Execute health check
+    const result = await checkInstanceHealth(number);
+
+    // 4. Transition state machine
+    await stateMachine.transition(number, result);
+
+  } finally {
+    // 5. SEMPRE liberar o lock
+    await releaseLock(lockKey, lock);
+  }
+}
+```
+
+## Redis Lock Pattern
+```typescript
+// apps/worker/src/lib/redis-lock.ts
+import { redis } from './redis';
+import { randomUUID } from 'crypto';
+
+export async function acquireLock(key: string, ttlSeconds: number): Promise<string | null> {
+  const value = randomUUID();
+  const result = await redis.set(key, value, 'EX', ttlSeconds, 'NX');
+  return result === 'OK' ? value : null;
+}
+
+export async function releaseLock(key: string, value: string): Promise<void> {
+  // Lua script para release atômico (evita liberar lock de outro worker)
+  const script = `
+    if redis.call("get", KEYS[1]) == ARGV[1] then
+      return redis.call("del", KEYS[1])
+    else
+      return 0
+    end
+  `;
+  await redis.eval(script, 1, key, value);
+}
+```
+
+## State Machine
+```typescript
+// apps/worker/src/state-machine.ts
+// Transições EXPLÍCITAS — nunca inferidas
+const VALID_TRANSITIONS: Record<NumberState, NumberState[]> = {
+  CONNECTED:    ['DISCONNECTED'],
+  DISCONNECTED: ['CONNECTING', 'ERROR'],
+  CONNECTING:   ['CONNECTED', 'DISCONNECTED', 'ERROR'],
+  RESTARTING:   ['CONNECTED', 'ERROR'],
+  ERROR:        ['RESTARTING'],
+};
+
+export async function transition(
+  number: NumberWithConfig,
+  toState: NumberState,
+  meta?: Record<string, unknown>
+): Promise<void> {
+  if (!VALID_TRANSITIONS[number.state]?.includes(toState)) {
+    logger.warn('invalid_state_transition', { from: number.state, to: toState, numberId: number.id });
+    return; // Não quebra — apenas loga e ignora
+  }
+  await prisma.number.update({ where: { id: number.id }, data: { state: toState } });
+  await writeLog(number, toState, meta);
+}
+```
+
+## Classificação de erros da Evolution API
+```typescript
+export function classifyEvolutionError(response: Response, body: unknown): ErrorType {
+  if (response.status === 401 || response.status === 403) return 'AUTH_ERROR';
+  if (response.status === 429) return 'RATE_LIMIT';
+  if (response.status === 404) {
+    const msg = JSON.stringify(body).toLowerCase();
+    if (msg.includes('does not exist') || msg.includes('not found')) {
+      return 'INSTANCE_NOT_FOUND';
+    }
+  }
+  if (!response.ok) return 'UNKNOWN';
+  return 'UNKNOWN';
+}
+
+export function classifyFetchError(error: unknown): ErrorType {
+  if (error instanceof TypeError && error.message.includes('fetch')) return 'NETWORK_ERROR';
+  if (error instanceof DOMException && error.name === 'AbortError') return 'NETWORK_ERROR';
+  return 'UNKNOWN';
+}
+```
+
+## Timeouts obrigatórios
+```typescript
+// Ping (connectionState + setPresence): 5 segundos
+// Restart: 10 segundos
+const TIMEOUTS = { ping: 5_000, restart: 10_000 } as const;
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+```
+
+## Alert Cooldown
+```typescript
+// NUNCA enviar alerta se cooldown ativo
+const COOLDOWN_KEY = (numberId: string) => `alert:cooldown:${numberId}`;
+
+export async function canSendAlert(numberId: string, cooldownSeconds: number): Promise<boolean> {
+  const key = COOLDOWN_KEY(numberId);
+  const result = await redis.set(key, '1', 'EX', cooldownSeconds, 'NX');
+  return result === 'OK'; // false = cooldown ativo
+}
+```
+
+## Logger estruturado
+```typescript
+// SEMPRE use este formato — nunca console.log com string
+logger.info('health_check_success', {
+  numberId: number.id,
+  projectId: number.projectId,
+  instanceName: number.instanceName,
+  responseTimeMs: elapsed,
+});
+
+logger.error('health_check_failed', {
+  numberId: number.id,
+  projectId: number.projectId,
+  errorType: 'NETWORK_ERROR',
+  message: error.message,
+});
+```

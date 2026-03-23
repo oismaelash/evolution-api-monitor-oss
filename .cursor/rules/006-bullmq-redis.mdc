@@ -1,0 +1,108 @@
+---
+description: Padrões para filas BullMQ e uso do Redis
+globs: apps/worker/**/*.ts, apps/api/src/lib/queues/**/*.ts
+alwaysApply: false
+---
+
+# BullMQ & Redis Standards
+
+## Queues definidas
+```typescript
+// packages/shared/src/queues.ts
+export const QUEUE_NAMES = {
+  HEALTH_CHECK: 'health-check',
+  RESTART:      'restart',
+  ALERT:        'alert',
+  SYNC:         'sync',
+  DEAD_LETTER:  'dead-letter',
+} as const;
+```
+
+## Queue configuration
+```typescript
+// apps/worker/src/queues/index.ts
+import { Queue, Worker, QueueEvents } from 'bullmq';
+
+const connection = { host: env.REDIS_HOST, port: env.REDIS_PORT };
+
+export const healthCheckQueue = new Queue(QUEUE_NAMES.HEALTH_CHECK, {
+  connection,
+  defaultJobOptions: {
+    removeOnComplete: { count: 100 },
+    removeOnFail: { count: 500 },
+    attempts: 1, // Health checks não retentam automaticamente — gerenciado pelo state machine
+  },
+});
+
+export const restartQueue = new Queue(QUEUE_NAMES.RESTART, {
+  connection,
+  defaultJobOptions: {
+    removeOnComplete: true,
+    removeOnFail: { count: 200 },
+    attempts: 1,
+  },
+});
+
+export const alertQueue = new Queue(QUEUE_NAMES.ALERT, {
+  connection,
+  defaultJobOptions: {
+    removeOnComplete: true,
+    removeOnFail: { count: 200 },
+    attempts: 3, // Alertas retentam até 3x
+    backoff: { type: 'exponential', delay: 5_000 },
+  },
+});
+```
+
+## Job scheduling — health check por número
+```typescript
+// Ao adicionar número para monitoramento
+async function scheduleHealthCheck(numberId: string, intervalSeconds: number) {
+  const jobId = `number:${numberId}:health-check`;
+
+  // Remove job existente se já estava agendado
+  const existing = await healthCheckQueue.getJob(jobId);
+  if (existing) await existing.remove();
+
+  await healthCheckQueue.add(
+    'health-check',
+    { numberId },
+    {
+      jobId,
+      repeat: { every: intervalSeconds * 1_000 },
+      // Deduplicação: mesmo jobId não cria duplicata
+    }
+  );
+}
+
+// Ao remover número do monitoramento
+async function unscheduleHealthCheck(numberId: string) {
+  const jobId = `number:${numberId}:health-check`;
+  await healthCheckQueue.removeRepeatable('health-check', { every: 0, jobId });
+}
+```
+
+## Dead Letter Queue processor
+```typescript
+// apps/worker/src/jobs/dlq.processor.ts
+// Roda a cada 15 minutos via separate Worker
+export async function processDLQ() {
+  const failed = await healthCheckQueue.getFailed(0, 100);
+  for (const job of failed) {
+    await writeLog(null, 'ERROR', 'job_dead_lettered', {
+      jobId: job.id,
+      jobName: job.name,
+      failedReason: job.failedReason,
+      data: job.data,
+    });
+    // Não re-enqueue automaticamente — requer intervenção manual via Bull Board
+  }
+}
+```
+
+## Bull Board (dashboard de filas)
+```typescript
+// apps/api/app/api/admin/queues/route.ts — acesso restrito
+// Montar Bull Board em /admin/queues
+// Protegido por: session.user.role === 'ADMIN'
+```

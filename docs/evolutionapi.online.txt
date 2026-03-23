@@ -1,0 +1,197 @@
+Criar monitorador de numero da evolution api.
+
+cada pessoa pode ter varios projetos.
+
+cada projeto, tem varios numeros.
+
+a ideia é o gerenciador, verificar a saude de cada numero.
+
+a cada 5 minutos envia um ping (statu e presence),
+caso os dois retorne ok, segue a vida.
+
+Se em 3 pings, retorna falha, tentar fazer restart do numero.
+faz o restart, espera 1 minuto, e verifica novamente com ping, se a saude esta de volta.
+
+caso nao, tenta fazer mais um restart, apos 1 minuto faz outro ping.
+
+apos segunda tentativa falha, envia um WhatsApp, para o numero da pessoa que gerencia aquele projeto/conta.
+
+falando qual o numero precisa ser reconectado de forma manual, envia tambem, o qrcode de conexao.
+
+envia tambem o numero do pairing code de conexao.
+
+tudo deve ter log, que a pessoa consiga filtrar os log por numero, ou projeto.
+
+
+iremos usar a Pilot Status, para enviar a mensagem no WhatsApp de alerta: https://pilotstatus.online/docs
+
+A ideia é fazer o projeto open source, mas ter sua versao cloud.
+
+Onde na versao cloud, quero coloca em plataformas que instala o app, e so configura as credenciais do usuario admin, na primeira vez.
+
+quero deixar o maximo possivel parametrizado o projeto para quem vai gerencias os numeros.
+
+apos trazer os numeros, quais numeros quer monitorar
+
+o tempo dos pings, quantidade de tentativas, delay entre tentativas, exponencial ou fixo.
+
+se deseja escolher um numero para enviar o alerta, e criar o template de alerta, caso ele nao use a Pilot Status, fallback de numero para enviar mensagem, sendo que por padrao, caso nao escolha o Pilot Status, o Pilot Status, é o ultimo fallback
+
+e o que de mais para parametrizar.
+
+em anexo, segue documento, com endpoints e paylods (request e response) dos endpoints necessarias da evolution, para gerencias numeros.
+
+na evolution, uma instancia, equivale a um numero.
+
+preciso de documentos como ADR, TIP, PRD, preciso de um documento que explique como o frontend deve ser, baseado no resend.com e usando https://docs.iconsax.io/
+
+projeto usando next.js, typescript, postgres, prisma, docker, docker compose, projeto monolito para (api, frontend), projeto para worker, projeto monorepo usando workspaces, iremos salvar as imagens docker no GHCR, ter ambiente docker compose de dev com hot reload, usar redis para lock (Idempotência + concorrência, fila com delay com BullMQ, requeue), 
+
+
+GitHub da evolution: https://github.com/EvolutionAPI/evolution-api
+
+em anexo, tem collection do postman da evolution v2.3.x
+
+iremos usar pague.dev para pagamento via pix
+https://docs.pague.dev/
+
+e stripe, para pagamento via cartao.
+
+iremos cobrar 1 real por numero conectado para verificar a saude.
+
+sempre pensar que iremos ter a versao open source e a versao cloud.
+
+o dominio do projeto é evolutionapi.online (ira falar do projeto de forma geral, falar sobre open source etc) 
+e a versao cloud sera em cloud.evolutionapi.online
+
+uptime por numero,
+
+period de trial por 14 dias.
+enquanto o numero estiver conectado, mesmo desconectado, iremos cobrar.
+
+iremos ter login via WhatsApp, google e GitHub, usando NextAuth
+
+canal de alerta, iremos ter email, configurando via smtp, apenas do gmail inicialmente.
+webhook da plataforma para enviar o alerta.
+
+Estado da instância
+
+Você precisa persistir:
+
+CONNECTED
+DISCONNECTED
+CONNECTING
+RESTARTING
+ERROR
+
+10. Estratégia de retry (você mencionou, mas refine)
+
+Você falou:
+
+2 tentativas
+
+Mas pode melhorar:
+
+backoff exponencial opcional
+jitter (evitar avalanche)
+
+criar testes unitarios e de integracao para todo o sistema.
+
+Normalização de falhas
+
+Nem toda falha é igual.
+
+Você precisa classificar:
+
+NETWORK_ERROR
+AUTH_ERROR
+INSTANCE_NOT_FOUND
+RATE_LIMIT
+UNKNOWN
+
+👉 Isso melhora:
+
+retry inteligente
+alerta mais útil
+
+Anti-spam de alertas
+
+Imagina isso:
+
+número falha → alerta enviado
+continua falhando → spam infinito
+
+👉 Solução:
+
+cooldown de alerta (ex: 30 min)
+
+
+Vitest para testes
+
+iremos rodar em uma vps o monolito (api e frontend) e o worker
+
+Mas precisa definir as transições, senão o worker vira caos.
+
+Exemplo:
+
+CONNECTED → (falha ping) → DISCONNECTED  
+DISCONNECTED → (retry) → CONNECTING  
+CONNECTING → (sucesso) → CONNECTED  
+CONNECTING → (falha) → ERROR  
+ERROR → (restart) → RESTARTING  
+RESTARTING → (sucesso) → CONNECTED  
+RESTARTING → (falha) → ERROR  
+
+Concorrência por número (muito importante)
+
+Você já falou de Redis lock, mas precisa explicitar:
+
+👉 Regra:
+
+Apenas 1 job ativo por número (instance)
+
+👉 Exemplo:
+
+lock key: number:{id}:lock
+TTL: 2x tempo do job
+
+Timeout de requests
+
+Você não definiu isso — e isso quebra sistema real.
+
+👉 Exemplo:
+
+ping timeout: 5s
+restart timeout: 10s
+
+Abstração de providers (ESSENCIAL pro seu modelo)
+
+Você tem:
+
+Pilot Status (alerta)
+Stripe
+Pague.dev
+
+👉 Você PRECISA definir interface:
+
+interface AlertProvider {
+  send(message: string): Promise<void>
+}
+
+👉 senão vira acoplamento forte
+
+
+Logs estruturados (não só texto)
+
+Definir padrão:
+
+{
+  "level": "error",
+  "numberId": "123",
+  "projectId": "456",
+  "event": "health_check_failed",
+  "errorType": "NETWORK_ERROR"
+}
+
+
+

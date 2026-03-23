@@ -1,0 +1,66 @@
+---
+description: Padrões para uso do Prisma e acesso ao banco de dados
+globs: packages/database/**/*.ts, apps/*/src/services/**/*.ts, apps/*/src/lib/**/*.ts
+alwaysApply: false
+---
+
+# Database / Prisma Standards
+
+## Client singleton
+```typescript
+// packages/database/src/client.ts
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development'
+    ? ['query', 'error', 'warn']
+    : ['error'],
+});
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+```
+
+## Regras de query
+- SEMPRE incluir `where: { project: { userId: session.user.id } }` em queries de Number/Log/Alert
+- NUNCA usar `findMany` sem `take` (limite padrão: 50)
+- Use `select` explícito quando não precisa de todas as colunas (especialmente em listas)
+- Queries de health check history: SEMPRE filtrar por `numberId` + range de datas com índice
+
+## Paginação
+```typescript
+// Padrão de paginação reutilizável
+async function paginate<T>(
+  query: (args: { skip: number; take: number }) => Promise<T[]>,
+  countQuery: () => Promise<number>,
+  page: number,
+  limit: number = 50
+) {
+  const [data, total] = await Promise.all([
+    query({ skip: (page - 1) * limit, take: limit }),
+    countQuery(),
+  ]);
+  return { data, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+}
+```
+
+## Migrations
+- NUNCA editar migrations geradas — sempre `prisma migrate dev --name <descricao>`
+- Migrations de produção: `prisma migrate deploy` (sem --dev)
+- Antes de rename de coluna: criar nova, migrar dados, drop old (3 migrations separadas)
+- Índices para queries frequentes JÁ definidos no schema:
+  - `Number`: [projectId], [state], [projectId, instanceName] (unique)
+  - `HealthCheck`: [numberId, checkedAt]
+  - `Log`: [numberId, createdAt], [projectId, createdAt]
+  - `Alert`: [numberId, sentAt]
+
+## Encryption de campos sensíveis
+```typescript
+// Antes de salvar: encrypt
+const encryptedApiKey = encrypt(projectData.evolutionApiKey);
+await prisma.project.create({ data: { ...projectData, evolutionApiKey: encryptedApiKey } });
+
+// Após buscar: decrypt APENAS quando for usar (não em listagens)
+const decryptedKey = decrypt(project.evolutionApiKey);
+```

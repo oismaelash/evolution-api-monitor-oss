@@ -1,0 +1,113 @@
+---
+description: Padrões de testes unitários e de integração com Vitest
+globs: **/*.test.ts, **/*.spec.ts, **/test/**/*.ts
+alwaysApply: false
+---
+
+# Testing Standards (Vitest)
+
+## Configuração
+```typescript
+// vitest.config.ts (root)
+import { defineConfig } from 'vitest/config';
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    coverage: { provider: 'v8', threshold: { lines: 80, functions: 80 } },
+    setupFiles: ['./test/setup.ts'],
+  },
+});
+```
+
+## O que testar obrigatoriamente
+1. **classifyEvolutionError** — todos os status codes e body patterns
+2. **computeRetryDelay** — FIXED e EXPONENTIAL_JITTER com seed de random
+3. **stateMachine.transition** — todas as transições válidas e inválidas
+4. **canSendAlert** — cooldown ativo vs inativo
+5. **encrypt/decrypt** — round-trip de API keys
+6. **Zod schemas** — casos válidos e inválidos de cada schema de request
+
+## Mock factory pattern
+```typescript
+// packages/shared/src/test/factories.ts
+import { NumberState } from '../enums';
+
+export function makeNumber(overrides?: Partial<NumberModel>): NumberModel {
+  return {
+    id: 'num_test_001',
+    projectId: 'proj_test_001',
+    instanceName: 'test-instance',
+    phoneNumber: '5511999999999',
+    state: NumberState.CONNECTED,
+    failureCount: 0,
+    monitored: true,
+    lastHealthyAt: new Date(),
+    lastCheckedAt: new Date(),
+    lastAlertSentAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  };
+}
+
+export function makeProjectConfig(overrides?: Partial<ProjectConfigModel>): ProjectConfigModel {
+  return {
+    pingInterval: 300,
+    maxRetries: 2,
+    retryDelay: 60,
+    retryStrategy: 'FIXED',
+    alertCooldown: 1800,
+    alertChannels: ['PILOT_STATUS'],
+    ...overrides,
+  };
+}
+```
+
+## Mock Redis para testes de lock
+```typescript
+// packages/shared/src/test/mock-redis.ts
+export class MockRedis {
+  private store = new Map<string, { value: string; expiresAt: number }>();
+
+  async set(key: string, value: string, mode: string, ttl: number, flag: string) {
+    if (flag === 'NX' && this.store.has(key)) return null;
+    this.store.set(key, { value, expiresAt: Date.now() + ttl * 1000 });
+    return 'OK';
+  }
+
+  async get(key: string) {
+    const entry = this.store.get(key);
+    if (!entry || entry.expiresAt < Date.now()) return null;
+    return entry.value;
+  }
+
+  async eval(_script: string, _numkeys: number, key: string, value: string) {
+    const entry = this.store.get(key);
+    if (entry?.value === value) { this.store.delete(key); return 1; }
+    return 0;
+  }
+}
+```
+
+## Testes de integração do Worker
+```typescript
+// apps/worker/src/jobs/__tests__/health-check.integration.test.ts
+// Usa: testcontainers para Postgres + Redis reais
+// Não mocka Prisma — testa contra banco real em container
+describe('HealthCheckJob Integration', () => {
+  it('should transition number to DISCONNECTED on Evolution 404', async () => {
+    // Arrange: create number in DB
+    // Mock: fetch para Evolution API retorna 404 com body correto
+    // Act: processHealthCheck(job)
+    // Assert: number.state === 'DISCONNECTED' no banco
+    //         Log registrado com errorType === 'INSTANCE_NOT_FOUND'
+  });
+});
+```
+
+## Regras de teste
+- Nomes de teste: `should <comportamento> when <condição>`
+- NUNCA testar implementação interna — testar comportamento observável
+- Testes de state machine: testar TODAS as transições inválidas (devem ser no-ops)
+- Coverage mínimo: 80% lines/functions para packages/shared e apps/worker

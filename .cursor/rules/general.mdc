@@ -1,0 +1,83 @@
+---
+description: Índice das Cursor Rules do Pilot Status Monitor — uso do Cursor, skills e snippet HTTP (o conteúdo das regras está nos arquivos 000–010)
+globs: .cursor/rules/**
+alwaysApply: false
+---
+
+# Cursor Rules — Pilot Status Monitor
+
+## Estrutura de arquivos
+
+| Arquivo | Conteúdo |
+|---------|-----------|
+| `000-project-overview.mdc` | Contexto do projeto, regras absolutas, env, domínios (`alwaysApply: true`) |
+| `001-typescript.mdc` | TypeScript, AppError, imports, validação de env |
+| `002-nextjs-api.mdc` | App Router API routes, middleware de erros, encryption |
+| `003-nextjs-frontend.mdc` | UI, tokens CSS, Iconsax, SWR, empty/loading states |
+| `004-worker.mdc` | BullMQ jobs, Redis lock, state machine, Evolution errors, logger |
+| `005-database-prisma.mdc` | Prisma client, queries, paginação, migrations |
+| `006-bullmq-redis.mdc` | Queues, scheduling, DLQ, Bull Board |
+| `007-testing.mdc` | Vitest, factories, mock Redis, integração |
+| `008-billing.mdc` | PaymentProvider, webhooks, sync, grace period |
+| `009-evolution-api.mdc` | EvolutionClient, health check duplo, parsing, encoding |
+| `010-pilot-status-api.mdc` | API pública Pilot Status (WhatsApp), `x-api-key`, `/v1`, webhooks, opt-in |
+
+Edite cada arquivo numerado para alterar as regras. Este arquivo (`general.mdc`) não substitui as regras — apenas documenta como usá-las.
+
+## Como adicionar / usar no Cursor
+
+1. As regras ficam em `.cursor/rules/` e são carregadas automaticamente (**Settings → Features → Rules for AI**).
+2. `alwaysApply: true` só no `000-project-overview.mdc` — visão geral em todas as conversas.
+3. Demais rules usam `globs` para carregar quando arquivos correspondentes estão no contexto.
+4. No chat, você pode referenciar regras com `@rules` ou mencionando o arquivo (ex.: `@009-evolution-api.mdc`).
+
+## Skills do projeto (`.cursor/skills/`)
+
+| Skill | Motivo |
+|---|---|
+| `pilot-status-api` | Contrato REST Pilot Status (alinhado a [llms.txt](https://pilotstatus.online/llms.txt)), alertas WhatsApp, webhooks |
+
+## Skills / extensões recomendadas
+
+| Skill / Extension | Motivo |
+|---|---|
+| **Prisma** (VS Code) | Schema, format, autocomplete |
+| **ESLint** | Lint em tempo real |
+| **Tailwind CSS IntelliSense** | Classes |
+| **Docker** | Compose no editor |
+| **REST Client** | Arquivos `.http` para Evolution |
+| **GitLens** | Histórico e blame |
+
+## Arquivo `.http` para Evolution API
+
+Salve como `.cursor/http/evolution.http` (ou outro caminho) e ajuste variáveis:
+
+```http
+# .cursor/http/evolution.http
+@baseUrl = https://sua-evolution.com
+@apikey = sua-api-key
+@instance = meu-numero
+
+### Connection State
+GET {{baseUrl}}/instance/connectionState/{{instance}}
+apikey: {{apikey}}
+
+### Set Presence
+POST {{baseUrl}}/instance/setPresence/{{instance}}
+apikey: {{apikey}}
+Content-Type: application/json
+
+{ "presence": "available" }
+
+### Restart
+POST {{baseUrl}}/instance/restart/{{instance}}
+apikey: {{apikey}}
+
+### Get QR
+GET {{baseUrl}}/instance/connect/{{instance}}
+apikey: {{apikey}}
+
+### Fetch All Instances
+GET {{baseUrl}}/instance/fetchInstances
+apikey: {{apikey}}
+```
