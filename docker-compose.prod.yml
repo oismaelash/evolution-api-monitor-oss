@@ -1,0 +1,126 @@
+# Production stack: Postgres, Redis, Next.js API, BullMQ worker.
+#
+# Prerequisites: copy .env.example → .env and set secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY, etc.).
+#
+# Migrations (run before first start or after schema changes):
+#   docker compose -f docker-compose.prod.yml --profile migrate run --rm migrate
+#
+# Start:
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# API: http://localhost:3000  (set NEXTAUTH_URL to the public URL in production)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-monitor_status}
+    volumes:
+      - monitor_pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - monitor_redis_prod:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    profiles: [migrate]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    restart: unless-stopped
+    ports:
+      - '${API_PORT:-3000}:3000'
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      CLOUD_BILLING: ${CLOUD_BILLING:-false}
+      CLOUD_ADVANCED_ALERTS: ${CLOUD_ADVANCED_ALERTS:-false}
+      CLOUD_EXPONENTIAL_RETRY: ${CLOUD_EXPONENTIAL_RETRY:-false}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_ID: ${GITHUB_ID:-}
+      GITHUB_SECRET: ${GITHUB_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-}
+      BILLING_PRICE_PER_NUMBER_CENTS: ${BILLING_PRICE_PER_NUMBER_CENTS:-}
+      PAGUE_DEV_API_KEY: ${PAGUE_DEV_API_KEY:-}
+      PAGUE_DEV_WEBHOOK_SECRET: ${PAGUE_DEV_WEBHOOK_SECRET:-}
+      PAGUE_DEV_BASE_URL: ${PAGUE_DEV_BASE_URL:-}
+      MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
+      MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
+      BULL_BOARD_SECRET: ${BULL_BOARD_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      CLOUD_BILLING: ${CLOUD_BILLING:-false}
+      CLOUD_ADVANCED_ALERTS: ${CLOUD_ADVANCED_ALERTS:-false}
+      CLOUD_EXPONENTIAL_RETRY: ${CLOUD_EXPONENTIAL_RETRY:-false}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-}
+      PAGUE_DEV_API_KEY: ${PAGUE_DEV_API_KEY:-}
+      PAGUE_DEV_WEBHOOK_SECRET: ${PAGUE_DEV_WEBHOOK_SECRET:-}
+      PAGUE_DEV_BASE_URL: ${PAGUE_DEV_BASE_URL:-}
+      MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
+      MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
+      PING_TIMEOUT_MS: ${PING_TIMEOUT_MS:-}
+      RESTART_TIMEOUT_MS: ${RESTART_TIMEOUT_MS:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  monitor_pgdata_prod:
+  monitor_redis_prod:
