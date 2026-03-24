@@ -143,16 +143,39 @@ export function createAlertWorker(connection: RedisClient) {
           ? defaultResolvedText
           : renderMessage(advanced, cfg.alertTemplate, vars, defaultFailureText);
 
+        const isLive = env.MONITOR_STATUS_API_KEY?.startsWith('ps_live_');
         const channels = cfg.alertChannels;
         const channelsSent: string[] = [];
 
         for (const ch of channels) {
-          if (ch === AlertChannel.MONITOR_STATUS && env.MONITOR_STATUS_API_KEY && env.MONITOR_STATUS_BASE_URL) {
+          if (ch === AlertChannel.MONITOR_STATUS && env.MONITOR_STATUS_API_KEY) {
+            const { PilotStatusClient } = await import('@pilot-status/sdk');
+            const client = new PilotStatusClient({
+              apiKey: env.MONITOR_STATUS_API_KEY,
+            });
+
             const dest = number.project.alertPhone ?? '';
             if (!dest) {
               logJson('warn', 'alert_monitor_missing_phone', { numberId });
               continue;
             }
+
+            const e164Dest = dest.startsWith('+') ? dest : `+${dest.replace(/^\+/, '')}`;
+
+            // Check Opt-in if LIVE
+            if (isLive) {
+              try {
+                const optIn = await client.messages.checkOptIn(e164Dest);
+                if (!optIn.authorized) {
+                  logJson('warn', 'alert_monitor_missing_optin', { numberId, reason: optIn.reason });
+                  continue;
+                }
+              } catch (e) {
+                logJson('error', 'alert_monitor_optin_error', { numberId, message: (e as Error).message });
+                // We proceed if we can't check, or we could stop. Let's proceed but log.
+              }
+            }
+
             const row = await prisma.alert.create({
               data: {
                 numberId,
@@ -160,29 +183,23 @@ export function createAlertWorker(connection: RedisClient) {
                 payload: { ...payload, message: monitorMessage } as object,
               },
             });
+
             try {
-              const base = env.MONITOR_STATUS_BASE_URL.replace(/\/$/, '');
-              const res = await fetch(`${base}/v1/messages/send`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-api-key': env.MONITOR_STATUS_API_KEY,
+              const accepted = await client.messages.send({
+                templateId: cfg.alertTemplate || 'default',
+                destinationNumber: e164Dest,
+                variables: {
+                  message: monitorMessage, // Fallback for old templates
+                  instanceName: number.instanceName,
+                  projectName: number.project.name,
+                  errorType: errorType || 'None',
+                  status: isResolved ? 'Healthy' : 'Error',
                 },
-                body: JSON.stringify({
-                  templateId: 'default',
-                  destinationNumber: dest.startsWith('+') ? dest : `+${dest.replace(/^\+/, '')}`,
-                  variables: {
-                    message: monitorMessage,
-                  },
-                }),
               });
-              if (!res.ok && res.status !== 202) {
-                const t = await res.text();
-                throw new Error(`monitor status ${res.status}: ${t}`);
-              }
+
               await prisma.alert.update({
                 where: { id: row.id },
-                data: { delivered: true },
+                data: { delivered: true, payload: { ...payload, pilotStatusId: accepted.id } as object },
               });
               channelsSent.push('MONITOR_STATUS');
             } catch (e) {
@@ -204,9 +221,9 @@ export function createAlertWorker(connection: RedisClient) {
               auth:
                 cfg.smtpUser && pass
                   ? {
-                      user: cfg.smtpUser,
-                      pass,
-                    }
+                    user: cfg.smtpUser,
+                    pass,
+                  }
                   : undefined,
             });
             const subject = isResolved
