@@ -58,7 +58,7 @@ export function makeProjectConfig(overrides?: Partial<ProjectConfigModel>): Proj
     retryDelay: 60,
     retryStrategy: 'FIXED',
     alertCooldown: 1800,
-    alertChannels: ['PILOT_STATUS'],
+    alertChannels: ['MONITOR_STATUS'],
     ...overrides,
   };
 }

@@ -49,7 +49,7 @@ throw new AppError('NETWORK_ERROR', 'Evolution API unreachable', 502, { url });
 ```
 
 ## Imports
-- Use path aliases: `@/` para apps/api/src, `@pilot/shared` para packages/shared
+- Use path aliases: `@/` para apps/api/src, `@monitor/shared` para packages/shared
 - Imports de packages SEMPRE por barrel (index.ts), nunca path interno
 - Ordem: node built-ins → external packages → internal packages → relative
 

@@ -10,7 +10,7 @@ alwaysApply: false
 ```typescript
 // apps/worker/src/jobs/health-check.job.ts
 import { Job } from 'bullmq';
-import { HealthCheckJobData } from '@pilot/shared';
+import { HealthCheckJobData } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lib/redis-lock';
 import { checkInstanceHealth } from '../evolution/health-checker';
 import { stateMachine } from '../state-machine';

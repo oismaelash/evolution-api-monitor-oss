@@ -1,5 +1,5 @@
-import { prisma } from '@pilot/database';
-import { AppError } from '@pilot/shared';
+import { prisma } from '@monitor/database';
+import { AppError } from '@monitor/shared';
 
 export const AlertService = {
   async acknowledge(userId: string, alertId: string) {

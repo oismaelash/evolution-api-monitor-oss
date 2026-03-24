@@ -1,4 +1,4 @@
-import { AlertChannel, prisma, RetryStrategy } from '@pilot/database';
+import { AlertChannel, prisma, RetryStrategy } from '@monitor/database';
 import {
   AppError,
   buildPaginationMeta,
@@ -8,7 +8,7 @@ import {
   type CreateProjectInput,
   type ProjectConfigInput,
   type UpdateProjectInput,
-} from '@pilot/shared';
+} from '@monitor/shared';
 import { encryptForStorage } from '@/lib/encryption';
 
 async function ensureProjectOwned(userId: string, projectId: string) {

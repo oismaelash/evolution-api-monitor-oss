@@ -1,5 +1,5 @@
 ---
-name: pilot-status-billing
+name: monitor-billing
 description: >-
   Cobrança cloud: interface PaymentProvider (Stripe/Pague.dev), NoOp quando CLOUD_BILLING desligado,
   webhooks com assinatura e idempotência Redis, sync de quantidade com COUNT real, grace period. Use ao

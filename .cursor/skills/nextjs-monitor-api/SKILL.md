@@ -1,5 +1,5 @@
 ---
-name: nextjs-pilot-api
+name: nextjs-monitor-api
 description: >-
   Next.js 14 App Router no apps/api: handlers finos (auth → parse → service → JSON), NextAuth session,
   AppError, paginação { data, meta }. Use ao criar ou alterar app/api, middleware, lib de API, ou ao
@@ -11,7 +11,7 @@ description: >-
 ## Padrão de route handler
 
 1. **Auth primeiro** — `getServerSession(authOptions)`; sem `session.user.id` → 401.
-2. **Parse** — query/body com Zod/schemas de `@pilot/shared` onde existir.
+2. **Parse** — query/body com Zod/schemas de `@monitor/shared` onde existir.
 3. **Delegar** — `SomeService.method(session.user.id, …)`; zero regra de negócio no arquivo da rota.
 4. **Resposta** — JSON; erros `{ error: string }` (e `code` se `AppError`); paginação `{ data, meta: { page, limit, total, totalPages } }`.
 
@@ -19,7 +19,7 @@ description: >-
 
 - Não confiar em `userId` do cliente para ownership — checagem no **service**.
 - Não vazar mensagens cruas do Prisma ao cliente.
-- Não acoplar chamadas HTTP a Evolution nem Pilot Status no handler — usar serviços que já encapsulam integrações.
+- Não acoplar chamadas HTTP a Evolution nem ao provedor de alertas no handler — usar serviços que já encapsulam integrações.
 
 ## Erros
 

@@ -1,5 +1,5 @@
 ---
-name: prisma-pilot-database
+name: prisma-monitor-database
 description: >-
   Prisma em packages/database: singleton PrismaClient, queries com ownership por userId, paginação com take,
   migrations via migrate dev/deploy, encrypt/decrypt de campos sensíveis. Use ao alterar schema, services

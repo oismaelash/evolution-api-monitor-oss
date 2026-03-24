@@ -47,7 +47,7 @@ enum ErrorType {
 }
 
 enum AlertChannel {
-  PILOT_STATUS
+  MONITOR_STATUS
   EMAIL
   WEBHOOK
 }
@@ -145,7 +145,7 @@ model ProjectConfig {
   retryDelay      Int             @default(60)
   retryStrategy   RetryStrategy   @default(FIXED)
   alertCooldown   Int             @default(1800)
-  alertChannels   AlertChannel[]  @default([PILOT_STATUS])
+  alertChannels   AlertChannel[]  @default([MONITOR_STATUS])
   alertTemplate   String?
   smtpHost        String?
   smtpPort        Int?

@@ -23,7 +23,7 @@ envia tambem o numero do pairing code de conexao.
 tudo deve ter log, que a pessoa consiga filtrar os log por numero, ou projeto.
 
 
-iremos usar a Pilot Status, para enviar a mensagem no WhatsApp de alerta: https://pilotstatus.online/docs
+iremos usar o Monitor (API em https://pilotstatus.online/docs) para enviar a mensagem no WhatsApp de alerta
 
 A ideia é fazer o projeto open source, mas ter sua versao cloud.
 
@@ -35,7 +35,7 @@ apos trazer os numeros, quais numeros quer monitorar
 
 o tempo dos pings, quantidade de tentativas, delay entre tentativas, exponencial ou fixo.
 
-se deseja escolher um numero para enviar o alerta, e criar o template de alerta, caso ele nao use a Pilot Status, fallback de numero para enviar mensagem, sendo que por padrao, caso nao escolha o Pilot Status, o Pilot Status, é o ultimo fallback
+se deseja escolher um numero para enviar o alerta, e criar o template de alerta, caso ele nao use o Monitor, fallback de numero para enviar mensagem, sendo que por padrao, caso nao escolha o Monitor, o Monitor é o ultimo fallback
 
 e o que de mais para parametrizar.
 
@@ -168,7 +168,7 @@ Abstração de providers (ESSENCIAL pro seu modelo)
 
 Você tem:
 
-Pilot Status (alerta)
+Monitor (WhatsApp) (alerta)
 Stripe
 Pague.dev
 

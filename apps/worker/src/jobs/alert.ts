@@ -1,8 +1,8 @@
 import { Worker, type Job } from 'bullmq';
 import type IORedis from 'ioredis';
 import { randomUUID } from 'node:crypto';
-import { AlertChannel, ErrorType, LogLevel, prisma } from '@pilot/database';
-import { EvolutionClient, loadEnv } from '@pilot/shared';
+import { AlertChannel, ErrorType, LogLevel, prisma } from '@monitor/database';
+import { EvolutionClient, loadEnv } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
@@ -68,26 +68,26 @@ export function createAlertWorker(connection: IORedis) {
         const channels = cfg.alertChannels;
 
         for (const ch of channels) {
-          if (ch === AlertChannel.PILOT_STATUS && env.PILOT_STATUS_API_KEY && env.PILOT_STATUS_BASE_URL) {
+          if (ch === AlertChannel.MONITOR_STATUS && env.MONITOR_STATUS_API_KEY && env.MONITOR_STATUS_BASE_URL) {
             const dest = number.project.alertPhone ?? '';
             if (!dest) {
-              logJson('warn', 'alert_pilot_missing_phone', { numberId });
+              logJson('warn', 'alert_monitor_missing_phone', { numberId });
               continue;
             }
             const row = await prisma.alert.create({
               data: {
                 numberId,
-                channel: AlertChannel.PILOT_STATUS,
+                channel: AlertChannel.MONITOR_STATUS,
                 payload: payload as object,
               },
             });
             try {
-              const base = env.PILOT_STATUS_BASE_URL.replace(/\/$/, '');
+              const base = env.MONITOR_STATUS_BASE_URL.replace(/\/$/, '');
               const res = await fetch(`${base}/v1/messages/send`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'x-api-key': env.PILOT_STATUS_API_KEY,
+                  'x-api-key': env.MONITOR_STATUS_API_KEY,
                 },
                 body: JSON.stringify({
                   templateId: 'default',
@@ -99,7 +99,7 @@ export function createAlertWorker(connection: IORedis) {
               });
               if (!res.ok && res.status !== 202) {
                 const t = await res.text();
-                throw new Error(`pilot status ${res.status}: ${t}`);
+                throw new Error(`monitor status ${res.status}: ${t}`);
               }
               await prisma.alert.update({
                 where: { id: row.id },
@@ -111,7 +111,7 @@ export function createAlertWorker(connection: IORedis) {
                 where: { id: row.id },
                 data: { deliveryError: err.message },
               });
-              logJson('error', 'alert_pilot_failed', { numberId, message: err.message });
+              logJson('error', 'alert_monitor_failed', { numberId, message: err.message });
             }
           }
 

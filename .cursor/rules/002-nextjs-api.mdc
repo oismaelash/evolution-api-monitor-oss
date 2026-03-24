@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { ProjectService } from '@/services/project.service';
-import { createProjectSchema } from '@pilot/shared';
+import { createProjectSchema } from '@monitor/shared';
 
 export async function GET(req: NextRequest) {
   // 1. Auth — SEMPRE primeiro

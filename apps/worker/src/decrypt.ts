@@ -1,5 +1,5 @@
-import { decryptSecret } from '@pilot/shared';
-import { loadEnv } from '@pilot/shared';
+import { decryptSecret } from '@monitor/shared';
+import { loadEnv } from '@monitor/shared';
 
 export function decryptProjectSecret(cipher: string): string {
   const env = loadEnv();

@@ -16,8 +16,8 @@ export interface AlertProvider {
 }
 
 export type AlertProviderContext = {
-  pilotStatusApiKey?: string;
-  pilotStatusBaseUrl?: string;
+  monitorStatusApiKey?: string;
+  monitorStatusBaseUrl?: string;
   alertPhoneE164?: string;
   smtpHost?: string | null;
   smtpPort?: number | null;

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { prisma } from '@pilot/database';
+import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 

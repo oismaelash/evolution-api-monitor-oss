@@ -1,3 +1,3 @@
-import { loadEnv } from '@pilot/shared';
+import { loadEnv } from '@monitor/shared';
 
 loadEnv();

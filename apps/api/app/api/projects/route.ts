@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { ProjectService } from '@/services/project.service';
-import { parsePagination } from '@pilot/shared';
+import { parsePagination } from '@monitor/shared';
 import { toErrorResponse } from '@/lib/http';
 
 export async function GET(req: NextRequest) {

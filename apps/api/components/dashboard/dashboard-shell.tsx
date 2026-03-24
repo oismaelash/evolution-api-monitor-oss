@@ -22,7 +22,7 @@ export function DashboardShell({
   return (
     <div className="flex min-h-screen">
       <aside className="w-60 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-        <div className="mb-8 text-sm font-semibold text-[var(--color-accent)]">Pilot Monitor</div>
+        <div className="mb-8 text-sm font-semibold text-[var(--color-accent)]">Evolution Monitor</div>
         <nav className="flex flex-col gap-1">
           {nav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@pilot/shared', '@pilot/database'],
+  transpilePackages: ['@monitor/shared', '@monitor/database'],
 };
 
 export default nextConfig;

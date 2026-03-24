@@ -50,7 +50,7 @@ After dependencies are installed:
 
 ```bash
 npm run db:migrate
-# or: npm run migrate:dev --workspace=@pilot/database
+# or: npm run migrate:dev --workspace=@monitor/database
 ```
 
 Apply migrations in production with `prisma migrate deploy` from `packages/database`.

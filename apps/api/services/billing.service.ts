@@ -1,5 +1,5 @@
-import { loadEnv } from '@pilot/shared';
-import { prisma } from '@pilot/database';
+import { loadEnv } from '@monitor/shared';
+import { prisma } from '@monitor/database';
 
 export const BillingService = {
   async getSubscription(userId: string) {

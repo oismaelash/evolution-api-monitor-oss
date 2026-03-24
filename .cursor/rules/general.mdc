@@ -20,7 +20,7 @@ alwaysApply: false
 | `007-testing.mdc` | Vitest, factories, mock Redis, integração |
 | `008-billing.mdc` | PaymentProvider, webhooks, sync, grace period |
 | `009-evolution-api.mdc` | EvolutionClient, health check duplo, parsing, encoding |
-| `010-pilot-status-api.mdc` | API pública Pilot Status (WhatsApp), `x-api-key`, `/v1`, webhooks, opt-in |
+| `010-monitor-status-api.mdc` | Alertas WhatsApp (API pública em pilotstatus.online), `x-api-key`, `/v1`, webhooks, opt-in |
 | `011-git-commit-push.mdc` | Commit + push após trabalho relevante; exceções (sem remote, WIP) |
 
 Edite cada arquivo numerado para alterar as regras. Este arquivo (`general.mdc`) não substitui as regras — apenas documenta como usá-las.
@@ -36,13 +36,13 @@ Edite cada arquivo numerado para alterar as regras. Este arquivo (`general.mdc`)
 
 | Skill | Motivo |
 |---|---|
-| `pilot-status-monorepo` | Visão do monorepo, workspaces, regras absolutas, mapa dos demais skills |
-| `nextjs-pilot-api` | App Router em `apps/api`: rotas finas, session, paginação, erros |
-| `prisma-pilot-database` | Prisma em `packages/database`, migrations, ownership, criptografia |
+| `monitor-monorepo` | Visão do monorepo, workspaces, regras absolutas, mapa dos demais skills |
+| `nextjs-monitor-api` | App Router em `apps/api`: rotas finas, session, paginação, erros |
+| `prisma-monitor-database` | Prisma em `packages/database`, migrations, ownership, criptografia |
 | `worker-bullmq-redis` | BullMQ, Redis lock, logs JSON, `ErrorType`, state machine |
 | `evolution-api-integration` | `EvolutionClient`, health check duplo, sem Evolution no browser |
-| `pilot-status-billing` | `PaymentProvider`, webhooks, `CLOUD_BILLING`, sync de quantidade |
-| `pilot-status-api` | Contrato REST Pilot Status (alinhado a [llms.txt](https://pilotstatus.online/llms.txt)), alertas WhatsApp, webhooks |
+| `monitor-billing` | `PaymentProvider`, webhooks, `CLOUD_BILLING`, sync de quantidade |
+| `monitor-status-api` | Contrato REST do provedor (alinhado a [llms.txt](https://pilotstatus.online/llms.txt)), alertas WhatsApp, webhooks |
 | `tailwind-css` | Tailwind v4, `@theme`, acessibilidade, composição de classes |
 
 Lista curada da comunidade (Next, Stripe, Prisma oficiais, etc.): [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) — revisar segurança antes de instalar skills de terceiros; o comportamento deste repo segue `.cursor/rules/` e a tabela acima.

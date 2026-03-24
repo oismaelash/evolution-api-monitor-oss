@@ -20,7 +20,7 @@ export const projectConfigSchema = z.object({
   retryDelay: z.number().int().min(5).max(3600).optional(),
   retryStrategy: z.enum(['FIXED', 'EXPONENTIAL_JITTER']).optional(),
   alertCooldown: z.number().int().min(60).max(86400).optional(),
-  alertChannels: z.array(z.enum(['PILOT_STATUS', 'EMAIL', 'WEBHOOK'])).optional(),
+  alertChannels: z.array(z.enum(['MONITOR_STATUS', 'EMAIL', 'WEBHOOK'])).optional(),
   alertTemplate: z.string().nullable().optional(),
   smtpHost: z.string().nullable().optional(),
   smtpPort: z.number().int().nullable().optional(),

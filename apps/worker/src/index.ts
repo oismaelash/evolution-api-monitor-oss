@@ -1,4 +1,4 @@
-import { loadEnv } from '@pilot/shared';
+import { loadEnv } from '@monitor/shared';
 import IORedis from 'ioredis';
 import { createHealthCheckWorker } from './jobs/health-check.js';
 import { createRestartWorker } from './jobs/restart.js';

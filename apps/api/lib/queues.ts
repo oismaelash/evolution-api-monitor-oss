@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
-import { loadEnv } from '@pilot/shared';
+import { loadEnv } from '@monitor/shared';
 
 let connection: IORedis | null = null;
 

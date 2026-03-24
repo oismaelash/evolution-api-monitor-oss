@@ -45,7 +45,7 @@ export class EvolutionClient {
     private readonly opts?: { pingTimeoutMs?: number; restartTimeoutMs?: number }
   ) {}
 
-  private headers(): HeadersInit {
+  private headers(): Record<string, string> {
     return {
       apikey: this.apiKey,
       'Content-Type': 'application/json',

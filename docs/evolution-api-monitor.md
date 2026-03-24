@@ -60,10 +60,10 @@ Evolution API Monitor gives teams full observability and auto-healing for Evolut
 ### **F3 - Alert System**
 
 - Alert payload: instance name, project, error type, QR code (base64), pairing code
-- Channels: WhatsApp via Pilot Status (primary), SMTP/Gmail, platform webhook
+- Channels: WhatsApp via Monitor (primary), SMTP/Gmail, platform webhook
 - Alert cooldown: configurable per project (default: 30 minutes)
 - Alert template customization per project
-- Pilot Status is default fallback if no channel configured
+- Monitor is default fallback if no channel configured
 
 ### **F4 - Multi-Project & Multi-Number Management**
 
@@ -90,7 +90,7 @@ Evolution API Monitor gives teams full observability and auto-healing for Evolut
 | retryDelay     | Project   | 60s           | Wait time between restart and re-check        |
 | retryStrategy  | Project   | fixed         | fixed \| exponential_jitter                   |
 | alertCooldown  | Project   | 1800s (30min) | Min time between alerts per number            |
-| alertChannels  | Project   | pilot_status  | Comma-separated: pilot_status, email, webhook |
+| alertChannels  | Project   | monitor_status  | Comma-separated: monitor_status, email, webhook |
 | alertTemplate  | Project   | Default       | Custom message template with variables        |
 | pingTimeout    | Global    | 5s            | Timeout for connectionState + setPresence     |
 | restartTimeout | Global    | 10s           | Timeout for restart call                      |
@@ -287,7 +287,7 @@ Single PostgreSQL database. Every table that contains user data has a userId or 
 | Database       | PostgreSQL 15 + Prisma  | Persistent state for all entities                                            |
 | Cache / Queue  | Redis 7                 | BullMQ queues, distributed locks, alert cooldown keys                        |
 | Evolution API  | External (per project)  | WhatsApp session management (connectionState, setPresence, restart, connect) |
-| Pilot Status   | External SaaS           | WhatsApp alert delivery                                                      |
+| Monitor (WhatsApp)   | External SaaS           | WhatsApp alert delivery                                                      |
 | Stripe         | External SaaS           | Credit/debit card subscription billing                                       |
 | Pague.dev      | External SaaS           | PIX payment processing                                                       |
 
@@ -491,7 +491,7 @@ enum HealthStatus { HEALTHY UNHEALTHY }
 
 enum ErrorType { NETWORK_ERROR AUTH_ERROR INSTANCE_NOT_FOUND RATE_LIMIT UNKNOWN }
 
-enum AlertChannel { PILOT_STATUS EMAIL WEBHOOK }
+enum AlertChannel { MONITOR_STATUS EMAIL WEBHOOK }
 
 enum RetryStrategy { FIXED EXPONENTIAL_JITTER }
 
@@ -575,7 +575,7 @@ retryStrategy RetryStrategy @default(FIXED)
 
 alertCooldown Int @default(1800) // seconds
 
-alertChannels AlertChannel\[\] @default(\[PILOT_STATUS\])
+alertChannels AlertChannel\[\] @default(\[MONITOR_STATUS\])
 
 alertTemplate String? // Handlebars template
 
@@ -895,7 +895,7 @@ send(payload: AlertPayload, config: ProjectConfig): Promise&lt;void&gt;;
 
 // Implementations:
 
-// - PilotStatusAlertProvider (WhatsApp)
+// - MonitorStatusAlertProvider (WhatsApp)
 
 // - EmailAlertProvider (SMTP/Gmail)
 
@@ -1143,7 +1143,7 @@ Global layout: fixed left sidebar (240px) + main content area. No top navigation
 
 ### **/settings/integrations - Integrations**
 
-- Alert channel configuration: Pilot Status (WhatsApp number), Email (SMTP), Webhook URL
+- Alert channel configuration: Monitor (WhatsApp number), Email (SMTP), Webhook URL
 - Test alert button per channel
 - Template editor for WhatsApp/email alert message
 
@@ -1283,11 +1283,11 @@ ports: \['5432:5432'\]
 
 environment:
 
-POSTGRES_DB: pilot_dev
+POSTGRES_DB: monitor_dev
 
-POSTGRES_USER: pilot
+POSTGRES_USER: monitor
 
-POSTGRES_PASSWORD: pilot
+POSTGRES_PASSWORD: monitor
 
 volumes: \[postgres_data:/var/lib/postgresql/data\]
 
@@ -1307,7 +1307,7 @@ ports: \['3000:3000'\]
 
 environment:
 
-DATABASE_URL: postgresql://pilot:pilot@postgres:5432/pilot_dev
+DATABASE_URL: postgresql://monitor:monitor@postgres:5432/monitor_dev
 
 REDIS_URL: redis://redis:6379
 
@@ -1321,7 +1321,7 @@ volumes: \['./:/app', '/app/node_modules'\]
 
 environment:
 
-DATABASE_URL: postgresql://pilot:pilot@postgres:5432/pilot_dev
+DATABASE_URL: postgresql://monitor:monitor@postgres:5432/monitor_dev
 
 REDIS_URL: redis://redis:6379
 
@@ -1343,8 +1343,8 @@ depends_on: \[postgres, redis\]
 | STRIPE_SECRET_KEY     | api         | Cloud        | Stripe secret key (sk*live*\*)                                       |
 | STRIPE_WEBHOOK_SECRET | api         | Cloud        | Stripe webhook signing secret                                        |
 | PAGUE_DEV_API_KEY     | api         | Cloud        | Pague.dev API key                                                    |
-| PILOT_STATUS_API_KEY  | worker      | Yes          | Pilot Status API key for WhatsApp alerts                             |
-| PILOT_STATUS_INSTANCE | worker      | Yes          | Pilot Status sending instance name                                   |
+| MONITOR_STATUS_API_KEY  | worker      | Yes          | API key for WhatsApp alerts (pilotstatus.online)                             |
+| MONITOR_STATUS_INSTANCE | worker      | Yes          | Sending instance name for WhatsApp alerts                                   |
 | CLOUD_BILLING         | api, worker | No           | Set to 'true' to enable billing features                             |
 | ADMIN_EMAIL           | api         | No           | Email for system alerts and DLQ notifications                        |
 
@@ -1385,7 +1385,7 @@ Test utilities: packages/shared/src/test/ contains mock factories for Number, Pr
 | Health monitoring (5-min interval) | ✅ Yes                   | ✅ Yes           |
 | Custom ping interval               | ✅ Yes                   | ✅ Yes           |
 | Auto-restart cycle                 | ✅ Yes                   | ✅ Yes           |
-| WhatsApp alert (Pilot Status)      | ✅ Yes (own credentials) | ✅ Yes (managed) |
+| WhatsApp alert (Monitor)      | ✅ Yes (own credentials) | ✅ Yes (managed) |
 | Email alert (SMTP)                 | ✅ Yes                   | ✅ Yes           |
 | Webhook alert                      | ✅ Yes                   | ✅ Yes           |
 | Structured logs                    | ✅ Yes                   | ✅ Yes           |

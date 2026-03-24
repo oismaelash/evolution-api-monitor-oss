@@ -1,4 +1,4 @@
-import { decryptSecret, encryptSecret, loadEnv } from '@pilot/shared';
+import { decryptSecret, encryptSecret, loadEnv } from '@monitor/shared';
 
 export function encryptForStorage(plain: string): string {
   return encryptSecret(plain, loadEnv().ENCRYPTION_KEY);

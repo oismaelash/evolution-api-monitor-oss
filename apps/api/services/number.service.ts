@@ -1,11 +1,11 @@
-import { prisma } from '@pilot/database';
+import { prisma } from '@monitor/database';
 import {
   AppError,
   EvolutionClient,
   addNumberSchema,
   buildPaginationMeta,
   updateNumberSchema,
-} from '@pilot/shared';
+} from '@monitor/shared';
 import { decryptFromStorage } from '@/lib/encryption';
 
 async function ensureNumberOwned(userId: string, numberId: string) {

@@ -1,6 +1,6 @@
 ---
-name: Pilot Status Monitor completo
-overview: "Construir o restante do Pilot Status Monitor conforme o PRD em docs/evolution-api-monitor.md: packages (Prisma, shared, config), worker BullMQ, API de domínio, dashboard autenticado, alertas, billing opcional e DevOps. A landing pública em apps/api (grupo (marketing), componentes hero/features/OSS vs cloud/footer) já está pronta — o escopo abaixo começa pela fundação do monorepo e não inclui refazer marketing."
+name: Evolution API Monitor completo
+overview: "Construir o restante do Evolution API Monitor conforme o PRD em docs/evolution-api-monitor.md: packages (Prisma, shared, config), worker BullMQ, API de domínio, dashboard autenticado, alertas, billing opcional e DevOps. A landing pública em apps/api (grupo (marketing), componentes hero/features/OSS vs cloud/footer) já está pronta — o escopo abaixo começa pela fundação do monorepo e não inclui refazer marketing."
 todos:
   - id: landing-marketing
     content: Landing page marketing em apps/api (route (marketing), layout, hero, features, OSS vs cloud, header/footer)
@@ -24,7 +24,7 @@ todos:
     content: "apps/worker: filas, locks Redis, jobs health/restart/alert, state machine, logs JSON"
     status: completed
   - id: alert-providers
-    content: Pilot Status, email, webhook + cooldown Redis + templates (flags cloud)
+    content: Monitor (WhatsApp), email, webhook + cooldown Redis + templates (flags cloud)
     status: completed
   - id: frontend-product
     content: "Dashboard app: projects, numbers, logs, uptime (UI produto — distinta da landing já feita)"
@@ -38,7 +38,7 @@ todos:
 isProject: false
 ---
 
-# Plano: sistema Pilot Status Monitor (MVP + evolução)
+# Plano: sistema Evolution API Monitor (MVP + evolução)
 
 ## O que já está pronto
 
@@ -84,7 +84,7 @@ flowchart LR
   end
   subgraph external [External]
     Evo[Evolution API]
-    PS[Pilot Status API]
+    PS[Monitor (WhatsApp) API]
     Stripe[Stripe]
     Pague[Pague.dev]
   end
@@ -132,7 +132,7 @@ flowchart LR
 
 - NextAuth + `app/api/auth/[...nextauth]/route.ts`; providers conforme PRD.
 - Middleware: rotas públicas incluem a **landing** `(marketing)`; rotas `(dashboard)` protegidas.
-- Handlers finos: auth → parse → **service** → JSON ([nextjs-pilot-api skill](.cursor/skills/nextjs-pilot-api/SKILL.md)).
+- Handlers finos: auth → parse → **service** → JSON ([nextjs-monitor-api skill](.cursor/skills/nextjs-monitor-api/SKILL.md)).
 - Layout dashboard: sidebar, tokens seção 7 do doc — **novo layout**, reutilizando apenas tokens/componentes compartilhados se fizer sentido (não misturar hero da landing no app logado).
 
 **Entregável:** login + `/dashboard` vazio autenticado; `/` continua sendo a landing.
@@ -165,9 +165,9 @@ flowchart LR
 
 ---
 
-## Fase 6 — Alert providers e Pilot Status
+## Fase 6 — Alert providers e Monitor (WhatsApp)
 
-- `AlertProvider` em `packages/shared`; Pilot Status, email, webhook; cooldown Redis; templates se `CLOUD_ADVANCED_ALERTS` ([pilot-status-api skill](.cursor/skills/pilot-status-api/SKILL.md)).
+- `AlertProvider` em `packages/shared`; Monitor (WhatsApp), email, webhook; cooldown Redis; templates se `CLOUD_ADVANCED_ALERTS` ([monitor-status-api skill](.cursor/skills/monitor-status-api/SKILL.md)).
 
 **Entregável:** alerta e2e em staging.
 
@@ -184,7 +184,7 @@ flowchart LR
 
 ## Fase 8 — Billing cloud (feature-flag)
 
-- `CLOUD_BILLING`: Stripe + Pague.dev, webhooks, UI billing ([pilot-status-billing skill](.cursor/skills/pilot-status-billing/SKILL.md), [008-billing](.cursor/rules/008-billing.mdc)); OSS com `NoOpPaymentProvider`.
+- `CLOUD_BILLING`: Stripe + Pague.dev, webhooks, UI billing ([monitor-billing skill](.cursor/skills/monitor-billing/SKILL.md), [008-billing](.cursor/rules/008-billing.mdc)); OSS com `NoOpPaymentProvider`.
 
 ---
 
@@ -203,7 +203,7 @@ Conforme seções 10–11 do doc: API pública + webhooks outbound, equipe por p
 ## Riscos e dependências
 
 - Evolution v2.3 vs [postman collection](docs/Evolution%20API%20-%20v2.3.-.postman_collection.json).
-- Pilot Status: credenciais não-prod.
+- Monitor (WhatsApp): credenciais não-prod.
 - Jobs ↔ DB: alterar `pingInterval` / `monitored` deve atualizar repeatable jobs.
 
 ---

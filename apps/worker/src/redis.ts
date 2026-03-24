@@ -1,5 +1,5 @@
 import IORedis from 'ioredis';
-import { loadEnv } from '@pilot/shared';
+import { loadEnv } from '@monitor/shared';
 
 let redis: IORedis | null = null;
 

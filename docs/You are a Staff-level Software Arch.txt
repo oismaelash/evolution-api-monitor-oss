@@ -69,7 +69,7 @@ Alerts must include:
 
 Alert channels:
 
-* WhatsApp via Pilot Status (primary)
+* WhatsApp via Monitor (WhatsApp) (primary)
 * Email (SMTP, Gmail)
 * Webhook
 

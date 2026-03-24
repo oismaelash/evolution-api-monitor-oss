@@ -1,5 +1,5 @@
-import { prisma } from '@pilot/database';
-import { buildPaginationMeta, parsePagination } from '@pilot/shared';
+import { prisma } from '@monitor/database';
+import { buildPaginationMeta, parsePagination } from '@monitor/shared';
 
 export const LogService = {
   async listGlobal(

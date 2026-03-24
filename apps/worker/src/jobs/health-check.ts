@@ -7,8 +7,8 @@ import {
   LogLevel,
   NumberState,
   prisma,
-} from '@pilot/database';
-import { EvolutionClient, computeDelayMs, loadEnv, RetryStrategy as RetryStrategyConst } from '@pilot/shared';
+} from '@monitor/database';
+import { EvolutionClient, computeDelayMs, loadEnv, RetryStrategy as RetryStrategyConst } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';

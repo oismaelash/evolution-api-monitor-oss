@@ -46,7 +46,7 @@ export const ErrorType = {
 export type ErrorType = (typeof ErrorType)[keyof typeof ErrorType];
 
 export const AlertChannel = {
-  PILOT_STATUS: 'PILOT_STATUS',
+  MONITOR_STATUS: 'MONITOR_STATUS',
   EMAIL: 'EMAIL',
   WEBHOOK: 'WEBHOOK',
 } as const;

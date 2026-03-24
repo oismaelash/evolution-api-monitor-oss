@@ -22,24 +22,24 @@ const baseSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   PAGUE_DEV_WEBHOOK_SECRET: z.string().optional(),
-  PILOT_STATUS_API_KEY: z.string().optional(),
-  PILOT_STATUS_BASE_URL: z.string().url().optional(),
+  MONITOR_STATUS_API_KEY: z.string().optional(),
+  MONITOR_STATUS_BASE_URL: z.string().url().optional(),
 });
 
-export type PilotEnv = z.infer<typeof baseSchema> & {
+export type MonitorEnv = z.infer<typeof baseSchema> & {
   CLOUD_BILLING: boolean;
   CLOUD_ADVANCED_ALERTS: boolean;
   CLOUD_EXPONENTIAL_RETRY: boolean;
 };
 
-let cached: PilotEnv | null = null;
+let cached: MonitorEnv | null = null;
 
-export function loadEnv(overrides?: Record<string, string | undefined>): PilotEnv {
+export function loadEnv(overrides?: Record<string, string | undefined>): MonitorEnv {
   if (cached && !overrides) {
     return cached;
   }
   const merged = { ...process.env, ...overrides } as Record<string, string | undefined>;
-  cached = baseSchema.parse(merged) as PilotEnv;
+  cached = baseSchema.parse(merged) as MonitorEnv;
   return cached;
 }
 

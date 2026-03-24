@@ -32,7 +32,7 @@ A Evolution costuma devolver JSON onde o estado aparece em **`instance.state`** 
 }
 ```
 
-Valores comuns de estado (normalmente **case-insensitive** na prática; o Pilot normaliza para maiúsculas):
+Valores comuns de estado (normalmente **case-insensitive** na prática; o Monitor normaliza para maiúsculas):
 
 | Estado (exemplos) | Significado usual |
 |-------------------|-------------------|
@@ -40,7 +40,7 @@ Valores comuns de estado (normalmente **case-insensitive** na prática; o Pilot 
 | `close` | Desconectado |
 | `connecting` | Em processo de conexão (QR, etc.) |
 
-No código do Pilot, `CONNECTING` é tratado como **ainda não conectado** para evitar falso positivo antes da checagem de presença.
+No código do Monitor, `CONNECTING` é tratado como **ainda não conectado** para evitar falso positivo antes da checagem de presença.
 
 Erros HTTP e corpos de erro seguem o padrão da sua instalação Evolution (ex.: `400`, `404`, JSON com `message` / `error`).
 
@@ -64,13 +64,13 @@ Quando **`{instanceName}`** não existe nesse servidor Evolution (nome errado, i
 - Confira se o nome na URL está **idêntico** ao cadastrado na Evolution (incluindo espaços e maiúsculas) e se está **URL-encoded** no path.
 - Nos fluxos do **worker** (`connectionState` / `setPresence`), esse padrão de 404 (`not found` + `does not exist` no corpo) é tratado como estado lógico **`not_found`** ou presença inválida — não como sessão aberta.
 
-Os mesmos endpoints de **seção 2** e **seção 3** podem retornar **404** em situações análogas (instância inexistente); o backend do Pilot pode propagar isso como erro de rede/Evolution (ex.: `502` na API interna) em vez de um JSON “sucesso”.
+Os mesmos endpoints de **seção 2** e **seção 3** podem retornar **404** em situações análogas (instância inexistente); o backend do Monitor pode propagar isso como erro de rede/Evolution (ex.: `502` na API interna) em vez de um JSON “sucesso”.
 
 ---
 
 ## 2. Presença (`setPresence`) — checagem adicional
 
-Alguns fluxos chamam este endpoint depois que `connectionState` indica `open`, para confirmar que a sessão responde de fato (o Pilot só considera “conectado” se a resposta for **201** e o corpo **não** indicar desconexão).
+Alguns fluxos chamam este endpoint depois que `connectionState` indica `open`, para confirmar que a sessão responde de fato (o Monitor só considera “conectado” se a resposta for **201** e o corpo **não** indicar desconexão).
 
 | | |
 |---|---|
@@ -104,7 +104,7 @@ HTTP **201** com corpo do tipo:
 }
 ```
 
-O Pilot trata como falha de “presença ok” se o status **não** for `201` ou se o texto da resposta contiver `"close"` (comparação case-insensitive), e nesse caso a instância é considerada desconectada para aquele fluxo.
+O Monitor trata como falha de “presença ok” se o status **não** for `201` ou se o texto da resposta contiver `"close"` (comparação case-insensitive), e nesse caso a instância é considerada desconectada para aquele fluxo.
 
 ---
 
@@ -127,7 +127,7 @@ GET {base}/instance/connect/Nome%20Da%20Instancia?number=5511999999999
 apikey: ***
 ```
 
-(No worker de notificação de desconexão o Pilot monta essa URL com `number` para pairing.)
+(No worker de notificação de desconexão o Monitor monta essa URL com `number` para pairing.)
 
 ### Response (200) — exemplo real do repositório
 
@@ -147,7 +147,7 @@ apikey: ***
 | `base64` | Imagem do QR (às vezes já com prefixo `data:image/png;base64,`) |
 | `count` | Contador retornado pela API neste exemplo |
 
-O backend do Pilot lê o QR de `base64` ou, em alguns casos, de `qrcode.base64` (compatibilidade entre formatos de resposta).
+O backend do Monitor lê o QR de `base64` ou, em alguns casos, de `qrcode.base64` (compatibilidade entre formatos de resposta).
 
 Se **`{instanceName}`** não existir, a Evolution pode responder **404** (corpo sem QR / mensagem de instância inexistente) em vez de **200** — mesmo padrão de erro descrito na seção **Instância não encontrada (404)** acima.
 

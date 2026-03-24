@@ -1,8 +1,8 @@
 import { Queue, Worker, type Job } from 'bullmq';
 import type IORedis from 'ioredis';
 import { randomUUID } from 'node:crypto';
-import { LogLevel, NumberState, prisma } from '@pilot/database';
-import { EvolutionClient } from '@pilot/shared';
+import { LogLevel, NumberState, prisma } from '@monitor/database';
+import { EvolutionClient } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';

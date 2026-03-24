@@ -4,11 +4,11 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: pilot_status
+      POSTGRES_DB: monitor_status
     ports:
       - "5432:5432"
     volumes:
-      - pilot_pgdata:/var/lib/postgresql/data
+      - monitor_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -38,7 +38,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pilot_status?schema=public
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monitor_status?schema=public
       REDIS_URL: redis://redis:6379
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
@@ -52,4 +52,4 @@ services:
     command: npm run dev --workspace=api
 
 volumes:
-  pilot_pgdata:
+  monitor_pgdata:

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
-import { AppError } from '@pilot/shared';
+import { AppError } from '@monitor/shared';
 
 export function toErrorResponse(e: unknown): NextResponse {
   if (e instanceof ZodError) {

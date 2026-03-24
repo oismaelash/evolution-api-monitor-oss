@@ -1,5 +1,5 @@
 ---
-name: pilot-status-monorepo
+name: monitor-monorepo
 description: >-
   Contexto do monorepo Evolution API Monitor (npm workspaces): apps/api Next.js 14, apps/worker BullMQ,
   packages/database Prisma, shared/config. Regras absolutas (session, Evolution só no servidor, Redis lock,
@@ -41,12 +41,12 @@ SaaS + open source para monitorar instâncias WhatsApp via Evolution API: usuár
 
 | Skill | Uso |
 |-------|-----|
-| `nextjs-pilot-api` | App Router, rotas finas, auth |
-| `prisma-pilot-database` | Prisma em `packages/database` |
+| `nextjs-monitor-api` | App Router, rotas finas, auth |
+| `prisma-monitor-database` | Prisma em `packages/database` |
 | `worker-bullmq-redis` | Jobs, lock, state machine |
 | `evolution-api-integration` | `EvolutionClient`, health check duplo |
-| `pilot-status-billing` | `PaymentProvider`, webhooks |
-| `pilot-status-api` | API pública Pilot Status (alertas WhatsApp) |
+| `monitor-billing` | `PaymentProvider`, webhooks |
+| `monitor-status-api` | Contrato REST do provedor (alertas WhatsApp) |
 | `tailwind-css` | UI Tailwind v4 |
 
 ## Ecossistema externo (curadoria)
