@@ -1,10 +1,14 @@
-# Dev image: Next.js with dependencies installed (hot reload via bind mount in compose)
+# Dev image: monorepo dependencies (hot reload via bind mount in compose)
 FROM node:20-bookworm-slim
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
+COPY apps/worker/package.json ./apps/worker/
+COPY packages/config/package.json ./packages/config/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/database/package.json ./packages/database/
 
 RUN npm ci
 

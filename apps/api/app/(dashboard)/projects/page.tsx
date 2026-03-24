@@ -1,0 +1,54 @@
+import Link from 'next/link';
+import { prisma } from '@pilot/database';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+
+export default async function ProjectsPage() {
+  const session = await getServerSession(authOptions);
+  const userId = session!.user!.id;
+  const projects = await prisma.project.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      _count: { select: { numbers: true } },
+    },
+  });
+
+  return (
+    <div>
+      <h1 className="mb-2 text-2xl font-semibold">Projects</h1>
+      <p className="mb-6 text-[var(--color-text-muted)]" suppressHydrationWarning>
+        Manage Evolution servers and monitored numbers.
+      </p>
+      <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
+            <tr>
+              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2">Numbers</th>
+              <th className="px-4 py-2">Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {projects.map((p) => (
+              <tr key={p.id} className="border-t border-[var(--color-border)]">
+                <td className="px-4 py-2">
+                  <Link
+                    href={`/projects/${p.id}`}
+                    className="font-medium text-[var(--color-accent)] hover:underline"
+                  >
+                    {p.name}
+                  </Link>
+                </td>
+                <td className="px-4 py-2">{p._count.numbers}</td>
+                <td className="px-4 py-2 text-[var(--color-text-muted)]">
+                  {p.updatedAt.toISOString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

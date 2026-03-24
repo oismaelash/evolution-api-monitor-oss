@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PAID
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+}
+
+enum NumberState {
+  CONNECTED
+  DISCONNECTED
+  CONNECTING
+  RESTARTING
+  ERROR
+}
+
+enum HealthStatus {
+  HEALTHY
+  UNHEALTHY
+}
+
+enum ErrorType {
+  NETWORK_ERROR
+  AUTH_ERROR
+  INSTANCE_NOT_FOUND
+  RATE_LIMIT
+  UNKNOWN
+}
+
+enum AlertChannel {
+  PILOT_STATUS
+  EMAIL
+  WEBHOOK
+}
+
+enum RetryStrategy {
+  FIXED
+  EXPONENTIAL_JITTER
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String?   @unique
+  emailVerified    DateTime?
+  passwordHash     String?
+  name             String?
+  image            String?
+  whatsappNumber   String?   @unique
+  role             UserRole  @default(USER)
+  plan             Plan      @default(FREE)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  projects         Project[]
+  subscription     Subscription?
+  accounts         Account[]
+  sessions         Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Project {
+  id               String         @id @default(cuid())
+  userId           String
+  name             String
+  evolutionUrl     String
+  evolutionApiKey  String
+  alertPhone       String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  numbers          Number[]
+  config           ProjectConfig?
+  logs             Log[]
+
+  @@index([userId])
+}
+
+model ProjectConfig {
+  id              String          @id @default(cuid())
+  projectId       String          @unique
+  pingInterval    Int             @default(300)
+  maxRetries      Int             @default(2)
+  retryDelay      Int             @default(60)
+  retryStrategy   RetryStrategy   @default(FIXED)
+  alertCooldown   Int             @default(1800)
+  alertChannels   AlertChannel[]  @default([PILOT_STATUS])
+  alertTemplate   String?
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPass        String?
+  webhookUrl      String?
+  webhookSecret   String?
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Number {
+  id             String       @id @default(cuid())
+  projectId      String
+  instanceName   String
+  phoneNumber    String?
+  label          String?
+  state          NumberState  @default(DISCONNECTED)
+  failureCount   Int          @default(0)
+  monitored      Boolean      @default(true)
+  lastHealthyAt  DateTime?
+  lastCheckedAt  DateTime?
+  lastAlertSentAt DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  healthChecks   HealthCheck[]
+  alerts         Alert[]
+  logs           Log[]
+
+  @@unique([projectId, instanceName])
+  @@index([projectId])
+  @@index([state])
+}
+
+model HealthCheck {
+  id             String       @id @default(cuid())
+  numberId       String
+  status         HealthStatus
+  errorType      ErrorType?
+  errorMessage   String?
+  responseTimeMs Int?
+  rawResponse    Json?
+  checkedAt      DateTime     @default(now())
+  number         Number       @relation(fields: [numberId], references: [id], onDelete: Cascade)
+
+  @@index([numberId, checkedAt])
+}
+
+model Alert {
+  id             String        @id @default(cuid())
+  numberId       String
+  channel        AlertChannel
+  payload        Json
+  delivered      Boolean       @default(false)
+  deliveryError  String?
+  sentAt         DateTime      @default(now())
+  acknowledgedAt DateTime?
+  number         Number        @relation(fields: [numberId], references: [id], onDelete: Cascade)
+
+  @@index([numberId, sentAt])
+}
+
+model Log {
+  id        String    @id @default(cuid())
+  numberId  String?
+  projectId String?
+  level     LogLevel
+  event     String
+  errorType ErrorType?
+  meta      Json?
+  createdAt DateTime  @default(now())
+  number    Number?   @relation(fields: [numberId], references: [id], onDelete: SetNull)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([numberId, createdAt])
+  @@index([projectId, createdAt])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?
+  pagueDevCustomerId   String?
+  status               SubscriptionStatus @default(TRIALING)
+  trialEndsAt          DateTime?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  activeNumbers        Int                @default(0)
+  monthlyAmountCents   Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

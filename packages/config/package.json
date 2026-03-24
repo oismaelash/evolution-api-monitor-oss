@@ -1,0 +1,10 @@
+{
+  "name": "@pilot/config",
+  "version": "0.0.1",
+  "private": true,
+  "files": ["tsconfig.base.json", "eslint-next.cjs"],
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./eslint-next": "./eslint-next.cjs"
+  }
+}
