@@ -1,7 +1,14 @@
 import Link from 'next/link';
+import type { HealthStatus } from '@prisma/client';
 import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+
+type StatusAgg = { status: HealthStatus; _count: { _all: number } };
+
+function bucketHour(ts: Date): number {
+  return Math.floor(ts.getTime() / (60 * 60 * 1000));
+}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -16,6 +23,56 @@ export default async function DashboardPage() {
       where: { project: { userId }, state: 'ERROR' },
     }),
   ]);
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const checks = await prisma.healthCheck.findMany({
+    where: { number: { project: { userId } }, checkedAt: { gte: since } },
+    select: { checkedAt: true, status: true },
+    orderBy: { checkedAt: 'asc' },
+    take: 5000,
+  });
+
+  const buckets = new Map<number, { ok: number; fail: number }>();
+  for (const c of checks) {
+    const b = bucketHour(c.checkedAt);
+    const cur = buckets.get(b) ?? { ok: 0, fail: 0 };
+    if (c.status === 'HEALTHY') cur.ok += 1;
+    else cur.fail += 1;
+    buckets.set(b, cur);
+  }
+  const chartBuckets: { label: string; ok: number; fail: number }[] = [];
+  const now = Date.now();
+  for (let i = 23; i >= 0; i--) {
+    const t = new Date(now - i * 60 * 60 * 1000);
+    const b = bucketHour(t);
+    const v = buckets.get(b) ?? { ok: 0, fail: 0 };
+    chartBuckets.push({
+      label: `${t.getHours().toString().padStart(2, '0')}h`,
+      ok: v.ok,
+      fail: v.fail,
+    });
+  }
+
+  const uptimeRows = await Promise.all(
+    (
+      await prisma.number.findMany({
+        where: { project: { userId } },
+        select: { id: true, instanceName: true },
+        take: 20,
+      })
+    ).map(async (n: { id: string; instanceName: string }) => {
+      const u24 = (await prisma.healthCheck.groupBy({
+        by: ['status'],
+        where: { numberId: n.id, checkedAt: { gte: since } },
+        _count: { _all: true },
+      })) as StatusAgg[];
+      const ok = u24.find((r: StatusAgg) => r.status === 'HEALTHY')?._count._all ?? 0;
+      const bad = u24.find((r: StatusAgg) => r.status === 'UNHEALTHY')?._count._all ?? 0;
+      const tot = ok + bad;
+      const pct = tot === 0 ? 100 : Math.round((ok / tot) * 1000) / 10;
+      return { id: n.id, name: n.instanceName, pct };
+    })
+  );
 
   const recentAlerts = await prisma.alert.findMany({
     where: { number: { project: { userId } } },
@@ -42,6 +99,75 @@ export default async function DashboardPage() {
           <div className="text-2xl font-semibold text-[var(--color-error)]">{errors}</div>
         </div>
       </div>
+
+      <h2 className="mb-4 text-lg font-medium">Health checks (24h)</h2>
+      <div className="mb-10 flex h-40 items-end gap-0.5 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        {chartBuckets.map((row) => {
+          const max = Math.max(1, ...chartBuckets.map((r) => r.ok + r.fail));
+          const hOk = (row.ok / max) * 100;
+          const hFail = (row.fail / max) * 100;
+          return (
+            <div key={row.label} className="flex min-w-[10px] flex-1 flex-col items-center gap-1">
+              <div className="flex w-full flex-1 flex-col justify-end gap-px">
+                <div
+                  className="w-full rounded-sm bg-[var(--color-success)]"
+                  style={{ height: `${hOk}%`, minHeight: row.ok ? 2 : 0 }}
+                  title={`${row.ok} healthy`}
+                />
+                <div
+                  className="w-full rounded-sm bg-[var(--color-error)]"
+                  style={{ height: `${hFail}%`, minHeight: row.fail ? 2 : 0 }}
+                  title={`${row.fail} unhealthy`}
+                />
+              </div>
+              <span className="text-[10px] text-[var(--color-text-muted)]">{row.label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      <h2 className="mb-4 text-lg font-medium">Uptime (24h) by number</h2>
+      <div className="mb-10 overflow-hidden rounded-lg border border-[var(--color-border)]">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
+            <tr>
+              <th className="px-4 py-2">Instance</th>
+              <th className="px-4 py-2">Uptime</th>
+            </tr>
+          </thead>
+          <tbody>
+            {uptimeRows.length === 0 ? (
+              <tr>
+                <td className="px-4 py-4 text-[var(--color-text-muted)]" colSpan={2}>
+                  No numbers yet.
+                </td>
+              </tr>
+            ) : (
+              uptimeRows.map((u) => (
+                <tr key={u.id} className="border-t border-[var(--color-border)]">
+                  <td className="px-4 py-2">
+                    <Link href={`/numbers/${u.id}`} className="text-[var(--color-accent)] hover:underline">
+                      {u.name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 flex-1 max-w-xs overflow-hidden rounded-full bg-[var(--color-border)]">
+                        <div
+                          className="h-full bg-[var(--color-success)]"
+                          style={{ width: `${u.pct}%` }}
+                        />
+                      </div>
+                      <span className="text-[var(--color-text-muted)]">{u.pct}%</span>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
       <h2 className="mb-4 text-lg font-medium">Recent alerts</h2>
       <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
         <table className="w-full text-left text-sm">
@@ -60,7 +186,7 @@ export default async function DashboardPage() {
                 </td>
               </tr>
             ) : (
-              recentAlerts.map((a) => (
+              recentAlerts.map((a: (typeof recentAlerts)[number]) => (
                 <tr key={a.id} className="border-t border-[var(--color-border)]">
                   <td className="px-4 py-2">{a.sentAt.toISOString()}</td>
                   <td className="px-4 py-2">

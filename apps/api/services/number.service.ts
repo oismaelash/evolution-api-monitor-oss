@@ -7,6 +7,7 @@ import {
   updateNumberSchema,
 } from '@monitor/shared';
 import { decryptFromStorage } from '@/lib/encryption';
+import { BillingSyncService } from '@/services/billing-sync.service';
 
 async function ensureNumberOwned(userId: string, numberId: string) {
   const n = await prisma.number.findFirst({
@@ -100,6 +101,7 @@ export const NumberService = {
         await upsertHealthSchedule(n.id, ping);
       }
     }
+    await BillingSyncService.syncActiveNumberCount(userId);
     return { synced: names.length, created };
   },
 
@@ -120,12 +122,14 @@ export const NumberService = {
         label: parsed.label,
         monitored: parsed.monitored ?? true,
       },
+      include: { project: true },
     });
     if (n.monitored) {
       const ping = project.config?.pingInterval ?? 300;
       const { upsertHealthSchedule } = await import('@/lib/queues');
       await upsertHealthSchedule(n.id, ping);
     }
+    await BillingSyncService.syncActiveNumberCount(userId);
     return n;
   },
 
@@ -152,6 +156,7 @@ export const NumberService = {
     } else {
       await removeHealthSchedule(updated.id);
     }
+    await BillingSyncService.syncActiveNumberCount(userId);
     return updated;
   },
 
@@ -160,6 +165,7 @@ export const NumberService = {
     const { removeHealthSchedule } = await import('@/lib/queues');
     await removeHealthSchedule(numberId);
     await prisma.number.delete({ where: { id: numberId } });
+    await BillingSyncService.syncActiveNumberCount(userId);
   },
 
   async restart(userId: string, numberId: string) {
@@ -195,8 +201,9 @@ export const NumberService = {
       where: { numberId, checkedAt: { gte: from } },
       _count: { _all: true },
     });
-    const healthy = rows.find((r) => r.status === 'HEALTHY')?._count._all ?? 0;
-    const unhealthy = rows.find((r) => r.status === 'UNHEALTHY')?._count._all ?? 0;
+    type Row = { status: string; _count: { _all: number } };
+    const healthy = rows.find((r: Row) => r.status === 'HEALTHY')?._count._all ?? 0;
+    const unhealthy = rows.find((r: Row) => r.status === 'UNHEALTHY')?._count._all ?? 0;
     const total = healthy + unhealthy;
     const percent = total === 0 ? 100 : Math.round((healthy / total) * 1000) / 10;
     return { period, healthy, unhealthy, total, percent };

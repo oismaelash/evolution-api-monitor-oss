@@ -46,7 +46,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                 </td>
               </tr>
             ) : (
-              project.numbers.map((n) => (
+              project.numbers.map((n: (typeof project.numbers)[number]) => (
                 <tr key={n.id} className="border-t border-[var(--color-border)]">
                   <td className="px-4 py-2">
                     <Link

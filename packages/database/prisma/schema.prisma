@@ -147,6 +147,8 @@ model ProjectConfig {
   alertCooldown   Int             @default(1800)
   alertChannels   AlertChannel[]  @default([MONITOR_STATUS])
   alertTemplate   String?
+  alertEmail      String?
+  smtpFrom        String?
   smtpHost        String?
   smtpPort        Int?
   smtpUser        String?
@@ -164,6 +166,7 @@ model Number {
   label          String?
   state          NumberState  @default(DISCONNECTED)
   failureCount   Int          @default(0)
+  restartAttempts Int         @default(0)
   monitored      Boolean      @default(true)
   lastHealthyAt  DateTime?
   lastCheckedAt  DateTime?
@@ -235,6 +238,7 @@ model Subscription {
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean            @default(false)
+  pastDueGraceEndsAt   DateTime?
   activeNumbers        Int                @default(0)
   monthlyAmountCents   Int                @default(0)
   createdAt            DateTime           @default(now())

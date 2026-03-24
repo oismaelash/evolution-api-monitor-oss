@@ -1,0 +1,74 @@
+'use client';
+
+import { useState } from 'react';
+
+export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) {
+  const [loading, setLoading] = useState<'checkout' | 'portal' | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function checkout() {
+    setLoading('checkout');
+    setErr(null);
+    try {
+      const res = await fetch('/api/billing/checkout', { method: 'POST' });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok) {
+        setErr(data.error ?? 'Checkout failed');
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setErr('No checkout URL');
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  async function portal() {
+    setLoading('portal');
+    setErr(null);
+    try {
+      const res = await fetch('/api/billing/portal', { method: 'POST' });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok) {
+        setErr(data.error ?? 'Portal failed');
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setErr('No portal URL');
+    } finally {
+      setLoading(null);
+    }
+  }
+
+  if (!billingEnabled) {
+    return null;
+  }
+
+  return (
+    <div className="mt-6 flex flex-wrap gap-3">
+      <button
+        type="button"
+        onClick={() => void checkout()}
+        disabled={loading !== null}
+        className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+      >
+        {loading === 'checkout' ? 'Redirecting…' : 'Open checkout (Stripe)'}
+      </button>
+      <button
+        type="button"
+        onClick={() => void portal()}
+        disabled={loading !== null}
+        className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] disabled:opacity-60"
+      >
+        {loading === 'portal' ? 'Redirecting…' : 'Billing portal'}
+      </button>
+      {err ? <p className="w-full text-sm text-[var(--color-error)]">{err}</p> : null}
+    </div>
+  );
+}

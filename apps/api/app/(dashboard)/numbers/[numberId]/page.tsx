@@ -41,7 +41,7 @@ export default async function NumberDetailPage({ params }: Props) {
             </tr>
           </thead>
           <tbody>
-            {checks.map((c) => (
+            {checks.map((c: (typeof checks)[number]) => (
               <tr key={c.id} className="border-t border-[var(--color-border)]">
                 <td className="px-4 py-2">{c.checkedAt.toISOString()}</td>
                 <td className="px-4 py-2">{c.status}</td>

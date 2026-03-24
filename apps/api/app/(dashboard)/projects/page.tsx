@@ -30,7 +30,7 @@ export default async function ProjectsPage() {
             </tr>
           </thead>
           <tbody>
-            {projects.map((p) => (
+            {projects.map((p: (typeof projects)[number]) => (
               <tr key={p.id} className="border-t border-[var(--color-border)]">
                 <td className="px-4 py-2">
                   <Link

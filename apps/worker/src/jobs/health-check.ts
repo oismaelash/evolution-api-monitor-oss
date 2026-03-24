@@ -7,8 +7,16 @@ import {
   LogLevel,
   NumberState,
   prisma,
+  SubscriptionStatus,
 } from '@monitor/database';
-import { EvolutionClient, computeDelayMs, loadEnv, RetryStrategy as RetryStrategyConst } from '@monitor/shared';
+import {
+  EvolutionClient,
+  FAILURES_BEFORE_RESTART,
+  computeDelayMs,
+  getEvolutionTimeoutsMs,
+  loadEnv,
+  RetryStrategy as RetryStrategyConst,
+} from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
@@ -16,8 +24,6 @@ import { decryptProjectSecret } from '../decrypt.js';
 
 export type HealthCheckJobData = { numberId: string };
 
-const PING_TIMEOUT = 5000;
-const RESTART_TIMEOUT = 10_000;
 const LOCK_TTL_SEC = 60;
 
 function prismaErrorFromString(code: string): ErrorType {
@@ -26,6 +32,28 @@ function prismaErrorFromString(code: string): ErrorType {
   if (code === 'INSTANCE_NOT_FOUND') return ErrorType.INSTANCE_NOT_FOUND;
   if (code === 'RATE_LIMIT') return ErrorType.RATE_LIMIT;
   return ErrorType.UNKNOWN;
+}
+
+function shouldSkipHealthForBilling(
+  cloudBilling: boolean,
+  sub: { status: SubscriptionStatus; currentPeriodEnd: Date | null; pastDueGraceEndsAt: Date | null } | null
+): boolean {
+  if (!cloudBilling) return false;
+  if (!sub) return false;
+  if (sub.status === SubscriptionStatus.UNPAID) {
+    return true;
+  }
+  if (sub.status === SubscriptionStatus.CANCELED && sub.currentPeriodEnd && sub.currentPeriodEnd < new Date()) {
+    return true;
+  }
+  if (
+    sub.status === SubscriptionStatus.PAST_DUE &&
+    sub.pastDueGraceEndsAt &&
+    new Date() > sub.pastDueGraceEndsAt
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function createHealthCheckWorker(connection: IORedis) {
@@ -60,16 +88,26 @@ export function createHealthCheckWorker(connection: IORedis) {
         }
 
         const env = loadEnv();
-        const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, {
-          pingTimeoutMs: PING_TIMEOUT,
-          restartTimeoutMs: RESTART_TIMEOUT,
+        const sub = await prisma.subscription.findUnique({
+          where: { userId: number.project.userId },
+          select: { status: true, currentPeriodEnd: true, pastDueGraceEndsAt: true },
         });
+        if (shouldSkipHealthForBilling(env.CLOUD_BILLING, sub)) {
+          logJson('info', 'health_check_skipped_billing', { numberId, status: sub?.status });
+          return;
+        }
+
+        const timeouts = getEvolutionTimeoutsMs();
+        const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
+        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, timeouts);
 
         const result = await client.checkHealth(number.instanceName);
         const checkedAt = new Date();
 
         if (result.ok) {
+          const shouldNotifyResolved =
+            number.lastAlertSentAt != null &&
+            (!number.lastHealthyAt || number.lastHealthyAt < number.lastAlertSentAt);
           await prisma.$transaction([
             prisma.healthCheck.create({
               data: {
@@ -85,6 +123,7 @@ export function createHealthCheckWorker(connection: IORedis) {
               data: {
                 state: NumberState.CONNECTED,
                 failureCount: 0,
+                restartAttempts: 0,
                 lastHealthyAt: checkedAt,
                 lastCheckedAt: checkedAt,
               },
@@ -99,6 +138,15 @@ export function createHealthCheckWorker(connection: IORedis) {
               },
             }),
           ]);
+          if (shouldNotifyResolved) {
+            const alertQueue = new Queue('alert', { connection });
+            await alertQueue.add(
+              'alert-resolved',
+              { numberId },
+              { attempts: 2, removeOnComplete: true }
+            );
+            logJson('info', 'alert_resolved_enqueued', { numberId });
+          }
           return;
         }
 
@@ -131,21 +179,26 @@ export function createHealthCheckWorker(connection: IORedis) {
             level: LogLevel.WARN,
             event: 'health_check_failed',
             errorType: prismaEt,
-            meta: { failureCount: newCount },
+            meta: { failureCount: newCount, restartAttempts: number.restartAttempts },
           },
         });
 
         if (prismaEt === ErrorType.AUTH_ERROR || prismaEt === ErrorType.INSTANCE_NOT_FOUND) {
           await prisma.number.update({
             where: { id: numberId },
-            data: { state: NumberState.ERROR },
+            data: { state: NumberState.ERROR, restartAttempts: 0 },
           });
           const alertQueue = new Queue('alert', { connection });
           await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
           return;
         }
 
-        if (newCount >= config.maxRetries) {
+        if (newCount < FAILURES_BEFORE_RESTART) {
+          return;
+        }
+
+        const restartAttempts = number.restartAttempts;
+        if (restartAttempts >= config.maxRetries) {
           await prisma.number.update({
             where: { id: numberId },
             data: { state: NumberState.ERROR },
@@ -154,6 +207,12 @@ export function createHealthCheckWorker(connection: IORedis) {
           await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
           return;
         }
+
+        const nextRestartAttempts = restartAttempts + 1;
+        await prisma.number.update({
+          where: { id: numberId },
+          data: { restartAttempts: nextRestartAttempts },
+        });
 
         const useJitter = env.CLOUD_EXPONENTIAL_RETRY;
         const strategy = useJitter
@@ -162,7 +221,7 @@ export function createHealthCheckWorker(connection: IORedis) {
         const delayMs = computeDelayMs({
           retryStrategy: strategy,
           retryDelayMs: config.retryDelay * 1000,
-          attempt: newCount,
+          attempt: nextRestartAttempts,
         });
 
         const restartQueue = new Queue('restart', { connection });
@@ -171,7 +230,12 @@ export function createHealthCheckWorker(connection: IORedis) {
           { numberId },
           { delay: delayMs, jobId: `restart:${numberId}:${Date.now()}` }
         );
-        logJson('info', 'restart_enqueued', { numberId, delayMs, failureCount: newCount });
+        logJson('info', 'restart_enqueued', {
+          numberId,
+          delayMs,
+          failureCount: newCount,
+          restartAttempt: nextRestartAttempts,
+        });
       } catch (e) {
         const err = e as Error;
         logJson('error', 'health_check_job_failed', {

@@ -1,4 +1,5 @@
-import { AlertChannel, prisma, RetryStrategy } from '@monitor/database';
+import { prisma } from '@monitor/database';
+import { AlertChannel, RetryStrategy } from '@prisma/client';
 import {
   AppError,
   buildPaginationMeta,

@@ -24,6 +24,18 @@ const baseSchema = z.object({
   PAGUE_DEV_WEBHOOK_SECRET: z.string().optional(),
   MONITOR_STATUS_API_KEY: z.string().optional(),
   MONITOR_STATUS_BASE_URL: z.string().url().optional(),
+  PING_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).optional(),
+  RESTART_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).optional(),
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GITHUB_ID: z.string().optional(),
+  GITHUB_SECRET: z.string().optional(),
+  STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+  STRIPE_PRICE_ID: z.string().optional(),
+  BILLING_PRICE_PER_NUMBER_CENTS: z.coerce.number().int().positive().optional(),
+  PAGUE_DEV_API_KEY: z.string().optional(),
+  PAGUE_DEV_BASE_URL: z.string().url().optional(),
+  BULL_BOARD_SECRET: z.string().optional(),
 });
 
 export type MonitorEnv = z.infer<typeof baseSchema> & {
@@ -45,4 +57,12 @@ export function loadEnv(overrides?: Record<string, string | undefined>): Monitor
 
 export function resetEnvCacheForTests(): void {
   cached = null;
+}
+
+export function getEvolutionTimeoutsMs(): { pingTimeoutMs: number; restartTimeoutMs: number } {
+  const e = loadEnv();
+  return {
+    pingTimeoutMs: e.PING_TIMEOUT_MS ?? 5000,
+    restartTimeoutMs: e.RESTART_TIMEOUT_MS ?? 10_000,
+  };
 }

@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react';
 
 const nav = [
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/onboarding', label: 'Onboarding' },
   { href: '/projects', label: 'Projects' },
   { href: '/logs', label: 'Logs' },
   { href: '/settings/billing', label: 'Billing' },

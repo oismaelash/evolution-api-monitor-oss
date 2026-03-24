@@ -15,6 +15,8 @@
     "test:watch": "vitest",
     "db:migrate": "npm run migrate:dev --workspace=@monitor/database",
     "db:generate": "npm run generate --workspace=@monitor/database",
+    "db:seed": "npm run seed --workspace=@monitor/database",
+    "test:integration": "vitest run apps/api/integration.test.ts",
     "start": "npm run start --workspace=api"
   },
   "devDependencies": {

@@ -13,7 +13,7 @@ function getConnection(): IORedis {
 
 export async function upsertHealthSchedule(numberId: string, intervalSeconds: number): Promise<void> {
   const conn = getConnection();
-  const queue = new Queue('health-check', { connection: conn });
+  const queue = new Queue('health-check', { connection: conn as never });
   const jobId = `number:${numberId}:health-check`;
   const repeatable = await queue.getRepeatableJobs();
   for (const j of repeatable) {
@@ -34,7 +34,7 @@ export async function upsertHealthSchedule(numberId: string, intervalSeconds: nu
 
 export async function removeHealthSchedule(numberId: string): Promise<void> {
   const conn = getConnection();
-  const queue = new Queue('health-check', { connection: conn });
+  const queue = new Queue('health-check', { connection: conn as never });
   const jobId = `number:${numberId}:health-check`;
   const repeatable = await queue.getRepeatableJobs();
   for (const j of repeatable) {
@@ -46,6 +46,6 @@ export async function removeHealthSchedule(numberId: string): Promise<void> {
 
 export async function enqueueManualRestart(numberId: string): Promise<void> {
   const conn = getConnection();
-  const queue = new Queue('restart', { connection: conn });
+  const queue = new Queue('restart', { connection: conn as never });
   await queue.add('restart', { numberId }, { jobId: `manual-restart:${numberId}:${Date.now()}` });
 }

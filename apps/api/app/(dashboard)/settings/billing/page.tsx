@@ -1,6 +1,7 @@
 import { BillingService } from '@/services/billing.service';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { BillingActions } from '@/components/billing/billing-actions';
 
 export default async function BillingPage() {
   const session = await getServerSession(authOptions);
@@ -11,7 +12,7 @@ export default async function BillingPage() {
       <h1 className="mb-2 text-2xl font-semibold">Billing</h1>
       <p className="mb-6 text-[var(--color-text-muted)]">
         {sub.billingEnabled
-          ? 'Cloud billing is enabled.'
+          ? 'Cloud billing is enabled. Subscribe via Stripe or manage your subscription in the portal.'
           : 'Self-hosted / billing disabled (NoOp).'}
       </p>
       <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-sm">
@@ -19,6 +20,7 @@ export default async function BillingPage() {
           {JSON.stringify(sub, null, 2)}
         </pre>
       </div>
+      <BillingActions billingEnabled={sub.billingEnabled} />
     </div>
   );
 }

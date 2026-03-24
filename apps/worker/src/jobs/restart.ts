@@ -2,7 +2,7 @@ import { Queue, Worker, type Job } from 'bullmq';
 import type IORedis from 'ioredis';
 import { randomUUID } from 'node:crypto';
 import { LogLevel, NumberState, prisma } from '@monitor/database';
-import { EvolutionClient } from '@monitor/shared';
+import { EvolutionClient, getEvolutionTimeoutsMs } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
@@ -10,7 +10,6 @@ import { decryptProjectSecret } from '../decrypt.js';
 
 export type RestartJobData = { numberId: string };
 
-const RESTART_TIMEOUT = 10_000;
 const LOCK_TTL_SEC = 120;
 
 export function createRestartWorker(connection: IORedis) {
@@ -34,10 +33,9 @@ export function createRestartWorker(connection: IORedis) {
         if (!number?.monitored || !number.project.config) {
           return;
         }
+        const timeouts = getEvolutionTimeoutsMs();
         const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, {
-          restartTimeoutMs: RESTART_TIMEOUT,
-        });
+        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, timeouts);
         await client.restart(number.instanceName);
         await prisma.number.update({
           where: { id: numberId },

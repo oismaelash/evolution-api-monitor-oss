@@ -15,6 +15,7 @@ export const BillingService = {
         monthlyAmountCents: sub?.monthlyAmountCents ?? 0,
         trialEndsAt: sub?.trialEndsAt,
         currentPeriodEnd: sub?.currentPeriodEnd,
+        pastDueGraceEndsAt: sub?.pastDueGraceEndsAt,
       };
     }
     return {
@@ -24,6 +25,7 @@ export const BillingService = {
       monthlyAmountCents: sub?.monthlyAmountCents ?? 0,
       trialEndsAt: sub?.trialEndsAt,
       currentPeriodEnd: sub?.currentPeriodEnd,
+      pastDueGraceEndsAt: sub?.pastDueGraceEndsAt,
       stripeCustomerId: sub?.stripeCustomerId,
     };
   },

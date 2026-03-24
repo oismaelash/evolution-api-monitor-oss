@@ -64,6 +64,22 @@ export default function LoginPage() {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+        <div className="mt-6 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+            className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
+          >
+            Continue with Google
+          </button>
+          <button
+            type="button"
+            onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
+            className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
+          >
+            Continue with GitHub
+          </button>
+        </div>
         <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
           <Link href="/" className="text-[var(--color-accent)] hover:underline">
             Back to home

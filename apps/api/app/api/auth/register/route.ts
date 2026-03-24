@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@monitor/database';
-import { registerSchema } from '@monitor/shared';
+import { loadEnv, registerSchema, SubscriptionStatus } from '@monitor/shared';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,13 +16,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
     }
     const passwordHash = await bcrypt.hash(parsed.data.password, 12);
-    await prisma.user.create({
+    const env = loadEnv();
+    const u = await prisma.user.create({
       data: {
         email,
         passwordHash,
         name: parsed.data.name,
       },
     });
+    if (env.CLOUD_BILLING) {
+      await prisma.subscription.create({
+        data: {
+          userId: u.id,
+          status: SubscriptionStatus.TRIALING as never,
+          trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (e) {
     const err = e as Error;

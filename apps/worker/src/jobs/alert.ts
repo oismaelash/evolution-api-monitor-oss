@@ -1,31 +1,68 @@
 import { Worker, type Job } from 'bullmq';
 import type IORedis from 'ioredis';
 import { randomUUID } from 'node:crypto';
+import Handlebars from 'handlebars';
+import nodemailer from 'nodemailer';
 import { AlertChannel, ErrorType, LogLevel, prisma } from '@monitor/database';
-import { EvolutionClient, loadEnv } from '@monitor/shared';
+import { EvolutionClient, getEvolutionTimeoutsMs, loadEnv } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
 import { decryptProjectSecret } from '../decrypt.js';
 
-export type AlertJobData = {
+export type AlertFailureJobData = {
   numberId: string;
   errorType: ErrorType;
 };
 
+export type AlertResolvedJobData = {
+  numberId: string;
+};
+
 const LOCK_TTL_SEC = 60;
 
+type BasePayload = {
+  instanceName: string;
+  projectName: string;
+  errorType?: ErrorType;
+  qrCodeBase64?: string;
+  pairingCode?: string;
+  resolved?: boolean;
+};
+
+function renderMessage(
+  advanced: boolean,
+  template: string | null | undefined,
+  vars: Record<string, unknown>,
+  fallback: string
+): string {
+  if (advanced && template && template.trim().length > 0) {
+    try {
+      return Handlebars.compile(template)(vars);
+    } catch (e) {
+      logJson('warn', 'alert_template_compile_failed', { message: (e as Error).message });
+    }
+  }
+  return fallback;
+}
+
+function decryptSmtpPass(cipher: string | null | undefined): string | undefined {
+  if (!cipher) return undefined;
+  return decryptProjectSecret(cipher);
+}
+
 export function createAlertWorker(connection: IORedis) {
-  return new Worker<AlertJobData>(
+  return new Worker(
     'alert',
-    async (job: Job<AlertJobData>) => {
-      const { numberId, errorType } = job.data;
+    async (job: Job<AlertFailureJobData | AlertResolvedJobData>) => {
+      const isResolved = job.name === 'alert-resolved';
+      const numberId = job.data.numberId;
       const redis = getRedis();
       const lockVal = randomUUID();
       const lockKey = `number:${numberId}:lock`;
       const got = await acquireLock(redis, lockKey, LOCK_TTL_SEC, lockVal);
       if (!got) {
-        logJson('warn', 'alert_lock_busy', { numberId });
+        logJson('warn', 'alert_lock_busy', { numberId, isResolved });
         return;
       }
       try {
@@ -37,35 +74,63 @@ export function createAlertWorker(connection: IORedis) {
           return;
         }
         const cfg = number.project.config;
-        const cooldownKey = `alert:cooldown:${numberId}`;
-        const setOk = await redis.set(cooldownKey, '1', 'EX', cfg.alertCooldown, 'NX');
-        if (setOk !== 'OK') {
-          logJson('info', 'alert_skipped_cooldown', { numberId });
-          return;
+
+        if (!isResolved) {
+          const cooldownKey = `alert:cooldown:${numberId}`;
+          const setOk = await redis.set(cooldownKey, '1', 'EX', cfg.alertCooldown, 'NX');
+          if (setOk !== 'OK') {
+            logJson('info', 'alert_skipped_cooldown', { numberId });
+            return;
+          }
         }
 
+        const env = loadEnv();
+        const timeouts = getEvolutionTimeoutsMs();
         const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const evo = new EvolutionClient(number.project.evolutionUrl, apiKey);
+        const evo = new EvolutionClient(number.project.evolutionUrl, apiKey, timeouts);
+
         let qrBase64: string | undefined;
         let pairingCode: string | undefined;
-        try {
-          const conn = await evo.getConnect(number.instanceName);
-          qrBase64 = conn.qrBase64;
-          pairingCode = conn.pairingCode;
-        } catch {
-          // optional QR
+        if (!isResolved) {
+          try {
+            const conn = await evo.getConnect(number.instanceName);
+            qrBase64 = conn.qrBase64;
+            pairingCode = conn.pairingCode;
+          } catch {
+            // optional QR
+          }
         }
 
-        const payload = {
+        const errorType = isResolved ? undefined : (job.data as AlertFailureJobData).errorType;
+
+        const payload: BasePayload = {
           instanceName: number.instanceName,
           projectName: number.project.name,
           errorType,
           qrCodeBase64: qrBase64,
           pairingCode,
+          resolved: isResolved,
         };
 
-        const env = loadEnv();
+        const advanced = env.CLOUD_ADVANCED_ALERTS === true;
+        const vars = {
+          instanceName: number.instanceName,
+          projectName: number.project.name,
+          errorType: errorType ?? '',
+          qrCodeBase64: qrBase64 ?? '',
+          pairingCode: pairingCode ?? '',
+          timestamp: new Date().toISOString(),
+          resolved: isResolved,
+        };
+
+        const defaultFailureText = `${number.project.name}: ${number.instanceName} — ${errorType}. Reconnect if needed.`;
+        const defaultResolvedText = `${number.project.name}: ${number.instanceName} is healthy again.`;
+        const monitorMessage = isResolved
+          ? defaultResolvedText
+          : renderMessage(advanced, cfg.alertTemplate, vars, defaultFailureText);
+
         const channels = cfg.alertChannels;
+        const channelsSent: string[] = [];
 
         for (const ch of channels) {
           if (ch === AlertChannel.MONITOR_STATUS && env.MONITOR_STATUS_API_KEY && env.MONITOR_STATUS_BASE_URL) {
@@ -78,7 +143,7 @@ export function createAlertWorker(connection: IORedis) {
               data: {
                 numberId,
                 channel: AlertChannel.MONITOR_STATUS,
-                payload: payload as object,
+                payload: { ...payload, message: monitorMessage } as object,
               },
             });
             try {
@@ -93,7 +158,7 @@ export function createAlertWorker(connection: IORedis) {
                   templateId: 'default',
                   destinationNumber: dest.startsWith('+') ? dest : `+${dest.replace(/^\+/, '')}`,
                   variables: {
-                    message: `${number.project.name}: ${number.instanceName} — ${errorType}. Reconnect if needed.`,
+                    message: monitorMessage,
                   },
                 }),
               });
@@ -105,6 +170,7 @@ export function createAlertWorker(connection: IORedis) {
                 where: { id: row.id },
                 data: { delivered: true },
               });
+              channelsSent.push('MONITOR_STATUS');
             } catch (e) {
               const err = e as Error;
               await prisma.alert.update({
@@ -112,6 +178,57 @@ export function createAlertWorker(connection: IORedis) {
                 data: { deliveryError: err.message },
               });
               logJson('error', 'alert_monitor_failed', { numberId, message: err.message });
+            }
+          }
+
+          if (ch === AlertChannel.EMAIL && cfg.smtpHost && cfg.smtpPort && cfg.alertEmail) {
+            const pass = decryptSmtpPass(cfg.smtpPass);
+            const transporter = nodemailer.createTransport({
+              host: cfg.smtpHost,
+              port: cfg.smtpPort,
+              secure: cfg.smtpPort === 465,
+              auth:
+                cfg.smtpUser && pass
+                  ? {
+                      user: cfg.smtpUser,
+                      pass,
+                    }
+                  : undefined,
+            });
+            const subject = isResolved
+              ? `[OK] ${number.instanceName} reconnected`
+              : `[ALERT] ${number.instanceName} — ${errorType}`;
+            const textBody = isResolved
+              ? defaultResolvedText
+              : renderMessage(advanced, cfg.alertTemplate, vars, defaultFailureText);
+            const htmlBody = textBody.replace(/\n/g, '<br/>');
+            const row = await prisma.alert.create({
+              data: {
+                numberId,
+                channel: AlertChannel.EMAIL,
+                payload: { ...payload, subject, textBody } as object,
+              },
+            });
+            try {
+              await transporter.sendMail({
+                from: cfg.smtpFrom ?? cfg.smtpUser ?? 'monitor@localhost',
+                to: cfg.alertEmail,
+                subject,
+                text: textBody,
+                html: htmlBody,
+              });
+              await prisma.alert.update({
+                where: { id: row.id },
+                data: { delivered: true },
+              });
+              channelsSent.push('EMAIL');
+            } catch (e) {
+              const err = e as Error;
+              await prisma.alert.update({
+                where: { id: row.id },
+                data: { deliveryError: err.message },
+              });
+              logJson('error', 'alert_email_failed', { numberId, message: err.message });
             }
           }
 
@@ -124,9 +241,13 @@ export function createAlertWorker(connection: IORedis) {
               },
             });
             try {
+              const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+              if (cfg.webhookSecret) {
+                headers['X-Webhook-Secret'] = cfg.webhookSecret;
+              }
               const res = await fetch(cfg.webhookUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(payload),
               });
               if (!res.ok) {
@@ -136,6 +257,7 @@ export function createAlertWorker(connection: IORedis) {
                 where: { id: row.id },
                 data: { delivered: true },
               });
+              channelsSent.push('WEBHOOK');
             } catch (e) {
               const err = e as Error;
               await prisma.alert.update({
@@ -147,20 +269,33 @@ export function createAlertWorker(connection: IORedis) {
           }
         }
 
-        await prisma.number.update({
-          where: { id: numberId },
-          data: { lastAlertSentAt: new Date() },
-        });
-        await prisma.log.create({
-          data: {
-            numberId,
-            projectId: number.projectId,
-            level: LogLevel.WARN,
-            event: 'alert_sent',
-            errorType,
-            meta: { channels },
-          },
-        });
+        if (!isResolved) {
+          await prisma.number.update({
+            where: { id: numberId },
+            data: { lastAlertSentAt: new Date() },
+          });
+          await prisma.log.create({
+            data: {
+              numberId,
+              projectId: number.projectId,
+              level: LogLevel.WARN,
+              event: 'alert_sent',
+              errorType,
+              meta: { channels: channelsSent },
+            },
+          });
+        } else {
+          logJson('info', 'alert_resolved', { numberId, channels: channelsSent });
+          await prisma.log.create({
+            data: {
+              numberId,
+              projectId: number.projectId,
+              level: LogLevel.INFO,
+              event: 'alert_resolved',
+              meta: { channels: channelsSent },
+            },
+          });
+        }
       } catch (e) {
         const err = e as Error;
         logJson('error', 'alert_job_failed', { numberId, message: err.message });

@@ -13,10 +13,13 @@
     "@monitor/shared": "*",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.34.5",
-    "ioredis": "^5.4.1"
+    "handlebars": "^4.7.8",
+    "ioredis": "^5.4.1",
+    "nodemailer": "^6.9.16"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^6.4.17",
     "@types/node": "^20.14.0",
     "tsx": "^4.19.2",
     "typescript": "^5.5.0"
