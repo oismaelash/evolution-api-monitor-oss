@@ -1,5 +1,6 @@
 {
   "name": "evolution-online",
+  "version": "0.0.1",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -17,7 +18,8 @@
     "db:generate": "npm run generate --workspace=@monitor/database",
     "db:seed": "npm run seed --workspace=@monitor/database",
     "test:integration": "vitest run apps/api/integration.test.ts",
-    "start": "npm run start --workspace=api"
+    "start": "npm run start --workspace=api",
+    "push:checks": "npm run lint && npm run test"
   },
   "devDependencies": {
     "vitest": "^2.1.4"
