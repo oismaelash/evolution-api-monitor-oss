@@ -33,8 +33,11 @@ export class PagueDevService {
     }
 
     static async createStaticQrCode(data: StaticQrCodeRequest): Promise<StaticQrCodeResponse> {
+        const env = loadEnv();
         const headers = this.getHeaders();
-        const res = await fetch('https://api.pague.dev/v1/pix/qrcode-static', {
+        const baseUrl = (env.PAGUE_DEV_BASE_URL || 'https://api.pague.dev/v1').replace(/\/$/, '');
+
+        const res = await fetch(`${baseUrl}/pix/qrcode-static`, {
             method: 'POST',
             headers,
             body: JSON.stringify(data),
