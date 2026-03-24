@@ -203,12 +203,19 @@ export function createAlertWorker(connection: RedisClient) {
               });
               channelsSent.push('MONITOR_STATUS');
             } catch (e) {
-              const err = e as Error;
+              const { PilotStatusHttpError } = await import('@pilot-status/sdk');
+              let errorMessage = (e as Error).message;
+
+              if (e instanceof PilotStatusHttpError) {
+                const httpErr = e as any; // Cast to any to access status/body in case of lint issues
+                errorMessage = `HTTP ${httpErr.status}: ${JSON.stringify(httpErr.body)}`;
+              }
+
               await prisma.alert.update({
                 where: { id: row.id },
-                data: { deliveryError: err.message },
+                data: { deliveryError: errorMessage },
               });
-              logJson('error', 'alert_monitor_failed', { numberId, message: err.message });
+              logJson('error', 'alert_monitor_failed', { numberId, message: errorMessage });
             }
           }
 
