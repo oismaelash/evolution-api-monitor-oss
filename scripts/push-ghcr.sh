@@ -6,7 +6,10 @@
 # Uso: ./scripts/push-ghcr.sh
 #
 # Obrigatórias (env ou .env):
-#   GHCR_TOKEN, GHCR_IMAGE_VERSION (ex.: 0.1.0 ou v1.0.0)
+#   GHCR_TOKEN
+#
+# Versão da tag (GHCR_IMAGE_VERSION):
+#   export / .env, ou "version" no package.json da raiz, ou (fallback) git rev-parse --short HEAD
 #
 # Opcionais:
 #   GHCR_USERNAME      — inferido do remote origin (github.com)
@@ -14,6 +17,7 @@
 #                        imagens: ${GHCR_IMAGE_NAME}-api e ${GHCR_IMAGE_NAME}-worker
 #   ENV_FILE           — padrão: .env
 #   SKIP_CHECKS=1      — não roda npm run push:checks antes do build
+#   GHCR_PUSH_MIGRATE=true — também build/push de ${GHCR_IMAGE_NAME}-migrate (Prisma migrate one-off)
 #
 set -euo pipefail
 
@@ -100,13 +104,17 @@ if [ -z "${GHCR_IMAGE_VERSION:-}" ] && [ -f package.json ] && command -v node &>
     GHCR_IMAGE_VERSION=$(node -e "console.log(require('./package.json').version || '')" 2>/dev/null || echo "")
     [[ -n "$GHCR_IMAGE_VERSION" ]] && echo -e "${YELLOW}📦 GHCR_IMAGE_VERSION (package.json): ${GHCR_IMAGE_VERSION}${NC}"
 fi
+if [ -z "${GHCR_IMAGE_VERSION:-}" ] && command -v git &> /dev/null && git rev-parse --is-inside-work-tree &> /dev/null; then
+    GHCR_IMAGE_VERSION=$(git rev-parse --short HEAD)
+    echo -e "${YELLOW}📦 GHCR_IMAGE_VERSION (git short SHA): ${GHCR_IMAGE_VERSION}${NC}"
+fi
 
 if [ -z "${GHCR_IMAGE_NAME:-}" ]; then
     echo -e "${RED}❌ GHCR_IMAGE_NAME indefinido${NC}"
     exit 1
 fi
 if [ -z "${GHCR_IMAGE_VERSION:-}" ]; then
-    echo -e "${RED}❌ GHCR_IMAGE_VERSION indefinido (export ou .env)${NC}"
+    echo -e "${RED}❌ GHCR_IMAGE_VERSION indefinido (export, .env, package.json version ou repo git)${NC}"
     exit 1
 fi
 if [ -z "${GHCR_TOKEN:-}" ]; then
@@ -120,11 +128,15 @@ fi
 
 API_IMAGE="ghcr.io/${GHCR_USERNAME}/${GHCR_IMAGE_NAME}-api"
 WORKER_IMAGE="ghcr.io/${GHCR_USERNAME}/${GHCR_IMAGE_NAME}-worker"
+MIGRATE_IMAGE="ghcr.io/${GHCR_USERNAME}/${GHCR_IMAGE_NAME}-migrate"
 TAG_VER="${GHCR_IMAGE_VERSION}"
 
 echo -e "${GREEN}📋 Imagens:${NC}"
 echo -e "   ${API_IMAGE}:${TAG_VER} , :latest"
 echo -e "   ${WORKER_IMAGE}:${TAG_VER} , :latest"
+if [[ "${GHCR_PUSH_MIGRATE:-}" == "true" ]]; then
+    echo -e "   ${MIGRATE_IMAGE}:${TAG_VER} , :latest"
+fi
 
 echo -e "${YELLOW}🔐 Login GHCR...${NC}"
 echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
@@ -146,5 +158,8 @@ docker_build_push() {
 
 docker_build_push api "$API_IMAGE"
 docker_build_push worker "$WORKER_IMAGE"
+if [[ "${GHCR_PUSH_MIGRATE:-}" == "true" ]]; then
+    docker_build_push migrate "$MIGRATE_IMAGE"
+fi
 
 echo -e "${GREEN}🎉 Concluído.${NC}"
