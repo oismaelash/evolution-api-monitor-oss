@@ -7,6 +7,8 @@
     "packages/*"
   ],
   "scripts": {
+    "test:all": "vitest run",
+    "push": "npm run test:all && bash scripts/push-ghcr.sh",
     "dev": "npm run dev --workspace=api",
     "dev:worker": "npm run dev --workspace=worker",
     "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
@@ -19,7 +21,7 @@
     "db:seed": "npm run seed --workspace=@monitor/database",
     "test:integration": "vitest run apps/api/integration.test.ts",
     "start": "npm run start --workspace=api",
-    "push:checks": "npm run lint && npm run test"
+    "push:checks": "npm run lint && npm run test:all"
   },
   "devDependencies": {
     "vitest": "^2.1.4"
