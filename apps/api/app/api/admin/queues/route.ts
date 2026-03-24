@@ -3,8 +3,7 @@ import { getServerSession } from 'next-auth';
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { prisma } from '@monitor/database';
-import { UserRole } from '@prisma/client';
-import { loadEnv } from '@monitor/shared';
+import { loadEnv, UserRole } from '@monitor/shared';
 import { authOptions } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {

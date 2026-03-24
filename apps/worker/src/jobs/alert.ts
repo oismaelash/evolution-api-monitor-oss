@@ -1,11 +1,17 @@
 import { Worker, type Job } from 'bullmq';
-import type IORedis from 'ioredis';
 import { randomUUID } from 'node:crypto';
-import Handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
-import { AlertChannel, ErrorType, LogLevel, prisma } from '@monitor/database';
-import { EvolutionClient, getEvolutionTimeoutsMs, loadEnv } from '@monitor/shared';
+import { prisma } from '@monitor/database';
+import {
+  AlertChannel,
+  ErrorType,
+  EvolutionClient,
+  LogLevel,
+  getEvolutionTimeoutsMs,
+  loadEnv,
+} from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
+import type { RedisClient } from '../redis.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
 import { decryptProjectSecret } from '../decrypt.js';
@@ -30,6 +36,10 @@ type BasePayload = {
   resolved?: boolean;
 };
 
+function applySimpleTemplate(tpl: string, vars: Record<string, string>): string {
+  return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => vars[key] ?? '');
+}
+
 function renderMessage(
   advanced: boolean,
   template: string | null | undefined,
@@ -37,10 +47,14 @@ function renderMessage(
   fallback: string
 ): string {
   if (advanced && template && template.trim().length > 0) {
+    const strVars: Record<string, string> = {};
+    for (const [k, v] of Object.entries(vars)) {
+      strVars[k] = v == null ? '' : String(v);
+    }
     try {
-      return Handlebars.compile(template)(vars);
+      return applySimpleTemplate(template, strVars);
     } catch (e) {
-      logJson('warn', 'alert_template_compile_failed', { message: (e as Error).message });
+      logJson('warn', 'alert_template_failed', { message: (e as Error).message });
     }
   }
   return fallback;
@@ -51,7 +65,7 @@ function decryptSmtpPass(cipher: string | null | undefined): string | undefined 
   return decryptProjectSecret(cipher);
 }
 
-export function createAlertWorker(connection: IORedis) {
+export function createAlertWorker(connection: RedisClient) {
   return new Worker(
     'alert',
     async (job: Job<AlertFailureJobData | AlertResolvedJobData>) => {
@@ -142,7 +156,7 @@ export function createAlertWorker(connection: IORedis) {
             const row = await prisma.alert.create({
               data: {
                 numberId,
-                channel: AlertChannel.MONITOR_STATUS,
+                channel: AlertChannel.MONITOR_STATUS as never,
                 payload: { ...payload, message: monitorMessage } as object,
               },
             });
@@ -205,7 +219,7 @@ export function createAlertWorker(connection: IORedis) {
             const row = await prisma.alert.create({
               data: {
                 numberId,
-                channel: AlertChannel.EMAIL,
+                channel: AlertChannel.EMAIL as never,
                 payload: { ...payload, subject, textBody } as object,
               },
             });
@@ -236,7 +250,7 @@ export function createAlertWorker(connection: IORedis) {
             const row = await prisma.alert.create({
               data: {
                 numberId,
-                channel: AlertChannel.WEBHOOK,
+                channel: AlertChannel.WEBHOOK as never,
                 payload: payload as object,
               },
             });
@@ -278,9 +292,9 @@ export function createAlertWorker(connection: IORedis) {
             data: {
               numberId,
               projectId: number.projectId,
-              level: LogLevel.WARN,
+              level: LogLevel.WARN as never,
               event: 'alert_sent',
-              errorType,
+              errorType: errorType as never,
               meta: { channels: channelsSent },
             },
           });
@@ -290,7 +304,7 @@ export function createAlertWorker(connection: IORedis) {
             data: {
               numberId,
               projectId: number.projectId,
-              level: LogLevel.INFO,
+              level: LogLevel.INFO as never,
               event: 'alert_resolved',
               meta: { channels: channelsSent },
             },
@@ -304,6 +318,6 @@ export function createAlertWorker(connection: IORedis) {
         await releaseLock(redis, lockKey, lockVal);
       }
     },
-    { connection }
+    { connection: connection as never }
   );
 }

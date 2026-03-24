@@ -1,13 +1,14 @@
 import { prisma } from '@monitor/database';
-import { AlertChannel, RetryStrategy } from '@prisma/client';
 import {
   AppError,
   buildPaginationMeta,
   createProjectSchema,
   projectConfigSchema,
   updateProjectSchema,
+  type AlertChannel,
   type CreateProjectInput,
   type ProjectConfigInput,
+  type RetryStrategy,
   type UpdateProjectInput,
 } from '@monitor/shared';
 import { encryptForStorage } from '@/lib/encryption';
@@ -143,8 +144,8 @@ export const ProjectService = {
             create: {
               projectId,
               ...data,
-            },
-            update: data,
+            } as never,
+            update: data as never,
           });
     const numbers = await prisma.number.findMany({
       where: { projectId, monitored: true },

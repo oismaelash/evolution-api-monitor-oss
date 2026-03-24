@@ -128,7 +128,7 @@ export class StripePaymentProvider implements PaymentProvider {
       };
     }
     if (evt.type === 'customer.subscription.updated' || evt.type === 'customer.subscription.deleted') {
-      const sub = evt.data.object as StripeSubscriptionPayload;
+      const sub = evt.data.object as unknown as StripeSubscriptionPayload;
       const status = mapStripeStatus(sub.status);
       return {
         id,

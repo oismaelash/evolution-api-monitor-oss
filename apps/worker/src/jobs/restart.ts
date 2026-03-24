@@ -1,9 +1,9 @@
 import { Queue, Worker, type Job } from 'bullmq';
-import type IORedis from 'ioredis';
 import { randomUUID } from 'node:crypto';
-import { LogLevel, NumberState, prisma } from '@monitor/database';
-import { EvolutionClient, getEvolutionTimeoutsMs } from '@monitor/shared';
+import { prisma } from '@monitor/database';
+import { EvolutionClient, LogLevel, NumberState, getEvolutionTimeoutsMs } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
+import type { RedisClient } from '../redis.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
 import { decryptProjectSecret } from '../decrypt.js';
@@ -12,7 +12,7 @@ export type RestartJobData = { numberId: string };
 
 const LOCK_TTL_SEC = 120;
 
-export function createRestartWorker(connection: IORedis) {
+export function createRestartWorker(connection: RedisClient) {
   return new Worker<RestartJobData>(
     'restart',
     async (job: Job<RestartJobData>) => {
@@ -39,19 +39,19 @@ export function createRestartWorker(connection: IORedis) {
         await client.restart(number.instanceName);
         await prisma.number.update({
           where: { id: numberId },
-          data: { state: NumberState.RESTARTING },
+          data: { state: NumberState.RESTARTING as never },
         });
         await prisma.log.create({
           data: {
             numberId,
             projectId: number.projectId,
-            level: LogLevel.INFO,
+            level: LogLevel.INFO as never,
             event: 'restart_triggered',
             meta: {},
           },
         });
         const delayMs = number.project.config.retryDelay * 1000;
-        const healthQueue = new Queue('health-check', { connection });
+        const healthQueue = new Queue('health-check', { connection: connection as never });
         await healthQueue.add(
           'health-check',
           { numberId },
@@ -65,6 +65,6 @@ export function createRestartWorker(connection: IORedis) {
         await releaseLock(redis, lockKey, lockVal);
       }
     },
-    { connection }
+    { connection: connection as never }
   );
 }

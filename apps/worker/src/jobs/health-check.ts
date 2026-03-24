@@ -1,23 +1,21 @@
 import { Queue, Worker, type Job } from 'bullmq';
-import type IORedis from 'ioredis';
 import { randomUUID } from 'node:crypto';
+import { prisma } from '@monitor/database';
 import {
   ErrorType,
+  EvolutionClient,
+  FAILURES_BEFORE_RESTART,
   HealthStatus,
   LogLevel,
   NumberState,
-  prisma,
   SubscriptionStatus,
-} from '@monitor/database';
-import {
-  EvolutionClient,
-  FAILURES_BEFORE_RESTART,
   computeDelayMs,
   getEvolutionTimeoutsMs,
   loadEnv,
   RetryStrategy as RetryStrategyConst,
 } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
+import type { RedisClient } from '../redis.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
 import { decryptProjectSecret } from '../decrypt.js';
@@ -56,7 +54,7 @@ function shouldSkipHealthForBilling(
   return false;
 }
 
-export function createHealthCheckWorker(connection: IORedis) {
+export function createHealthCheckWorker(connection: RedisClient) {
   return new Worker<HealthCheckJobData>(
     'health-check',
     async (job: Job<HealthCheckJobData>) => {
@@ -112,7 +110,7 @@ export function createHealthCheckWorker(connection: IORedis) {
             prisma.healthCheck.create({
               data: {
                 numberId,
-                status: HealthStatus.HEALTHY,
+                status: HealthStatus.HEALTHY as never,
                 responseTimeMs: result.responseTimeMs,
                 rawResponse: result.raw as object,
                 checkedAt,
@@ -121,7 +119,7 @@ export function createHealthCheckWorker(connection: IORedis) {
             prisma.number.update({
               where: { id: numberId },
               data: {
-                state: NumberState.CONNECTED,
+                state: NumberState.CONNECTED as never,
                 failureCount: 0,
                 restartAttempts: 0,
                 lastHealthyAt: checkedAt,
@@ -132,14 +130,14 @@ export function createHealthCheckWorker(connection: IORedis) {
               data: {
                 numberId,
                 projectId: number.projectId,
-                level: LogLevel.INFO,
+                level: LogLevel.INFO as never,
                 event: 'health_check_ok',
                 meta: { responseTimeMs: result.responseTimeMs },
               },
             }),
           ]);
           if (shouldNotifyResolved) {
-            const alertQueue = new Queue('alert', { connection });
+            const alertQueue = new Queue('alert', { connection: connection as never });
             await alertQueue.add(
               'alert-resolved',
               { numberId },
@@ -154,8 +152,8 @@ export function createHealthCheckWorker(connection: IORedis) {
         await prisma.healthCheck.create({
           data: {
             numberId,
-            status: HealthStatus.UNHEALTHY,
-            errorType: prismaEt,
+            status: HealthStatus.UNHEALTHY as never,
+            errorType: prismaEt as never,
             errorMessage: result.message,
             rawResponse: result.raw as object,
             checkedAt,
@@ -167,7 +165,7 @@ export function createHealthCheckWorker(connection: IORedis) {
           where: { id: numberId },
           data: {
             failureCount: newCount,
-            state: NumberState.DISCONNECTED,
+            state: NumberState.DISCONNECTED as never,
             lastCheckedAt: checkedAt,
           },
         });
@@ -176,9 +174,9 @@ export function createHealthCheckWorker(connection: IORedis) {
           data: {
             numberId,
             projectId: number.projectId,
-            level: LogLevel.WARN,
+            level: LogLevel.WARN as never,
             event: 'health_check_failed',
-            errorType: prismaEt,
+            errorType: prismaEt as never,
             meta: { failureCount: newCount, restartAttempts: number.restartAttempts },
           },
         });
@@ -186,9 +184,9 @@ export function createHealthCheckWorker(connection: IORedis) {
         if (prismaEt === ErrorType.AUTH_ERROR || prismaEt === ErrorType.INSTANCE_NOT_FOUND) {
           await prisma.number.update({
             where: { id: numberId },
-            data: { state: NumberState.ERROR, restartAttempts: 0 },
+            data: { state: NumberState.ERROR as never, restartAttempts: 0 },
           });
-          const alertQueue = new Queue('alert', { connection });
+          const alertQueue = new Queue('alert', { connection: connection as never });
           await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
           return;
         }
@@ -201,9 +199,9 @@ export function createHealthCheckWorker(connection: IORedis) {
         if (restartAttempts >= config.maxRetries) {
           await prisma.number.update({
             where: { id: numberId },
-            data: { state: NumberState.ERROR },
+            data: { state: NumberState.ERROR as never },
           });
-          const alertQueue = new Queue('alert', { connection });
+          const alertQueue = new Queue('alert', { connection: connection as never });
           await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
           return;
         }
@@ -224,7 +222,7 @@ export function createHealthCheckWorker(connection: IORedis) {
           attempt: nextRestartAttempts,
         });
 
-        const restartQueue = new Queue('restart', { connection });
+        const restartQueue = new Queue('restart', { connection: connection as never });
         await restartQueue.add(
           'restart',
           { numberId },
@@ -248,6 +246,6 @@ export function createHealthCheckWorker(connection: IORedis) {
         await releaseLock(redis, lockKey, lockVal);
       }
     },
-    { connection }
+    { connection: connection as never }
   );
 }

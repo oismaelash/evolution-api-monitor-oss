@@ -1,6 +1,6 @@
 import { Queue, type Job } from 'bullmq';
 import { loadEnv } from '@monitor/shared';
-import IORedis from 'ioredis';
+import { Redis } from 'ioredis';
 import { createAlertWorker } from './jobs/alert.js';
 import { createDlqWorker } from './jobs/dlq.js';
 import { createHealthCheckWorker } from './jobs/health-check.js';
@@ -14,7 +14,7 @@ if (!redisUrl) {
   throw new Error('REDIS_URL is required');
 }
 
-const connection = new IORedis(redisUrl, { maxRetriesPerRequest: null });
+const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
 
 const health = createHealthCheckWorker(connection);
 const restart = createRestartWorker(connection);
@@ -23,7 +23,7 @@ const dlq = createDlqWorker(connection);
 
 async function enqueueDlq(sourceQueue: string, job: Job | undefined, err: unknown) {
   const e = err instanceof Error ? err : new Error(String(err));
-  const q = new Queue('dead-letter', { connection });
+  const q = new Queue('dead-letter', { connection: connection as never });
   await q.add(
     'record',
     {

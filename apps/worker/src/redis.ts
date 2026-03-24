@@ -1,11 +1,13 @@
-import IORedis from 'ioredis';
+import { Redis } from 'ioredis';
 import { loadEnv } from '@monitor/shared';
 
-let redis: IORedis | null = null;
+export type RedisClient = InstanceType<typeof Redis>;
 
-export function getRedis(): IORedis {
+let redis: RedisClient | null = null;
+
+export function getRedis(): RedisClient {
   if (redis) return redis;
   const env = loadEnv();
-  redis = new IORedis(env.REDIS_URL, { maxRetriesPerRequest: null });
+  redis = new Redis(env.REDIS_URL, { maxRetriesPerRequest: null });
   return redis;
 }

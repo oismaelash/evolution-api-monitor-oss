@@ -45,11 +45,10 @@ export async function processBillingWebhookEvent(event: BillingWebhookEvent): Pr
       where: { stripeSubscriptionId: event.stripeSubscriptionId },
     });
     if (!sub) return;
-    const status = (
+    const status =
       event.type === 'customer.subscription.deleted'
         ? SubscriptionStatus.CANCELED
-        : (event.status ?? SubscriptionStatus.ACTIVE)
-    ) as never;
+        : (event.status ?? SubscriptionStatus.ACTIVE);
     const pastDueGraceEndsAt =
       status === SubscriptionStatus.PAST_DUE ? new Date(Date.now() + GRACE_MS) : null;
     await prisma.subscription.update({
@@ -80,7 +79,7 @@ export async function processBillingWebhookEvent(event: BillingWebhookEvent): Pr
     await prisma.subscription.update({
       where: { id: sub.id },
       data: {
-        status: SubscriptionStatus.PAST_DUE,
+        status: SubscriptionStatus.PAST_DUE as never,
         pastDueGraceEndsAt: new Date(Date.now() + GRACE_MS),
       },
     });
@@ -95,7 +94,7 @@ export async function processBillingWebhookEvent(event: BillingWebhookEvent): Pr
     await prisma.subscription.update({
       where: { id: sub.id },
       data: {
-        status: SubscriptionStatus.ACTIVE,
+        status: SubscriptionStatus.ACTIVE as never,
         pastDueGraceEndsAt: null,
       },
     });
