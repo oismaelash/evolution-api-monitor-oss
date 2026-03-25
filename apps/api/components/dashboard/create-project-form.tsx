@@ -32,6 +32,36 @@ export function CreateProjectForm() {
   const [alertNational, setAlertNational] = useState('');
   const [evolutionFlavor, setEvolutionFlavor] = useState<EvolutionFlavorType>(EvolutionFlavor.EVOLUTION_V2);
 
+  const [step, setStep] = useState(1);
+
+  async function handleNextStep() {
+    setMsg(null);
+    if (step === 1) {
+      if (!name.trim()) {
+        setMsg(t('Nome é obrigatório', 'Name is required'));
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (!evolutionUrl.trim() || !evolutionApiKey.trim()) {
+        setMsg(t('URL e API Key são obrigatórios', 'URL and API Key are required'));
+        return;
+      }
+      try {
+        new URL(evolutionUrl);
+      } catch {
+        setMsg(t('URL inválida', 'Invalid URL'));
+        return;
+      }
+      setStep(3);
+    }
+  }
+
+  function handlePrevStep() {
+    setMsg(null);
+    setStep((s) => Math.max(1, s - 1));
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
@@ -95,7 +125,11 @@ export function CreateProjectForm() {
   return (
     <form
       id="create-project"
-      onSubmit={(e) => void onSubmit(e)}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (step === 3) void onSubmit(e);
+        else handleNextStep();
+      }}
       className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
     >
       <button
@@ -133,106 +167,149 @@ export function CreateProjectForm() {
             : undefined
         }
       >
-        <p className="mb-6 text-sm text-[var(--color-text-muted)]">
-          {t(
-            'Um servidor Evolution por projeto: URL base e API key global (igual ao Evolution Manager).',
-            'One Evolution server per project: base URL and global API key (same as Evolution Manager).',
-          )}
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <EvolutionFlavorFields
-              idSuffix="create"
-              flavor={evolutionFlavor}
-              onFlavorChange={setEvolutionFlavor}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <FormLabelWithHelp
-              htmlFor="proj-name"
-              description={t(
-                'Nome amigável do projeto no painel (não altera a Evolution).',
-                'Friendly project name in the dashboard (does not change Evolution).',
-              )}
-              value={name}
-            >
-              {t('Nome', 'Name')}
-            </FormLabelWithHelp>
-            <input
-              id="proj-name"
-              className={inputClass}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('WhatsApp produção', 'Production WhatsApp')}
-              autoComplete="off"
-              required
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <FormLabelWithHelp
-              htmlFor="proj-url"
-              description={t(
-                'URL raiz do servidor Evolution (sem path da instância). O monitor chama a API nesse host.',
-                'Root URL of your Evolution server (no instance path). The monitor calls the API on this host.',
-              )}
-              value={evolutionUrl}
-            >
-              {t('URL base da Evolution API', 'Evolution API base URL')}
-            </FormLabelWithHelp>
-            <input
-              id="proj-url"
-              type="url"
-              className={inputClass}
-              value={evolutionUrl}
-              onChange={(e) => setEvolutionUrl(e.target.value)}
-              placeholder="https://evolution.example.com"
-              autoComplete="off"
-              required
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <FormLabelWithHelp
-              htmlFor="proj-key"
-              description={t(
-                'Chave global da Evolution (mesma do Evolution Manager / AUTHENTICATION_API_KEY). Usada só no servidor.',
-                'Global Evolution API key (same as Evolution Manager / AUTHENTICATION_API_KEY). Used only on the server.',
-              )}
-              value={maskSecretInput(evolutionApiKey)}
-            >
-              {t('API key da Evolution', 'Evolution API key')}
-            </FormLabelWithHelp>
-            <input
-              id="proj-key"
-              type="password"
-              className={inputClass}
-              value={evolutionApiKey}
-              onChange={(e) => setEvolutionApiKey(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="off"
-              required
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <ProjectAlertPhoneSection
-              ddiId="proj-alert-ddi"
-              nationalId="proj-alert-national"
-              ddiValue={alertDdi}
-              nationalValue={alertNational}
-              onDdiChange={setAlertDdi}
-              onNationalChange={setAlertNational}
-              optional
-            />
+        <div className="mb-6 flex items-center justify-between">
+          <p className="text-sm font-medium text-[var(--color-text-primary)]">
+            {step === 1 && t('Passo 1: Dados Iniciais', 'Step 1: Base Data')}
+            {step === 2 && t('Passo 2: Credenciais', 'Step 2: Credentials')}
+            {step === 3 && t('Passo 3: Alertas (Opcional)', 'Step 3: Alerts (Optional)')}
+          </p>
+          <div className="flex gap-1">
+            <div className={`h-2 w-6 rounded-full ${step >= 1 ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`} />
+            <div className={`h-2 w-6 rounded-full transition-colors ${step >= 2 ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`} />
+            <div className={`h-2 w-6 rounded-full transition-colors ${step >= 3 ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'}`} />
           </div>
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {step === 1 && (
+            <>
+              <div className="sm:col-span-2">
+                <EvolutionFlavorFields
+                  idSuffix="create"
+                  flavor={evolutionFlavor}
+                  onFlavorChange={setEvolutionFlavor}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <FormLabelWithHelp
+                  htmlFor="proj-name"
+                  description={t(
+                    'Nome amigável do projeto no painel (não altera a Evolution).',
+                    'Friendly project name in the dashboard (does not change Evolution).',
+                  )}
+                  value={name}
+                >
+                  {t('Nome', 'Name')}
+                </FormLabelWithHelp>
+                <input
+                  id="proj-name"
+                  className={inputClass}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t('WhatsApp produção', 'Production WhatsApp')}
+                  autoComplete="off"
+                  required
+                />
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <p className="sm:col-span-2 text-sm text-[var(--color-text-muted)]">
+                {t(
+                  'Um servidor Evolution por projeto: URL base e API key global (igual ao Evolution Manager).',
+                  'One Evolution server per project: base URL and global API key (same as Evolution Manager).',
+                )}
+              </p>
+              <div className="sm:col-span-2">
+                <FormLabelWithHelp
+                  htmlFor="proj-url"
+                  description={t(
+                    'URL raiz do servidor Evolution (sem path da instância). O monitor chama a API nesse host.',
+                    'Root URL of your Evolution server (no instance path). The monitor calls the API on this host.',
+                  )}
+                  value={evolutionUrl}
+                >
+                  {t('URL base da Evolution API', 'Evolution API base URL')}
+                </FormLabelWithHelp>
+                <input
+                  id="proj-url"
+                  type="url"
+                  className={inputClass}
+                  value={evolutionUrl}
+                  onChange={(e) => setEvolutionUrl(e.target.value)}
+                  placeholder="https://evolution.example.com"
+                  autoComplete="off"
+                  required
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <FormLabelWithHelp
+                  htmlFor="proj-key"
+                  description={t(
+                    'Chave global da Evolution (mesma do Evolution Manager / AUTHENTICATION_API_KEY). Usada só no servidor.',
+                    'Global Evolution API key (same as Evolution Manager / AUTHENTICATION_API_KEY). Used only on the server.',
+                  )}
+                  value={maskSecretInput(evolutionApiKey)}
+                >
+                  {t('API key da Evolution', 'Evolution API key')}
+                </FormLabelWithHelp>
+                <input
+                  id="proj-key"
+                  type="password"
+                  className={inputClass}
+                  value={evolutionApiKey}
+                  onChange={(e) => setEvolutionApiKey(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="off"
+                  required
+                />
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <div className="sm:col-span-2">
+              <ProjectAlertPhoneSection
+                ddiId="proj-alert-ddi"
+                nationalId="proj-alert-national"
+                ddiValue={alertDdi}
+                nationalValue={alertNational}
+                onDdiChange={setAlertDdi}
+                onNationalChange={setAlertNational}
+                optional
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          {step > 1 && (
+            <button
+              type="button"
+              onClick={handlePrevStep}
+              className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-2 text-sm font-medium transition-colors hover:bg-[var(--color-bg)]/60"
+            >
+              {t('Voltar', 'Back')}
+            </button>
+          )}
+          
           <button
             type="submit"
             disabled={loading}
             className="flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            <Add size="18" variant="Outline" />
-            {loading ? t('Criando…', 'Creating…') : t('Criar projeto', 'Create project')}
+            {step < 3 ? (
+              t('Próximo', 'Next')
+            ) : (
+              <>
+                <Add size="18" variant="Outline" />
+                {loading ? t('Criando…', 'Creating…') : t('Criar projeto', 'Create project')}
+              </>
+            )}
           </button>
+          
           {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}
         </div>
       </div>

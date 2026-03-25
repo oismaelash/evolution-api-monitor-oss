@@ -16,11 +16,15 @@ import { DeleteNumberButton } from '@/components/dashboard/delete-number-button'
 import { DeleteProjectButton } from '@/components/dashboard/delete-project-button';
 import { SyncInstancesButton } from '@/components/dashboard/sync-instances-button';
 
-type Props = { params: Promise<{ projectId: string }> };
+type Props = {
+  params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ tab?: string }>;
+};
 
-export default async function ProjectDetailPage({ params }: Props) {
+export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const t = await getServerTranslator();
   const { projectId } = await params;
+  const { tab = 'connection' } = await searchParams;
   const session = await getServerSession(authOptions);
   const userId = session!.user!.id;
 
@@ -69,31 +73,53 @@ export default async function ProjectDetailPage({ params }: Props) {
         {t('URL Evolution:', 'Evolution URL:')} {project.evolutionUrl}
       </p>
 
-      <details
-        open
-        className="group mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
-      >
-        <summary className="flex cursor-pointer list-none items-start justify-between gap-4 p-6 [&::-webkit-details-marker]:hidden">
-          <div className="min-w-0 flex-1">
-            <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">
-              {t('Conexão', 'Connection')}
-            </h2>
-            <p className="text-sm text-[var(--color-text-muted)]">
-              {t(
-                'Atualize o nome, a URL base da Evolution ou a API key. O pareamento do WhatsApp continua na Evolution; este monitor só armazena credenciais e faz polling de saúde.',
-                'Update display name, Evolution base URL, or API key. Pairing WhatsApp still happens in Evolution; this monitor only stores credentials and polls health.',
-              )}
-            </p>
-          </div>
-          <ArrowDown2
-            size={20}
-            variant="Linear"
-            color="var(--color-text-muted)"
-            className="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-180"
-            aria-hidden
-          />
-        </summary>
-        <div className="border-t border-[var(--color-border)] px-6 pb-6 pt-6">
+      <div className="mb-8 border-b border-[var(--color-border)]">
+        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          <Link
+            href={`/projects/${project.id}?tab=connection`}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+              tab === 'connection'
+                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text-primary)]'
+            }`}
+          >
+            {t('Conexão', 'Connection')}
+          </Link>
+          <Link
+            href={`/projects/${project.id}?tab=monitoring`}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+              tab === 'monitoring'
+                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text-primary)]'
+            }`}
+          >
+            {t('Monitoramento', 'Monitoring')}
+          </Link>
+          <Link
+            href={`/projects/${project.id}?tab=numbers`}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+              tab === 'numbers'
+                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text-primary)]'
+            }`}
+          >
+            {t('Números', 'Numbers')}
+          </Link>
+        </nav>
+      </div>
+
+      {tab === 'connection' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+          <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">
+            {t('Conexão', 'Connection')}
+          </h2>
+          <p className="mb-6 text-sm text-[var(--color-text-muted)]">
+            {t(
+              'Atualize o nome, a URL base da Evolution ou a API key. O pareamento do WhatsApp continua na Evolution; este monitor só armazena credenciais e faz polling de saúde.',
+              'Update display name, Evolution base URL, or API key. Pairing WhatsApp still happens in Evolution; this monitor only stores credentials and polls health.',
+            )}
+          </p>
+          
           <EditProjectForm
             projectId={project.id}
             initialName={project.name}
@@ -102,6 +128,7 @@ export default async function ProjectDetailPage({ params }: Props) {
             initialAlertDdi={initialAlertDdi}
             initialAlertNational={initialAlertNational}
           />
+          
           <div className="mt-10 border-t border-[var(--color-border)] pt-8">
             <h3 className="mb-1 text-base font-medium text-[var(--color-text-primary)]">
               {t('Zona de perigo', 'Danger zone')}
@@ -119,60 +146,42 @@ export default async function ProjectDetailPage({ params }: Props) {
             />
           </div>
         </div>
-      </details>
+      )}
 
-      {configInitial ? (
-        <details
-          open
-          className="group mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
-        >
-          <summary className="flex cursor-pointer list-none items-start justify-between gap-4 p-6 [&::-webkit-details-marker]:hidden">
-            <div className="min-w-0 flex-1">
-              <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">
-                {t('Monitoramento', 'Monitoring')}
-              </h2>
-              <p className="text-sm text-[var(--color-text-muted)]">
-                {t(
-                  'Health checks e comportamento de retry. Abra a seção de alertas para canais, SMTP, webhook e modelos.',
-                  'Health checks and retry behaviour. Open the section for alert channels, SMTP, webhook, and templates.',
-                )}
-              </p>
-            </div>
-            <ArrowDown2
-              size={20}
-              variant="Linear"
-              color="var(--color-text-muted)"
-              className="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-180"
-              aria-hidden
-            />
-          </summary>
-          <div className="border-t border-[var(--color-border)] px-6 pb-6 pt-6">
-            <div className="mb-6">
-              <Link
-                href={`/projects/${project.id}/alerts`}
-                className="inline-flex items-center justify-center rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
-              >
-                {t('Configurações de alerta', 'Alert settings')}
-              </Link>
-              <p className="mt-3 text-sm text-[var(--color-text-muted)]">
-                {t('Canais, SMTP, webhook e modelos.', 'Channels, SMTP, webhook, and templates.')}
-              </p>
-            </div>
-            <ProjectConfigForm projectId={project.id} initial={configInitial} />
+      {tab === 'monitoring' && configInitial && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+          <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">
+            {t('Monitoramento', 'Monitoring')}
+          </h2>
+          <p className="mb-6 text-sm text-[var(--color-text-muted)]">
+            {t(
+              'Health checks e comportamento de retry. Abra a seção de alertas para canais, SMTP, webhook e modelos.',
+              'Health checks and retry behaviour. Open the section for alert channels, SMTP, webhook, and templates.',
+            )}
+          </p>
+          
+          <div className="mb-6">
+            <Link
+              href={`/projects/${project.id}/alerts`}
+              className="inline-flex items-center justify-center rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
+            >
+              {t('Configurações de alerta', 'Alert settings')}
+            </Link>
+            <p className="mt-3 text-sm text-[var(--color-text-muted)]">
+              {t('Canais, SMTP, webhook e modelos.', 'Channels, SMTP, webhook, and templates.')}
+            </p>
           </div>
-        </details>
-      ) : null}
+          <ProjectConfigForm projectId={project.id} initial={configInitial} />
+        </div>
+      )}
 
-      <details
-        open
-        className="group mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
-      >
-        <summary className="flex cursor-pointer list-none items-start justify-between gap-4 p-6 [&::-webkit-details-marker]:hidden">
-          <div className="min-w-0 flex-1">
+      {tab === 'numbers' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
             <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">
               {t('Números', 'Numbers')}
             </h2>
-            <p className="text-sm text-[var(--color-text-muted)]">
+            <p className="mb-6 text-sm text-[var(--color-text-muted)]">
               <strong className="text-[var(--color-text-primary)]">
                 {t('Sincronizar instâncias', 'Sync instances')}
               </strong>{' '}
@@ -181,69 +190,61 @@ export default async function ProjectDetailPage({ params }: Props) {
                 'loads instance names from your Evolution server; you choose which ones to add to this project.',
               )}
             </p>
+            <SyncInstancesButton projectId={project.id} />
           </div>
-          <ArrowDown2
-            size={20}
-            variant="Linear"
-            color="var(--color-text-muted)"
-            className="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-180"
-            aria-hidden
-          />
-        </summary>
-        <div className="border-t border-[var(--color-border)] px-6 pb-6 pt-6">
-          <SyncInstancesButton projectId={project.id} />
-        </div>
-      </details>
 
-      <h2 className="mb-4 text-lg font-medium">
-        {t('Números registrados', 'Registered numbers')}
-      </h2>
-      <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
-            <tr>
-              <th className="px-4 py-2">{t('Instância', 'Instance')}</th>
-              <th className="px-4 py-2">{t('Estado', 'State')}</th>
-              <th className="px-4 py-2">{t('Monitorado', 'Monitored')}</th>
-              <th className="w-28 px-4 py-2">{t('Ações', 'Actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {project.numbers.length === 0 ? (
-              <tr>
-                <td className="px-4 py-6 text-[var(--color-text-muted)]" colSpan={4}>
-                  {t(
-                    'Nenhum número ainda. Sincronize instâncias acima para começar.',
-                    'No numbers yet. Sync instances above to get started.',
-                  )}
-                </td>
-              </tr>
-            ) : (
-              project.numbers.map((n: (typeof project.numbers)[number]) => (
-                <tr key={n.id} className="border-t border-[var(--color-border)]">
-                  <td className="px-4 py-2">
-                    <Link
-                      href={`/numbers/${n.id}`}
-                      className="text-[var(--color-accent)] hover:underline"
-                    >
-                      {n.instanceName}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2">{formatNumberStateLabel(n.state, t)}</td>
-                  <td className="px-4 py-2">{n.monitored ? t('sim', 'yes') : t('não', 'no')}</td>
-                  <td className="px-4 py-2 align-top">
-                    <DeleteNumberButton
-                      numberId={n.id}
-                      instanceName={n.instanceName}
-                      compact
-                    />
-                  </td>
+          <h2 className="mb-4 text-lg font-medium">
+            {t('Números registrados', 'Registered numbers')}
+          </h2>
+          <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
+                <tr>
+                  <th className="px-4 py-2">{t('Instância', 'Instance')}</th>
+                  <th className="px-4 py-2">{t('Estado', 'State')}</th>
+                  <th className="px-4 py-2">{t('Monitorado', 'Monitored')}</th>
+                  <th className="w-28 px-4 py-2">{t('Ações', 'Actions')}</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {project.numbers.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-6 text-[var(--color-text-muted)]" colSpan={4}>
+                      {t(
+                        'Nenhum número ainda. Sincronize instâncias acima para começar.',
+                        'No numbers yet. Sync instances above to get started.',
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  project.numbers.map((n: (typeof project.numbers)[number]) => (
+                    <tr key={n.id} className="border-t border-[var(--color-border)]">
+                      <td className="px-4 py-2">
+                        <Link
+                          href={`/numbers/${n.id}`}
+                          className="text-[var(--color-accent)] hover:underline"
+                        >
+                          {n.instanceName}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2">{formatNumberStateLabel(n.state, t)}</td>
+                      <td className="px-4 py-2">{n.monitored ? t('sim', 'yes') : t('não', 'no')}</td>
+                      <td className="px-4 py-2 align-top">
+                        <DeleteNumberButton
+                          numberId={n.id}
+                          instanceName={n.instanceName}
+                          compact
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

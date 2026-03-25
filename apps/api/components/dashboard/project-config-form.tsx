@@ -86,7 +86,7 @@ export function ProjectConfigForm({
 
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-6">
         <div>
           <FormLabelWithHelp
             htmlFor={`cfg-ping-${projectId}`}
@@ -114,28 +114,6 @@ export function ProjectConfigForm({
         </div>
         <div>
           <FormLabelWithHelp
-            htmlFor={`cfg-retry-${projectId}`}
-            description={t(
-              'Quantas tentativas extras após uma falha antes de considerar o check como falha definitiva e seguir o fluxo de alerta.',
-              'How many extra attempts after a failed check before treating the round as failed and moving on to alerts.',
-            )}
-            value={maxRetries}
-          >
-            {t('Máx. tentativas', 'Max retries')}
-          </FormLabelWithHelp>
-          <input
-            id={`cfg-retry-${projectId}`}
-            type="number"
-            min={0}
-            max={10}
-            className={inputClass}
-            value={maxRetries}
-            onChange={(e) => setMaxRetries(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <FormLabelWithHelp
             htmlFor={`cfg-delay-${projectId}`}
             description={t(
               'Tempo de espera entre uma tentativa falha e a próxima (usado com a estratégia de retry configurada).',
@@ -159,7 +137,29 @@ export function ProjectConfigForm({
             <SecondsInputHint value={retryDelay} />
           </div>
         </div>
-        <div className="sm:col-span-2">
+        <div>
+          <FormLabelWithHelp
+            htmlFor={`cfg-retry-${projectId}`}
+            description={t(
+              'Quantas tentativas extras após uma falha antes de considerar o check como falha definitiva e seguir o fluxo de alerta.',
+              'How many extra attempts after a failed check before treating the round as failed and moving on to alerts.',
+            )}
+            value={maxRetries}
+          >
+            {t('Máx. tentativas', 'Max retries')}
+          </FormLabelWithHelp>
+          <input
+            id={`cfg-retry-${projectId}`}
+            type="number"
+            min={0}
+            max={10}
+            className={inputClass}
+            value={maxRetries}
+            onChange={(e) => setMaxRetries(e.target.value)}
+            required
+          />
+        </div>
+        <div>
           <FormLabelWithHelp
             htmlFor={`cfg-strat-${projectId}`}
             description={t(

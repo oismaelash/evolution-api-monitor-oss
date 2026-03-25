@@ -257,7 +257,7 @@ export function ProjectAlertsForm({
             'Required when the Email channel is enabled. Password is stored encrypted; leave blank to keep the current value.',
           )}
         </p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <div className="sm:col-span-2">
             <FormLabelWithHelp
               htmlFor={`al-email-${projectId}`}
@@ -389,7 +389,7 @@ export function ProjectAlertsForm({
             'POST JSON payloads to your endpoint when the Webhook channel is enabled. Optional secret is sent for verification and stored encrypted.',
           )}
         </p>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-4">
           <div className="sm:col-span-2">
             <FormLabelWithHelp
               htmlFor={`al-wh-url-${projectId}`}
