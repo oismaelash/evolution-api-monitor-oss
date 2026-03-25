@@ -7,7 +7,6 @@ import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { formatNumberStateLabel } from '@/lib/number-state-label';
 import { e164ToDdiAndNational } from '@/lib/e164-fields';
-import { AddNumberForm } from '@/components/dashboard/add-number-form';
 import { EditProjectForm } from '@/components/dashboard/edit-project-form';
 import {
   ProjectConfigForm,
@@ -178,15 +177,8 @@ export default async function ProjectDetailPage({ params }: Props) {
                 {t('Sincronizar instâncias', 'Sync instances')}
               </strong>{' '}
               {t(
-                'carrega os nomes de instância do seu servidor Evolution; você escolhe quais adicionar ao projeto. Use',
-                'loads instance names from your Evolution server; you choose which ones to add to this project. Use',
-              )}{' '}
-              <strong className="text-[var(--color-text-primary)]">
-                {t('Adicionar número', 'Add number')}
-              </strong>{' '}
-              {t(
-                'se preferir registrar um nome manualmente (deve coincidir com a Evolution).',
-                'if you prefer to register an instance name manually (it must match Evolution).',
+                'carrega os nomes de instância do seu servidor Evolution; você escolhe quais adicionar ao projeto.',
+                'loads instance names from your Evolution server; you choose which ones to add to this project.',
               )}
             </p>
           </div>
@@ -199,13 +191,7 @@ export default async function ProjectDetailPage({ params }: Props) {
           />
         </summary>
         <div className="border-t border-[var(--color-border)] px-6 pb-6 pt-6">
-          <div className="mb-8">
-            <SyncInstancesButton projectId={project.id} />
-          </div>
-          <h3 className="mb-4 text-base font-medium text-[var(--color-text-primary)]">
-            {t('Adicionar número manualmente', 'Add number manually')}
-          </h3>
-          <AddNumberForm projectId={project.id} />
+          <SyncInstancesButton projectId={project.id} />
         </div>
       </details>
 
@@ -227,8 +213,8 @@ export default async function ProjectDetailPage({ params }: Props) {
               <tr>
                 <td className="px-4 py-6 text-[var(--color-text-muted)]" colSpan={4}>
                   {t(
-                    'Nenhum número ainda. Sincronize instâncias ou adicione manualmente acima.',
-                    'No numbers yet. Sync instances or add one manually above.',
+                    'Nenhum número ainda. Sincronize instâncias acima para começar.',
+                    'No numbers yet. Sync instances above to get started.',
                   )}
                 </td>
               </tr>

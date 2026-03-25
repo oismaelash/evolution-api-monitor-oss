@@ -13,15 +13,22 @@ export async function MarketingHero() {
   return (
     <section className="relative py-20 sm:py-32" aria-labelledby="hero-heading">
       <div className="mx-auto max-w-4xl text-center">
-        <div className="mb-8 flex justify-center">
-          <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)] backdrop-blur-md">
+        <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          {/* <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)] backdrop-blur-md">
             <Monitor size={14} variant="Bold" color="currentColor" aria-hidden />
             <span className="bg-gradient-to-r from-[var(--color-accent)] to-purple-400 bg-clip-text text-transparent">
               {t('Monitoramento em Tempo Real', 'Real-time Monitoring')}
             </span>
-          </p>
+          </p> */}
+          <div className="inline-flex animate-pulse items-center gap-2 rounded-full border border-[var(--color-accent)]/50 bg-[var(--color-accent)]/10 px-4 py-1.5 text-sm font-bold tracking-wide text-white shadow-[0_0_15px_rgba(var(--color-accent-rgb),0.3)] backdrop-blur-md">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--color-accent)] opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--color-accent)]"></span>
+            </span>
+            {t('✨ Novo: Suporte total ao Evolution GO!', '✨ New: Full support for Evolution GO!')}
+          </div>
         </div>
-        
+
         <h1
           id="hero-heading"
           className="text-balance text-5xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl"
@@ -34,8 +41,8 @@ export async function MarketingHero() {
 
         <p className="mx-auto mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-[var(--color-text-muted)] sm:text-xl">
           {t(
-            'Não espere o cliente reclamar que seu bot parou. Receba alertas imediatos e garanta 100% de estabilidade na sua Evolution API.',
-            'Don\'t wait for customers to complain that your bot stopped. Get instant alerts and ensure 100% stability for your Evolution API.',
+            'Não espere o cliente reclamar que seu bot parou. Receba alertas imediatos e garanta 100% de estabilidade na sua Evolution API ou Evolution GO.',
+            'Don\'t wait for customers to complain that your bot stopped. Get instant alerts and ensure 100% stability for your Evolution API or Evolution GO.',
           )}
         </p>
 
