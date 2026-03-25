@@ -1,9 +1,14 @@
 'use client';
 
 import { SessionProvider } from 'next-auth/react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
 import { I18nProvider } from '@/components/i18n/i18n-provider';
 import type { AppLocale } from '@/lib/i18n';
+
+function ThemeProvider({ children, ...props }: React.ComponentProps<typeof NextThemesProvider> & { children: React.ReactNode }) {
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+}
 
 export function Providers({
   children,
@@ -13,8 +18,10 @@ export function Providers({
   initialLocale: AppLocale;
 }) {
   return (
-    <I18nProvider initialLocale={initialLocale}>
-      <SessionProvider>{children}</SessionProvider>
-    </I18nProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <I18nProvider initialLocale={initialLocale}>
+        <SessionProvider>{children}</SessionProvider>
+      </I18nProvider>
+    </ThemeProvider>
   );
 }

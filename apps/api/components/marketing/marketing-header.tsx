@@ -5,6 +5,7 @@ import { Cloud, Code, Monitor } from 'iconsax-react';
 import { loadEnv } from '@monitor/shared';
 
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { getServerTranslator } from '@/lib/i18n-server';
 
 const DASHBOARD_HREF = '/dashboard';
@@ -45,7 +46,10 @@ export async function MarketingHeader() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <LanguageSwitcher className="shrink-0 scale-90" />
+          <div className="flex items-center gap-2 shrink-0 scale-90">
+            <LanguageSwitcher />
+            <ThemeSwitcher />
+          </div>
           <Link
             href={DASHBOARD_HREF}
             className="hidden sm:flex rounded-xl bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition-all hover:shadow-accent/40 hover:scale-[1.02] active:scale-[0.98]"

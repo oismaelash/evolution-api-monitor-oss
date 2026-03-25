@@ -12,7 +12,7 @@
     "push": "npm run test:all && bash scripts/push-ghcr.sh",
     "dev": "npm run dev --workspace=api",
     "dev:worker": "npm run dev --workspace=worker",
-    "dev:docker": "docker compose -f docker-compose.dev.yml up -d --build",env
+    "dev:docker": "docker compose -f docker-compose.dev.yml up -d --build",
     "build": "npm run build --workspace=@monitor/shared && npm run build --workspace=@monitor/database && npm run build --workspace=api && npm run build --workspace=worker",
     "lint": "npm run lint --workspace=api",
     "test": "vitest run",

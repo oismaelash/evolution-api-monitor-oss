@@ -16,6 +16,7 @@ import {
 } from 'iconsax-react';
 
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { ThemeSwitcher } from '@/components/theme/theme-switcher';
 import { useT } from '@/components/i18n/i18n-provider';
 import { WhatsAppDisplayNameModal } from '@/components/dashboard/whatsapp-display-name-modal';
 
@@ -101,14 +102,17 @@ export function DashboardShell({
           )}
         </div>
 
-        {/* Language Switcher */}
+        {/* Controls */}
         <div className={`mb-6 px-2 ${isCollapsed ? 'flex justify-center' : ''}`}>
           {!isCollapsed && (
             <p className="mb-2 text-[0.65rem] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-              {t('Idioma', 'Language')}
+              {t('Preferências', 'Preferences')}
             </p>
           )}
-          <LanguageSwitcher isCollapsed={isCollapsed} />
+          <div className={`flex ${isCollapsed ? 'flex-col gap-2 items-center' : 'flex-row gap-2 items-center'}`}>
+            <LanguageSwitcher isCollapsed={isCollapsed} />
+            <ThemeSwitcher isCollapsed={isCollapsed} />
+          </div>
         </div>
 
         {/* Navigation */}
