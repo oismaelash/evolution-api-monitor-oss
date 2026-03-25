@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 export function DeleteProjectButton({
@@ -13,6 +14,7 @@ export function DeleteProjectButton({
   projectName: string;
   numberCount: number;
 }) {
+  const t = useT();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -21,12 +23,24 @@ export function DeleteProjectButton({
     setMsg(null);
     const numbersLine =
       numberCount === 0
-        ? 'All numbers under this project will be removed (none registered).'
+        ? t(
+            'Todos os números deste projeto serão removidos (nenhum registrado).',
+            'All numbers under this project will be removed (none registered).',
+          )
         : numberCount === 1
-          ? 'The 1 registered number will be permanently deleted.'
-          : `All ${numberCount} registered numbers will be permanently deleted.`;
+          ? t(
+              'O 1 número registrado será excluído permanentemente.',
+              'The 1 registered number will be permanently deleted.',
+            )
+          : t(
+              `Todos os ${numberCount} números registrados serão excluídos permanentemente.`,
+              `All ${numberCount} registered numbers will be permanently deleted.`,
+            );
     const ok = window.confirm(
-      `Delete project "${projectName}"?\n\n${numbersLine} Health schedules will be cleared. This cannot be undone.`,
+      t(
+        `Excluir projeto "${projectName}"?\n\n${numbersLine} Os agendamentos de health serão limpos. Não é possível desfazer.`,
+        `Delete project "${projectName}"?\n\n${numbersLine} Health schedules will be cleared. This cannot be undone.`,
+      ),
     );
     if (!ok) return;
     setLoading(true);
@@ -43,7 +57,7 @@ export function DeleteProjectButton({
       router.push('/projects');
       router.refresh();
     } catch {
-      setMsg('Network error');
+      setMsg(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
@@ -57,7 +71,7 @@ export function DeleteProjectButton({
         onClick={() => void onDelete()}
         className="rounded-md border border-[var(--color-error)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 disabled:opacity-60"
       >
-        {loading ? 'Deleting…' : 'Delete project'}
+        {loading ? t('Excluindo…', 'Deleting…') : t('Excluir projeto', 'Delete project')}
       </button>
       {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}
     </div>

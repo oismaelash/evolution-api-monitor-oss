@@ -1,6 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
+import { useT } from '@/components/i18n/i18n-provider';
 import { LocalDateTime } from '@/components/ui/local-datetime';
 
 export type NumberDetailHeader = {
@@ -54,6 +55,7 @@ export function NumberDetailPolling({
   initialHeader: NumberDetailHeader;
   initialChecksPayload: HealthChecksPayload;
 }) {
+  const t = useT();
   const numberUrl = `/api/numbers/${numberId}`;
   const checksUrl = `/api/numbers/${numberId}/health-checks?page=1&limit=20`;
 
@@ -78,19 +80,21 @@ export function NumberDetailPolling({
     <>
       <h1 className="mb-2 text-2xl font-semibold">{header.instanceName}</h1>
       <p className="mb-2 text-sm text-[var(--color-text-muted)]">
-        Project: {header.project.name} · State:{' '}
+        {t('Projeto:', 'Project:')} {header.project.name} · {t('Estado:', 'State:')}{' '}
         <span className="text-[var(--color-text-primary)]">{header.state}</span>
       </p>
       <p className="mb-8 text-sm text-[var(--color-text-muted)]">
-        Failure count: {header.failureCount}
+        {t('Contagem de falhas:', 'Failure count:')} {header.failureCount}
       </p>
-      <h2 className="mb-4 text-lg font-medium">Recent health checks</h2>
+      <h2 className="mb-4 text-lg font-medium">
+        {t('Health checks recentes', 'Recent health checks')}
+      </h2>
       <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
         <table className="w-full text-left text-sm">
           <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
             <tr>
-              <th className="px-4 py-2">Time</th>
-              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">{t('Hora', 'Time')}</th>
+              <th className="px-4 py-2">{t('Status', 'Status')}</th>
               <th className="px-4 py-2">ms</th>
             </tr>
           </thead>

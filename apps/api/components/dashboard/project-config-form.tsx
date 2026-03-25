@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { projectConfigSchema } from '@monitor/shared';
+import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
@@ -23,6 +24,7 @@ export function ProjectConfigForm({
   projectId: string;
   initial: ProjectConfigFormInitial;
 }) {
+  const t = useT();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -70,10 +72,10 @@ export function ProjectConfigForm({
         setMsg(apiErrorMessage(data));
         return;
       }
-      setOk('Monitoring settings saved.');
+      setOk(t('Configurações de monitoramento salvas.', 'Monitoring settings saved.'));
       router.refresh();
     } catch {
-      setMsg('Network error');
+      setMsg(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
@@ -84,7 +86,7 @@ export function ProjectConfigForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className={labelClass} htmlFor={`cfg-ping-${projectId}`}>
-            Ping interval (seconds)
+            {t('Intervalo de ping (segundos)', 'Ping interval (seconds)')}
           </label>
           <input
             id={`cfg-ping-${projectId}`}
@@ -99,7 +101,7 @@ export function ProjectConfigForm({
         </div>
         <div>
           <label className={labelClass} htmlFor={`cfg-retry-${projectId}`}>
-            Max retries
+            {t('Máx. tentativas', 'Max retries')}
           </label>
           <input
             id={`cfg-retry-${projectId}`}
@@ -114,7 +116,7 @@ export function ProjectConfigForm({
         </div>
         <div>
           <label className={labelClass} htmlFor={`cfg-delay-${projectId}`}>
-            Retry delay (seconds)
+            {t('Atraso entre tentativas (segundos)', 'Retry delay (seconds)')}
           </label>
           <input
             id={`cfg-delay-${projectId}`}
@@ -129,7 +131,7 @@ export function ProjectConfigForm({
         </div>
         <div className="sm:col-span-2">
           <label className={labelClass} htmlFor={`cfg-strat-${projectId}`}>
-            Retry strategy
+            {t('Estratégia de retry', 'Retry strategy')}
           </label>
           <select
             id={`cfg-strat-${projectId}`}
@@ -139,8 +141,8 @@ export function ProjectConfigForm({
               setRetryStrategy(e.target.value as 'FIXED' | 'EXPONENTIAL_JITTER')
             }
           >
-            <option value="FIXED">Fixed</option>
-            <option value="EXPONENTIAL_JITTER">Exponential jitter</option>
+            <option value="FIXED">{t('Fixo', 'Fixed')}</option>
+            <option value="EXPONENTIAL_JITTER">{t('Exponential jitter', 'Exponential jitter')}</option>
           </select>
         </div>
       </div>
@@ -151,7 +153,7 @@ export function ProjectConfigForm({
           disabled={loading}
           className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {loading ? 'Saving…' : 'Save monitoring settings'}
+          {loading ? t('Salvando…', 'Saving…') : t('Salvar monitoramento', 'Save monitoring settings')}
         </button>
         {ok ? <p className="text-sm text-[var(--color-success)]">{ok}</p> : null}
         {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}

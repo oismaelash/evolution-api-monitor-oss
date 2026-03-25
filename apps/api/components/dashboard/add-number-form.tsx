@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { addNumberSchema } from '@monitor/shared';
+import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
@@ -10,6 +11,7 @@ const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
 
 export function AddNumberForm({ projectId }: { projectId: string }) {
+  const t = useT();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -51,10 +53,10 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
       setPhoneNumber('');
       setLabel('');
       setMonitored(true);
-      setOk('Number added.');
+      setOk(t('Número adicionado.', 'Number added.'));
       router.refresh();
     } catch {
-      setMsg('Network error');
+      setMsg(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
@@ -65,20 +67,20 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className={labelClass} htmlFor={`add-inst-${projectId}`}>
-            Instance name
+            {t('Nome da instância', 'Instance name')}
           </label>
           <input
             id={`add-inst-${projectId}`}
             className={inputClass}
             value={instanceName}
             onChange={(e) => setInstanceName(e.target.value)}
-            placeholder="Must match Evolution instance name"
+            placeholder={t('Deve coincidir com o nome na Evolution', 'Must match Evolution instance name')}
             required
           />
         </div>
         <div>
           <label className={labelClass} htmlFor={`add-phone-${projectId}`}>
-            Phone (optional)
+            {t('Telefone (opcional)', 'Phone (optional)')}
           </label>
           <input
             id={`add-phone-${projectId}`}
@@ -90,14 +92,14 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
         </div>
         <div>
           <label className={labelClass} htmlFor={`add-label-${projectId}`}>
-            Label (optional)
+            {t('Rótulo (opcional)', 'Label (optional)')}
           </label>
           <input
             id={`add-label-${projectId}`}
             className={inputClass}
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder="Support line"
+            placeholder={t('Linha de suporte', 'Support line')}
           />
         </div>
         <div className="flex items-center gap-2 sm:col-span-2">
@@ -109,7 +111,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
             onChange={(e) => setMonitored(e.target.checked)}
           />
           <label htmlFor={`add-mon-${projectId}`} className="text-sm text-[var(--color-text-primary)]">
-            Monitored (health checks & alerts)
+            {t('Monitorado (health checks e alertas)', 'Monitored (health checks & alerts)')}
           </label>
         </div>
       </div>
@@ -119,7 +121,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
           disabled={loading}
           className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] disabled:opacity-60"
         >
-          {loading ? 'Adding…' : 'Add number'}
+          {loading ? t('Adicionando…', 'Adding…') : t('Adicionar número', 'Add number')}
         </button>
         {ok ? <p className="text-sm text-[var(--color-success)]">{ok}</p> : null}
         {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}

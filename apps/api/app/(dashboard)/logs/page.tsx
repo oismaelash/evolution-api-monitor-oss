@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@monitor/database';
 import { authOptions } from '@/lib/auth';
+import { getServerTranslator } from '@/lib/i18n-server';
 import { LogService } from '@/services/log.service';
 import { LogsFilters } from '@/components/dashboard/logs-filters';
 import { LogsTableWithPolling } from '@/components/dashboard/logs-table-with-polling';
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export default async function LogsPage({ searchParams }: Props) {
+  const t = await getServerTranslator();
   const session = await getServerSession(authOptions);
   const userId = session!.user!.id;
   const sp = await searchParams;
@@ -62,9 +64,12 @@ export default async function LogsPage({ searchParams }: Props) {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-semibold">Logs</h1>
+      <h1 className="mb-2 text-2xl font-semibold">{t('Logs', 'Logs')}</h1>
       <p className="mb-4 text-[var(--color-text-muted)]">
-        Monitor events from workers and health checks (newest first).
+        {t(
+          'Eventos de workers e health checks (mais recentes primeiro).',
+          'Monitor events from workers and health checks (newest first).',
+        )}
       </p>
       <Suspense
         fallback={

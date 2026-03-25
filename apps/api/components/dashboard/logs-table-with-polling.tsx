@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import useSWR from 'swr';
+import { useT } from '@/components/i18n/i18n-provider';
 import { LocalDateTime } from '@/components/ui/local-datetime';
 import { buildLogsHref } from '@/lib/logs-url';
 
@@ -54,6 +55,7 @@ export function LogsTableWithPolling({
   projectId: string | undefined;
   numberId: string | undefined;
 }) {
+  const t = useT();
   const apiUrl = queryString ? `/api/logs?${queryString}` : '/api/logs';
   const { data } = useSWR(apiUrl, fetchLogs, {
     fallbackData: { data: initialData, meta: initialMeta },
@@ -75,7 +77,7 @@ export function LogsTableWithPolling({
   return (
     <>
       <div className="mb-4 flex flex-wrap gap-2 text-sm">
-        <span className="text-[var(--color-text-muted)]">Level:</span>
+        <span className="text-[var(--color-text-muted)]">{t('Nível:', 'Level:')}</span>
         <Link
           href={buildLogsHref(base, { level: null, page: 1 })}
           className={
@@ -84,7 +86,7 @@ export function LogsTableWithPolling({
               : 'text-[var(--color-text-muted)] hover:underline'
           }
         >
-          All
+          {t('Todos', 'All')}
         </Link>
         {LEVELS.map((lvl) => (
           <Link
@@ -104,11 +106,11 @@ export function LogsTableWithPolling({
         <table className="w-full text-left text-sm">
           <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
             <tr>
-              <th className="px-4 py-2">Time</th>
-              <th className="px-4 py-2">Level</th>
-              <th className="px-4 py-2">Event</th>
-              <th className="px-4 py-2">Context</th>
-              <th className="px-4 py-2">Error type</th>
+              <th className="px-4 py-2">{t('Hora', 'Time')}</th>
+              <th className="px-4 py-2">{t('Nível', 'Level')}</th>
+              <th className="px-4 py-2">{t('Evento', 'Event')}</th>
+              <th className="px-4 py-2">{t('Contexto', 'Context')}</th>
+              <th className="px-4 py-2">{t('Tipo de erro', 'Error type')}</th>
             </tr>
           </thead>
           <tbody>
@@ -118,7 +120,7 @@ export function LogsTableWithPolling({
                   colSpan={5}
                   className="px-4 py-8 text-center text-[var(--color-text-muted)]"
                 >
-                  No log entries yet.
+                  {t('Nenhum log ainda.', 'No log entries yet.')}
                 </td>
               </tr>
             ) : (
@@ -163,7 +165,8 @@ export function LogsTableWithPolling({
       {meta.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between text-sm text-[var(--color-text-muted)]">
           <span>
-            Page {meta.page} of {meta.totalPages} ({meta.total} entries)
+            {t('Página', 'Page')} {meta.page} {t('de', 'of')} {meta.totalPages} ({meta.total}{' '}
+            {t('registros', 'entries')})
           </span>
           <div className="flex gap-3">
             {meta.page > 1 && (
@@ -171,7 +174,7 @@ export function LogsTableWithPolling({
                 href={buildLogsHref(base, { page: meta.page - 1 })}
                 className="text-[var(--color-accent)] hover:underline"
               >
-                Previous
+                {t('Anterior', 'Previous')}
               </Link>
             )}
             {meta.page < meta.totalPages && (
@@ -179,7 +182,7 @@ export function LogsTableWithPolling({
                 href={buildLogsHref(base, { page: meta.page + 1 })}
                 className="text-[var(--color-accent)] hover:underline"
               >
-                Next
+                {t('Próxima', 'Next')}
               </Link>
             )}
           </div>

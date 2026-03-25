@@ -2,8 +2,10 @@ import Link from 'next/link';
 import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { getServerTranslator } from '@/lib/i18n-server';
 
 export default async function OnboardingPage() {
+  const t = await getServerTranslator();
   const session = await getServerSession(authOptions);
   const userId = session!.user!.id;
   const projects = await prisma.project.findMany({
@@ -15,39 +17,55 @@ export default async function OnboardingPage() {
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-semibold">Onboarding</h1>
+      <h1 className="mb-2 text-2xl font-semibold">{t('Onboarding', 'Onboarding')}</h1>
       <p className="mb-8 text-[var(--color-text-muted)]">
-        Create a project, add your Evolution URL and API key, sync instances, then enable monitoring per number.
+        {t(
+          'Crie um projeto, adicione sua URL e API key da Evolution, sincronize instâncias e habilite o monitoramento por número.',
+          'Create a project, add your Evolution URL and API key, sync instances, then enable monitoring per number.',
+        )}
       </p>
       <ol className="mb-8 list-decimal space-y-3 pl-6 text-sm text-[var(--color-text-primary)]">
         <li>
           <Link href="/projects#create-project" className="text-[var(--color-accent)] hover:underline">
-            Create a project
+            {t('Crie um projeto', 'Create a project')}
           </Link>{' '}
-          with your Evolution API base URL and API key (form at the top of Projects).
+          {t(
+            'com a URL base da Evolution API e a API key (formulário no topo de Projetos).',
+            'with your Evolution API base URL and API key (form at the top of Projects).',
+          )}
         </li>
         <li>
-          Open the project and use <strong>Sync instances</strong> to list Evolution instances and choose
-          which ones to add.
+          {t(
+            'Abra o projeto e use Sincronizar instâncias para listar instâncias da Evolution e escolher quais adicionar.',
+            'Open the project and use Sync instances to list Evolution instances and choose which ones to add.',
+          )}
         </li>
-        <li>Choose which instances to monitor and set alert channels in project settings.</li>
+        <li>
+          {t(
+            'Escolha quais instâncias monitorar e configure canais de alerta nas configurações do projeto.',
+            'Choose which instances to monitor and set alert channels in project settings.',
+          )}
+        </li>
       </ol>
       <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-sm">
-        <div className="text-[var(--color-text-muted)]">Projects</div>
+        <div className="text-[var(--color-text-muted)]">{t('Projetos', 'Projects')}</div>
         <div className="mt-2 text-lg font-medium">{projects.length}</div>
         {firstProject ? (
           <p className="mt-4 text-[var(--color-text-muted)]">
-            Continue with{' '}
+            {t('Continue com', 'Continue with')}{' '}
             <Link
               href={`/projects/${firstProject.id}`}
               className="text-[var(--color-accent)] hover:underline"
             >
               {firstProject.name}
             </Link>{' '}
-            ({firstProject._count.numbers} numbers).
+            ({firstProject._count.numbers}{' '}
+            {firstProject._count.numbers === 1 ? t('número', 'number') : t('números', 'numbers')}).
           </p>
         ) : (
-          <p className="mt-4 text-[var(--color-text-muted)]">No projects yet — create one to begin.</p>
+          <p className="mt-4 text-[var(--color-text-muted)]">
+            {t('Nenhum projeto ainda — crie um para começar.', 'No projects yet — create one to begin.')}
+          </p>
         )}
       </div>
     </div>

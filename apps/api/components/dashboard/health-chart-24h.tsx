@@ -1,11 +1,14 @@
 'use client';
 
+import { useT } from '@/components/i18n/i18n-provider';
+
 type Bucket = { ts: number; ok: number; fail: number };
 
 /**
  * Hour labels use the browser’s local timezone (see `ts` for each column).
  */
 export function HealthChart24h({ buckets }: { buckets: Bucket[] }) {
+  const t = useT();
   const max = Math.max(1, ...buckets.map((r) => r.ok + r.fail));
   return (
     <div className="mb-10 flex h-40 items-end gap-0.5 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
@@ -19,12 +22,12 @@ export function HealthChart24h({ buckets }: { buckets: Bucket[] }) {
               <div
                 className="w-full rounded-sm bg-[var(--color-success)]"
                 style={{ height: `${hOk}%`, minHeight: row.ok ? 2 : 0 }}
-                title={`${row.ok} healthy`}
+                title={`${row.ok} ${t('saudáveis', 'healthy')}`}
               />
               <div
                 className="w-full rounded-sm bg-[var(--color-error)]"
                 style={{ height: `${hFail}%`, minHeight: row.fail ? 2 : 0 }}
-                title={`${row.fail} unhealthy`}
+                title={`${row.fail} ${t('com falha', 'unhealthy')}`}
               />
             </div>
             <span className="text-[10px] text-[var(--color-text-muted)]">{label}</span>

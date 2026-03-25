@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 type PreviewRow = { instanceName: string; alreadyInProject: boolean };
 
 export function SyncInstancesButton({ projectId }: { projectId: string }) {
+  const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -42,11 +44,11 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         new Set(list.filter((r) => !r.alreadyInProject).map((r) => r.instanceName)),
       );
     } catch {
-      setPreviewError('Network error');
+      setPreviewError(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, t]);
 
   const closeModal = useCallback(() => {
     setOpen(false);
@@ -92,13 +94,18 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         setMsg(apiErrorMessage(data));
         return;
       }
+      const synced = data.synced ?? 0;
+      const created = data.created ?? 0;
       setMsg(
-        `Synced ${String(data.synced ?? 0)} instance(s) from Evolution; created ${String(data.created ?? 0)} new row(s).`,
+        t(
+          `Sincronizadas ${synced} instância(s) do Evolution; criadas ${created} nova(s) linha(s).`,
+          `Synced ${synced} instance(s) from Evolution; created ${created} new row(s).`,
+        ),
       );
       closeModal();
       router.refresh();
     } catch {
-      setMsg('Network error');
+      setMsg(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
@@ -117,7 +124,7 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         disabled={loading && !open}
         className="w-fit rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        {loading && !open ? 'Loading…' : 'Sync instances'}
+        {loading && !open ? t('Carregando…', 'Loading…') : t('Sincronizar instâncias', 'Sync instances')}
       </button>
       {msg ? <p className="text-sm text-[var(--color-text-muted)]">{msg}</p> : null}
 
@@ -131,28 +138,34 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
           <button
             type="button"
             className="absolute inset-0 bg-black/60"
-            aria-label="Close"
+            aria-label={t('Fechar', 'Close')}
             onClick={() => !loading && closeModal()}
           />
           <div className="relative z-10 max-h-[min(85vh,560px)] w-full max-w-lg overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] shadow-xl">
             <div className="border-b border-[var(--color-border)] px-4 py-3">
               <h2 id="sync-instances-title" className="text-base font-semibold text-[var(--color-text-primary)]">
-                Choose instances to add
+                {t('Escolha instâncias para adicionar', 'Choose instances to add')}
               </h2>
               <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                Instances already in this project are shown for reference. Select which new names to
-                register.
+                {t(
+                  'Instâncias já neste projeto aparecem como referência. Selecione quais nomes novos registrar.',
+                  'Instances already in this project are shown for reference. Select which new names to register.',
+                )}
               </p>
             </div>
             <div className="max-h-[min(50vh,360px)] overflow-y-auto px-4 py-3">
               {loading ? (
-                <p className="text-sm text-[var(--color-text-muted)]">Loading from Evolution…</p>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  {t('Carregando da Evolution…', 'Loading from Evolution…')}
+                </p>
               ) : previewError ? (
                 <p className="text-sm text-[var(--color-error)]">{previewError}</p>
               ) : rows.length === 0 ? (
                 <p className="text-sm text-[var(--color-text-muted)]">
-                  No instances returned from Evolution. Check your URL and API key in Connection
-                  settings.
+                  {t(
+                    'Nenhuma instância retornada da Evolution. Verifique URL e API key em Conexão.',
+                    'No instances returned from Evolution. Check your URL and API key in Connection settings.',
+                  )}
                 </p>
               ) : (
                 <ul className="space-y-2">
@@ -184,7 +197,7 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
                           </span>
                           {row.alreadyInProject ? (
                             <span className="ml-2 text-[var(--color-text-muted)]">
-                              (already in project)
+                              ({t('já no projeto', 'already in project')})
                             </span>
                           ) : null}
                         </label>
@@ -201,7 +214,7 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
                 onClick={() => closeModal()}
                 className="rounded-md border border-[var(--color-border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-surface)] disabled:opacity-60"
               >
-                Cancel
+                {t('Cancelar', 'Cancel')}
               </button>
               <button
                 type="button"
@@ -210,10 +223,10 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
                 className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
                 {loading
-                  ? 'Saving…'
+                  ? t('Salvando…', 'Saving…')
                   : newCount === 0
-                    ? 'Nothing new to add'
-                    : `Add selected (${selectedCount})`}
+                    ? t('Nada novo para adicionar', 'Nothing new to add')
+                    : t(`Adicionar selecionados (${selectedCount})`, `Add selected (${selectedCount})`)}
               </button>
             </div>
           </div>

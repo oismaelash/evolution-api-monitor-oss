@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { projectConfigSchema } from '@monitor/shared';
+import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
@@ -11,11 +12,19 @@ const inputClass =
 
 const CHANNELS = ['MONITOR_STATUS', 'EMAIL', 'WEBHOOK'] as const;
 
-const CHANNEL_LABELS: Record<(typeof CHANNELS)[number], string> = {
-  MONITOR_STATUS: 'Monitor Status (WhatsApp)',
-  EMAIL: 'Email (SMTP)',
-  WEBHOOK: 'Webhook',
-};
+function channelLabel(
+  c: (typeof CHANNELS)[number],
+  t: (pt: string, en: string) => string,
+): string {
+  switch (c) {
+    case 'MONITOR_STATUS':
+      return t('Monitor Status (WhatsApp)', 'Monitor Status (WhatsApp)');
+    case 'EMAIL':
+      return t('E-mail (SMTP)', 'Email (SMTP)');
+    case 'WEBHOOK':
+      return t('Webhook', 'Webhook');
+  }
+}
 
 export type ProjectAlertsFormInitial = {
   alertCooldown: number;
@@ -36,6 +45,7 @@ export function ProjectAlertsForm({
   projectId: string;
   initial: ProjectAlertsFormInitial;
 }) {
+  const t = useT();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -69,7 +79,7 @@ export function ProjectAlertsForm({
     setOk(null);
 
     if (channels.size === 0) {
-      setMsg('Select at least one alert channel.');
+      setMsg(t('Selecione pelo menos um canal de alerta.', 'Select at least one alert channel.'));
       return;
     }
 
@@ -119,10 +129,10 @@ export function ProjectAlertsForm({
       }
       setSmtpPass('');
       setWebhookSecret('');
-      setOk('Alert settings saved.');
+      setOk(t('Configurações de alerta salvas.', 'Alert settings saved.'));
       router.refresh();
     } catch {
-      setMsg('Network error');
+      setMsg(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
@@ -131,16 +141,27 @@ export function ProjectAlertsForm({
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-8">
       <section className="space-y-4">
-        <h3 className="text-base font-medium text-[var(--color-text-primary)]">Channels &amp; rate limit</h3>
+        <h3 className="text-base font-medium text-[var(--color-text-primary)]">
+          {t('Canais e limite de taxa', 'Channels & rate limit')}
+        </h3>
         <p className="text-sm text-[var(--color-text-muted)]">
-          Choose where outage notifications go. For{' '}
-          <span className="text-[var(--color-text-primary)]">Monitor Status</span>, set the WhatsApp
-          destination (E.164) under{' '}
-          <span className="text-[var(--color-text-primary)]">Project → Connection → Alert phone</span>.
+          {t(
+            'Escolha para onde vão as notificações de indisponibilidade. Para',
+            'Choose where outage notifications go. For',
+          )}{' '}
+          <span className="text-[var(--color-text-primary)]">Monitor Status</span>,{' '}
+          {t(
+            'defina o destino WhatsApp (E.164) em',
+            'set the WhatsApp destination (E.164) under',
+          )}{' '}
+          <span className="text-[var(--color-text-primary)]">
+            {t('Projeto → Conexão → Telefone de alerta', 'Project → Connection → Alert phone')}
+          </span>
+          .
         </p>
         <div>
           <label className={labelClass} htmlFor={`al-cool-${projectId}`}>
-            Alert cooldown (seconds)
+            {t('Intervalo entre alertas (segundos)', 'Alert cooldown (seconds)')}
           </label>
           <input
             id={`al-cool-${projectId}`}
@@ -153,11 +174,14 @@ export function ProjectAlertsForm({
             required
           />
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            Minimum time between repeated alerts for the same incident.
+            {t(
+              'Tempo mínimo entre alertas repetidos para o mesmo incidente.',
+              'Minimum time between repeated alerts for the same incident.',
+            )}
           </p>
         </div>
         <div>
-          <span className={labelClass}>Alert channels</span>
+          <span className={labelClass}>{t('Canais de alerta', 'Alert channels')}</span>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
             {CHANNELS.map((c) => (
               <label
@@ -170,14 +194,14 @@ export function ProjectAlertsForm({
                   checked={channels.has(c)}
                   onChange={() => toggleChannel(c)}
                 />
-                {CHANNEL_LABELS[c]}
+                {channelLabel(c, t)}
               </label>
             ))}
           </div>
         </div>
         <div>
           <label className={labelClass} htmlFor={`al-tpl-${projectId}`}>
-            Alert template (optional, Handlebars)
+            {t('Modelo de alerta (opcional, Handlebars)', 'Alert template (optional, Handlebars)')}
           </label>
           <textarea
             id={`al-tpl-${projectId}`}
@@ -185,21 +209,25 @@ export function ProjectAlertsForm({
             className={inputClass}
             value={alertTemplate}
             onChange={(e) => setAlertTemplate(e.target.value)}
-            placeholder="Custom message body for alerts"
+            placeholder={t('Corpo da mensagem personalizado', 'Custom message body for alerts')}
           />
         </div>
       </section>
 
       <section className="space-y-4 border-t border-[var(--color-border)] pt-8">
-        <h3 className="text-base font-medium text-[var(--color-text-primary)]">Email (SMTP)</h3>
+        <h3 className="text-base font-medium text-[var(--color-text-primary)]">
+          {t('E-mail (SMTP)', 'Email (SMTP)')}
+        </h3>
         <p className="text-sm text-[var(--color-text-muted)]">
-          Required when the Email channel is enabled. Password is stored encrypted; leave blank to keep
-          the current value.
+          {t(
+            'Obrigatório quando o canal E-mail está ativo. A senha é armazenada criptografada; deixe em branco para manter o valor atual.',
+            'Required when the Email channel is enabled. Password is stored encrypted; leave blank to keep the current value.',
+          )}
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={labelClass} htmlFor={`al-email-${projectId}`}>
-              Destination email
+              {t('E-mail de destino', 'Destination email')}
             </label>
             <input
               id={`al-email-${projectId}`}
@@ -213,7 +241,7 @@ export function ProjectAlertsForm({
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass} htmlFor={`al-smtp-from-${projectId}`}>
-              From (optional)
+              {t('Remetente (opcional)', 'From (optional)')}
             </label>
             <input
               id={`al-smtp-from-${projectId}`}
@@ -226,7 +254,7 @@ export function ProjectAlertsForm({
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass} htmlFor={`al-smtp-host-${projectId}`}>
-              SMTP host
+              {t('Host SMTP', 'SMTP host')}
             </label>
             <input
               id={`al-smtp-host-${projectId}`}
@@ -238,7 +266,7 @@ export function ProjectAlertsForm({
           </div>
           <div>
             <label className={labelClass} htmlFor={`al-smtp-port-${projectId}`}>
-              SMTP port
+              {t('Porta SMTP', 'SMTP port')}
             </label>
             <input
               id={`al-smtp-port-${projectId}`}
@@ -250,7 +278,7 @@ export function ProjectAlertsForm({
           </div>
           <div>
             <label className={labelClass} htmlFor={`al-smtp-user-${projectId}`}>
-              SMTP user
+              {t('Usuário SMTP', 'SMTP user')}
             </label>
             <input
               id={`al-smtp-user-${projectId}`}
@@ -262,7 +290,7 @@ export function ProjectAlertsForm({
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass} htmlFor={`al-smtp-pass-${projectId}`}>
-              SMTP password (leave blank to keep)
+              {t('Senha SMTP (em branco para manter)', 'SMTP password (leave blank to keep)')}
             </label>
             <input
               id={`al-smtp-pass-${projectId}`}
@@ -277,15 +305,19 @@ export function ProjectAlertsForm({
       </section>
 
       <section className="space-y-4 border-t border-[var(--color-border)] pt-8">
-        <h3 className="text-base font-medium text-[var(--color-text-primary)]">Webhook</h3>
+        <h3 className="text-base font-medium text-[var(--color-text-primary)]">
+          {t('Webhook', 'Webhook')}
+        </h3>
         <p className="text-sm text-[var(--color-text-muted)]">
-          POST JSON payloads to your endpoint when the Webhook channel is enabled. Optional secret is sent
-          for verification and stored encrypted.
+          {t(
+            'Envia payloads JSON ao endpoint quando o canal Webhook está ativo. Segredo opcional para verificação, armazenado criptografado.',
+            'POST JSON payloads to your endpoint when the Webhook channel is enabled. Optional secret is sent for verification and stored encrypted.',
+          )}
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={labelClass} htmlFor={`al-wh-url-${projectId}`}>
-              Webhook URL
+              {t('URL do webhook', 'Webhook URL')}
             </label>
             <input
               id={`al-wh-url-${projectId}`}
@@ -298,7 +330,7 @@ export function ProjectAlertsForm({
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass} htmlFor={`al-wh-sec-${projectId}`}>
-              Webhook secret (leave blank to keep)
+              {t('Segredo do webhook (em branco para manter)', 'Webhook secret (leave blank to keep)')}
             </label>
             <input
               id={`al-wh-sec-${projectId}`}
@@ -318,7 +350,7 @@ export function ProjectAlertsForm({
           disabled={loading}
           className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {loading ? 'Saving…' : 'Save alert settings'}
+          {loading ? t('Salvando…', 'Saving…') : t('Salvar alertas', 'Save alert settings')}
         </button>
         {ok ? <p className="text-sm text-[var(--color-success)]">{ok}</p> : null}
         {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}

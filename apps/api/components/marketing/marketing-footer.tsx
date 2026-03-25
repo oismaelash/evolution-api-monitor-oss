@@ -1,12 +1,16 @@
-const links = [
-  { label: 'Documentation', href: '/docs' },
-  { label: 'Cloud', href: '/dashboard' },
-  { label: 'GitHub', href: 'https://github.com' },
-  { label: 'Privacy', href: '/privacy' },
-  { label: 'Terms', href: '/terms' },
-] as const;
+import { getServerTranslator } from '@/lib/i18n-server';
 
-export function MarketingFooter() {
+export async function MarketingFooter() {
+  const t = await getServerTranslator();
+
+  const links = [
+    { label: t('Documentação', 'Documentation'), href: '/docs' },
+    { label: t('Cloud', 'Cloud'), href: '/dashboard' },
+    { label: 'GitHub', href: 'https://github.com' },
+    { label: t('Privacidade', 'Privacy'), href: '/privacy' },
+    { label: t('Termos', 'Terms'), href: '/terms' },
+  ] as const;
+
   return (
     <footer className="border-t border-[var(--color-border)] py-12" role="contentinfo">
       <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
@@ -17,7 +21,7 @@ export function MarketingFooter() {
         </p>
         <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--color-text-muted)]">
           {links.map(({ label, href }) => (
-            <li key={label}>
+            <li key={href}>
               <a
                 href={href}
                 className="transition-colors hover:text-[var(--color-text-primary)]"
@@ -30,7 +34,10 @@ export function MarketingFooter() {
         </ul>
       </div>
       <p className="mt-8 text-xs text-[var(--color-text-muted)]">
-        Not affiliated with Meta. WhatsApp is a trademark of Meta Platforms, Inc.
+        {t(
+          'Não afiliado à Meta. WhatsApp é marca registrada da Meta Platforms, Inc.',
+          'Not affiliated with Meta. WhatsApp is a trademark of Meta Platforms, Inc.',
+        )}
       </p>
     </footer>
   );

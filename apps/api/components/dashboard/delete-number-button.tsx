@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 export function DeleteNumberButton({
@@ -17,6 +18,7 @@ export function DeleteNumberButton({
   /** Smaller control for table rows */
   compact?: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -24,7 +26,10 @@ export function DeleteNumberButton({
   async function onDelete() {
     setMsg(null);
     const ok = window.confirm(
-      `Remove "${instanceName}" from this project?\n\nThis deletes the number record and related health and alert history. Your Evolution instance on the server is not deleted. This cannot be undone.`,
+      t(
+        `Remover "${instanceName}" deste projeto?\n\nIsso apaga o registro do número e o histórico de health e alertas. A instância WhatsApp na Evolution não é excluída no servidor. Não é possível desfazer.`,
+        `Remove "${instanceName}" from this project?\n\nThis deletes the number record and related health and alert history. Your Evolution instance on the server is not deleted. This cannot be undone.`,
+      ),
     );
     if (!ok) return;
     setLoading(true);
@@ -43,7 +48,7 @@ export function DeleteNumberButton({
       }
       router.refresh();
     } catch {
-      setMsg('Network error');
+      setMsg(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
@@ -61,7 +66,7 @@ export function DeleteNumberButton({
         onClick={() => void onDelete()}
         className={btnClass}
       >
-        {loading ? 'Removing…' : 'Remove'}
+        {loading ? t('Removendo…', 'Removing…') : t('Remover', 'Remove')}
       </button>
       {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}
     </div>

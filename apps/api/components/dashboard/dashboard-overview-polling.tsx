@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import useSWR from 'swr';
+import { useT } from '@/components/i18n/i18n-provider';
 import type { DashboardOverviewPayload } from '@/lib/dashboard-overview-types';
 import { HealthChart24h } from '@/components/dashboard/health-chart-24h';
 import { LocalDateTime } from '@/components/ui/local-datetime';
@@ -17,6 +18,7 @@ export function DashboardOverviewPolling({
 }: {
   initialData: DashboardOverviewPayload;
 }) {
+  const t = useT();
   const { data } = useSWR('/api/dashboard/overview', fetchOverview, {
     fallbackData: initialData,
     refreshInterval: 60_000,
@@ -30,36 +32,46 @@ export function DashboardOverviewPolling({
     <>
       <div className="mb-10 grid gap-4 sm:grid-cols-3">
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-          <div className="text-sm text-[var(--color-text-muted)]">Total numbers</div>
+          <div className="text-sm text-[var(--color-text-muted)]">
+            {t('Total de números', 'Total numbers')}
+          </div>
           <div className="text-2xl font-semibold">{p.stats.total}</div>
         </div>
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-          <div className="text-sm text-[var(--color-text-muted)]">Connected</div>
+          <div className="text-sm text-[var(--color-text-muted)]">
+            {t('Conectados', 'Connected')}
+          </div>
           <div className="text-2xl font-semibold text-[var(--color-success)]">{p.stats.connected}</div>
         </div>
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-          <div className="text-sm text-[var(--color-text-muted)]">In error</div>
+          <div className="text-sm text-[var(--color-text-muted)]">
+            {t('Com erro', 'In error')}
+          </div>
           <div className="text-2xl font-semibold text-[var(--color-error)]">{p.stats.errors}</div>
         </div>
       </div>
 
-      <h2 className="mb-4 text-lg font-medium">Health checks (24h)</h2>
+      <h2 className="mb-4 text-lg font-medium">
+        {t('Health checks (24h)', 'Health checks (24h)')}
+      </h2>
       <HealthChart24h buckets={p.chartBuckets} />
 
-      <h2 className="mb-4 text-lg font-medium">Uptime (24h) by number</h2>
+      <h2 className="mb-4 text-lg font-medium">
+        {t('Uptime (24h) por número', 'Uptime (24h) by number')}
+      </h2>
       <div className="mb-10 overflow-hidden rounded-lg border border-[var(--color-border)]">
         <table className="w-full text-left text-sm">
           <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
             <tr>
-              <th className="px-4 py-2">Instance</th>
-              <th className="px-4 py-2">Uptime</th>
+              <th className="px-4 py-2">{t('Instância', 'Instance')}</th>
+              <th className="px-4 py-2">{t('Uptime', 'Uptime')}</th>
             </tr>
           </thead>
           <tbody>
             {p.uptimeRows.length === 0 ? (
               <tr>
                 <td className="px-4 py-4 text-[var(--color-text-muted)]" colSpan={2}>
-                  No numbers yet.
+                  {t('Nenhum número ainda.', 'No numbers yet.')}
                 </td>
               </tr>
             ) : (
@@ -88,21 +100,21 @@ export function DashboardOverviewPolling({
         </table>
       </div>
 
-      <h2 className="mb-4 text-lg font-medium">Recent alerts</h2>
+      <h2 className="mb-4 text-lg font-medium">{t('Alertas recentes', 'Recent alerts')}</h2>
       <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
         <table className="w-full text-left text-sm">
           <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
             <tr>
-              <th className="px-4 py-2">When</th>
-              <th className="px-4 py-2">Instance</th>
-              <th className="px-4 py-2">Channel</th>
+              <th className="px-4 py-2">{t('Quando', 'When')}</th>
+              <th className="px-4 py-2">{t('Instância', 'Instance')}</th>
+              <th className="px-4 py-2">{t('Canal', 'Channel')}</th>
             </tr>
           </thead>
           <tbody>
             {p.recentAlerts.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-[var(--color-text-muted)]" colSpan={3}>
-                  No alerts yet.
+                  {t('Nenhum alerta ainda.', 'No alerts yet.')}
                 </td>
               </tr>
             ) : (

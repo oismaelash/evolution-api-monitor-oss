@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { updateProjectSchema } from '@monitor/shared';
+import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
@@ -20,6 +21,7 @@ export function EditProjectForm({
   initialEvolutionUrl: string;
   initialAlertPhone: string | null;
 }) {
+  const t = useT();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -61,10 +63,10 @@ export function EditProjectForm({
         return;
       }
       setEvolutionApiKey('');
-      setOk('Saved.');
+      setOk(t('Salvo.', 'Saved.'));
       router.refresh();
     } catch {
-      setMsg('Network error');
+      setMsg(t('Erro de rede', 'Network error'));
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ export function EditProjectForm({
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
       <div>
         <label className={labelClass} htmlFor={`edit-name-${projectId}`}>
-          Name
+          {t('Nome', 'Name')}
         </label>
         <input
           id={`edit-name-${projectId}`}
@@ -86,7 +88,7 @@ export function EditProjectForm({
       </div>
       <div>
         <label className={labelClass} htmlFor={`edit-url-${projectId}`}>
-          Evolution API base URL
+          {t('URL base da Evolution API', 'Evolution API base URL')}
         </label>
         <input
           id={`edit-url-${projectId}`}
@@ -99,7 +101,7 @@ export function EditProjectForm({
       </div>
       <div>
         <label className={labelClass} htmlFor={`edit-key-${projectId}`}>
-          New Evolution API key (optional)
+          {t('Nova API key da Evolution (opcional)', 'New Evolution API key (optional)')}
         </label>
         <input
           id={`edit-key-${projectId}`}
@@ -107,13 +109,13 @@ export function EditProjectForm({
           className={inputClass}
           value={evolutionApiKey}
           onChange={(e) => setEvolutionApiKey(e.target.value)}
-          placeholder="Leave blank to keep current key"
+          placeholder={t('Deixe em branco para manter a atual', 'Leave blank to keep current key')}
           autoComplete="new-password"
         />
       </div>
       <div>
         <label className={labelClass} htmlFor={`edit-alert-${projectId}`}>
-          Alert phone (E.164)
+          {t('Telefone de alerta (E.164)', 'Alert phone (E.164)')}
         </label>
         <input
           id={`edit-alert-${projectId}`}
@@ -129,7 +131,7 @@ export function EditProjectForm({
           disabled={loading}
           className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {loading ? 'Saving…' : 'Save connection'}
+          {loading ? t('Salvando…', 'Saving…') : t('Salvar conexão', 'Save connection')}
         </button>
         {ok ? <p className="text-sm text-[var(--color-success)]">{ok}</p> : null}
         {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}

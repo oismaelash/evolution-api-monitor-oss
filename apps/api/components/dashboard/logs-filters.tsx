@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
+import { useT } from '@/components/i18n/i18n-provider';
 
 export type LogsFilterProject = {
   id: string;
@@ -21,6 +22,7 @@ export function LogsFilters({
   currentProjectId?: string;
   currentNumberId?: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -92,14 +94,14 @@ export function LogsFilters({
   return (
     <div className="mb-4 flex flex-wrap items-end gap-3 text-sm">
       <label className="flex flex-col gap-1">
-        <span className="text-[var(--color-text-muted)]">Project</span>
+        <span className="text-[var(--color-text-muted)]">{t('Projeto', 'Project')}</span>
         <select
           className={selectClassName}
           value={currentProjectId ?? ''}
           onChange={onProjectChange}
-          aria-label="Filter by project"
+          aria-label={t('Filtrar por projeto', 'Filter by project')}
         >
-          <option value="">All projects</option>
+          <option value="">{t('Todos os projetos', 'All projects')}</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -108,14 +110,14 @@ export function LogsFilters({
         </select>
       </label>
       <label className="flex min-w-0 flex-col gap-1">
-        <span className="text-[var(--color-text-muted)]">Number</span>
+        <span className="text-[var(--color-text-muted)]">{t('Número', 'Number')}</span>
         <select
           className={`${selectClassName} min-w-[12rem]`}
           value={currentNumberId ?? ''}
           onChange={onNumberChange}
-          aria-label="Filter by number"
+          aria-label={t('Filtrar por número', 'Filter by number')}
         >
-          <option value="">All numbers</option>
+          <option value="">{t('Todos os números', 'All numbers')}</option>
           {numberOptions.map((n) => (
             <option key={n.id} value={n.id}>
               {n.label}
@@ -129,7 +131,7 @@ export function LogsFilters({
           onClick={onClearScope}
           className="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/40"
         >
-          Clear scope
+          {t('Limpar escopo', 'Clear scope')}
         </button>
       )}
     </div>

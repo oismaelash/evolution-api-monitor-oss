@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@/components/i18n/i18n-provider';
 
 export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) {
+  const t = useT();
   const [loading, setLoading] = useState<'checkout' | 'portal' | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -13,14 +15,14 @@ export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) 
       const res = await fetch('/api/billing/checkout', { method: 'POST' });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok) {
-        setErr(data.error ?? 'Checkout failed');
+        setErr(data.error ?? t('Falha no checkout', 'Checkout failed'));
         return;
       }
       if (data.url) {
         window.location.href = data.url;
         return;
       }
-      setErr('No checkout URL');
+      setErr(t('Sem URL de checkout', 'No checkout URL'));
     } finally {
       setLoading(null);
     }
@@ -33,14 +35,14 @@ export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) 
       const res = await fetch('/api/billing/portal', { method: 'POST' });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok) {
-        setErr(data.error ?? 'Portal failed');
+        setErr(data.error ?? t('Falha no portal', 'Portal failed'));
         return;
       }
       if (data.url) {
         window.location.href = data.url;
         return;
       }
-      setErr('No portal URL');
+      setErr(t('Sem URL do portal', 'No portal URL'));
     } finally {
       setLoading(null);
     }
@@ -58,7 +60,9 @@ export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) 
         disabled={loading !== null}
         className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        {loading === 'checkout' ? 'Redirecting…' : 'Open checkout (Stripe)'}
+        {loading === 'checkout'
+          ? t('Redirecionando…', 'Redirecting…')
+          : t('Abrir checkout (Stripe)', 'Open checkout (Stripe)')}
       </button>
       <button
         type="button"
@@ -66,7 +70,9 @@ export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) 
         disabled={loading !== null}
         className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] disabled:opacity-60"
       >
-        {loading === 'portal' ? 'Redirecting…' : 'Billing portal'}
+        {loading === 'portal'
+          ? t('Redirecionando…', 'Redirecting…')
+          : t('Portal de cobrança', 'Billing portal')}
       </button>
       {err ? <p className="w-full text-sm text-[var(--color-error)]">{err}</p> : null}
     </div>

@@ -4,13 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
-const nav = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/onboarding', label: 'Onboarding' },
-  { href: '/projects', label: 'Projects' },
-  { href: '/logs', label: 'Logs' },
-  { href: '/settings/billing', label: 'Billing' },
-];
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { useT } from '@/components/i18n/i18n-provider';
 
 export function DashboardShell({
   children,
@@ -20,10 +15,23 @@ export function DashboardShell({
   userName?: string | null;
 }) {
   const pathname = usePathname();
+  const t = useT();
+
+  const nav = [
+    { href: '/dashboard', label: t('Painel', 'Dashboard') },
+    { href: '/onboarding', label: t('Onboarding', 'Onboarding') },
+    { href: '/projects', label: t('Projetos', 'Projects') },
+    { href: '/logs', label: t('Logs', 'Logs') },
+    { href: '/settings/billing', label: t('Cobrança', 'Billing') },
+  ];
+
   return (
     <div className="flex min-h-screen">
       <aside className="w-60 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-        <div className="mb-8 text-sm font-semibold text-[var(--color-accent)]">Evolution Monitor</div>
+        <div className="mb-6 flex items-center justify-between gap-2">
+          <div className="text-sm font-semibold text-[var(--color-accent)]">Evolution Monitor</div>
+          <LanguageSwitcher className="flex shrink-0 items-center text-xs" />
+        </div>
         <nav className="flex flex-col gap-1">
           {nav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -43,13 +51,13 @@ export function DashboardShell({
           })}
         </nav>
         <div className="mt-8 border-t border-[var(--color-border)] pt-4 text-xs text-[var(--color-text-muted)]">
-          <div className="mb-2 truncate">{userName ?? 'Account'}</div>
+          <div className="mb-2 truncate">{userName ?? t('Conta', 'Account')}</div>
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: '/' })}
             className="text-[var(--color-accent)] hover:underline"
           >
-            Sign out
+            {t('Sair', 'Sign out')}
           </button>
         </div>
       </aside>
