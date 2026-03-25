@@ -22,6 +22,14 @@ export const projectConfigSchema = z.object({
   alertCooldown: z.number().int().min(60).max(86400).optional(),
   alertChannels: z.array(z.enum(['MONITOR_STATUS', 'EMAIL', 'WEBHOOK'])).optional(),
   alertTemplate: z.string().nullable().optional(),
+  alertEmail: z.preprocess(
+    (v) => (v === '' ? null : v),
+    z.union([z.string().email(), z.null()]).optional()
+  ),
+  smtpFrom: z.preprocess(
+    (v) => (v === '' ? null : v),
+    z.union([z.string().min(1).max(500), z.null()]).optional()
+  ),
   smtpHost: z.string().nullable().optional(),
   smtpPort: z.number().int().nullable().optional(),
   smtpUser: z.string().nullable().optional(),

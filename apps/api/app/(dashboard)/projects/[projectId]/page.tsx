@@ -35,13 +35,6 @@ export default async function ProjectDetailPage({ params }: Props) {
         retryDelay: cfg.retryDelay,
         retryStrategy:
           cfg.retryStrategy === 'EXPONENTIAL_JITTER' ? 'EXPONENTIAL_JITTER' : 'FIXED',
-        alertCooldown: cfg.alertCooldown,
-        alertChannels: [...cfg.alertChannels],
-        alertTemplate: cfg.alertTemplate,
-        smtpHost: cfg.smtpHost,
-        smtpPort: cfg.smtpPort,
-        smtpUser: cfg.smtpUser,
-        webhookUrl: cfg.webhookUrl,
       }
     : null;
 
@@ -89,12 +82,16 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {configInitial ? (
         <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
-          <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">
-            Monitoring &amp; alerts
-          </h2>
+          <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Monitoring</h2>
           <p className="mb-6 text-sm text-[var(--color-text-muted)]">
-            Health checks, retries, and where to send alerts (email, webhook, and Monitor Status
-            when configured).
+            Health checks and retry behaviour.{' '}
+            <Link
+              href={`/projects/${project.id}/alerts`}
+              className="font-medium text-[var(--color-accent)] hover:underline"
+            >
+              Alert settings
+            </Link>{' '}
+            — channels, SMTP, webhook, templates.
           </p>
           <ProjectConfigForm projectId={project.id} initial={configInitial} />
         </section>

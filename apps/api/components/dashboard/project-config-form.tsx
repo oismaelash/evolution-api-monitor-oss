@@ -9,20 +9,11 @@ const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
 
-const CHANNELS = ['MONITOR_STATUS', 'EMAIL', 'WEBHOOK'] as const;
-
 export type ProjectConfigFormInitial = {
   pingInterval: number;
   maxRetries: number;
   retryDelay: number;
   retryStrategy: 'FIXED' | 'EXPONENTIAL_JITTER';
-  alertCooldown: number;
-  alertChannels: string[];
-  alertTemplate: string | null;
-  smtpHost: string | null;
-  smtpPort: number | null;
-  smtpUser: string | null;
-  webhookUrl: string | null;
 };
 
 export function ProjectConfigForm({
@@ -43,65 +34,22 @@ export function ProjectConfigForm({
   const [retryStrategy, setRetryStrategy] = useState<'FIXED' | 'EXPONENTIAL_JITTER'>(
     initial.retryStrategy
   );
-  const [alertCooldown, setAlertCooldown] = useState(String(initial.alertCooldown));
-  const [alertTemplate, setAlertTemplate] = useState(initial.alertTemplate ?? '');
-  const [channels, setChannels] = useState<Set<string>>(new Set(initial.alertChannels));
-
-  const [smtpHost, setSmtpHost] = useState(initial.smtpHost ?? '');
-  const [smtpPort, setSmtpPort] = useState(initial.smtpPort != null ? String(initial.smtpPort) : '');
-  const [smtpUser, setSmtpUser] = useState(initial.smtpUser ?? '');
-  const [smtpPass, setSmtpPass] = useState('');
-  const [webhookUrl, setWebhookUrl] = useState(initial.webhookUrl ?? '');
-  const [webhookSecret, setWebhookSecret] = useState('');
-
-  function toggleChannel(c: (typeof CHANNELS)[number]) {
-    setChannels((prev) => {
-      const next = new Set(prev);
-      if (next.has(c)) next.delete(c);
-      else next.add(c);
-      return next;
-    });
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     setOk(null);
 
-    if (channels.size === 0) {
-      setMsg('Select at least one alert channel.');
-      return;
-    }
-
     const pi = Number.parseInt(pingInterval, 10);
     const mr = Number.parseInt(maxRetries, 10);
     const rd = Number.parseInt(retryDelay, 10);
-    const ac = Number.parseInt(alertCooldown, 10);
-    const sp =
-      smtpPort.trim() === '' ? null : Number.parseInt(smtpPort.trim(), 10);
 
     const body: Record<string, unknown> = {
       pingInterval: pi,
       maxRetries: mr,
       retryDelay: rd,
       retryStrategy,
-      alertCooldown: ac,
-      alertChannels: Array.from(channels).filter((x): x is 'MONITOR_STATUS' | 'EMAIL' | 'WEBHOOK' =>
-        CHANNELS.includes(x as (typeof CHANNELS)[number])
-      ),
-      alertTemplate: alertTemplate.trim() === '' ? null : alertTemplate.trim(),
-      smtpHost: smtpHost.trim() === '' ? null : smtpHost.trim(),
-      smtpPort: sp,
-      smtpUser: smtpUser.trim() === '' ? null : smtpUser.trim(),
-      webhookUrl: webhookUrl.trim() === '' ? null : webhookUrl.trim(),
     };
-
-    if (smtpPass.trim().length > 0) {
-      body.smtpPass = smtpPass.trim();
-    }
-    if (webhookSecret.trim().length > 0) {
-      body.webhookSecret = webhookSecret.trim();
-    }
 
     const parsed = projectConfigSchema.safeParse(body);
     if (!parsed.success) {
@@ -122,9 +70,7 @@ export function ProjectConfigForm({
         setMsg(apiErrorMessage(data));
         return;
       }
-      setSmtpPass('');
-      setWebhookSecret('');
-      setOk('Settings saved.');
+      setOk('Monitoring settings saved.');
       router.refresh();
     } catch {
       setMsg('Network error');
@@ -148,21 +94,6 @@ export function ProjectConfigForm({
             className={inputClass}
             value={pingInterval}
             onChange={(e) => setPingInterval(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className={labelClass} htmlFor={`cfg-cool-${projectId}`}>
-            Alert cooldown (seconds)
-          </label>
-          <input
-            id={`cfg-cool-${projectId}`}
-            type="number"
-            min={60}
-            max={86400}
-            className={inputClass}
-            value={alertCooldown}
-            onChange={(e) => setAlertCooldown(e.target.value)}
             required
           />
         </div>
@@ -212,119 +143,7 @@ export function ProjectConfigForm({
             <option value="EXPONENTIAL_JITTER">Exponential jitter</option>
           </select>
         </div>
-        <div className="sm:col-span-2">
-          <span className={labelClass}>Alert channels</span>
-          <div className="flex flex-wrap gap-4">
-            {CHANNELS.map((c) => (
-              <label key={c} className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-[var(--color-border)]"
-                  checked={channels.has(c)}
-                  onChange={() => toggleChannel(c)}
-                />
-                {c}
-              </label>
-            ))}
-          </div>
-        </div>
-        <div className="sm:col-span-2">
-          <label className={labelClass} htmlFor={`cfg-tpl-${projectId}`}>
-            Alert template (optional, Handlebars)
-          </label>
-          <textarea
-            id={`cfg-tpl-${projectId}`}
-            rows={3}
-            className={inputClass}
-            value={alertTemplate}
-            onChange={(e) => setAlertTemplate(e.target.value)}
-            placeholder="Custom message template"
-          />
-        </div>
       </div>
-
-      <details className="rounded-md border border-[var(--color-border)] p-4">
-        <summary className="cursor-pointer text-sm font-medium text-[var(--color-text-primary)]">
-          Email &amp; webhook (optional)
-        </summary>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`cfg-smtp-host-${projectId}`}>
-              SMTP host
-            </label>
-            <input
-              id={`cfg-smtp-host-${projectId}`}
-              className={inputClass}
-              value={smtpHost}
-              onChange={(e) => setSmtpHost(e.target.value)}
-              autoComplete="off"
-            />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor={`cfg-smtp-port-${projectId}`}>
-              SMTP port
-            </label>
-            <input
-              id={`cfg-smtp-port-${projectId}`}
-              type="number"
-              className={inputClass}
-              value={smtpPort}
-              onChange={(e) => setSmtpPort(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={labelClass} htmlFor={`cfg-smtp-user-${projectId}`}>
-              SMTP user
-            </label>
-            <input
-              id={`cfg-smtp-user-${projectId}`}
-              className={inputClass}
-              value={smtpUser}
-              onChange={(e) => setSmtpUser(e.target.value)}
-              autoComplete="off"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`cfg-smtp-pass-${projectId}`}>
-              SMTP password (leave blank to keep)
-            </label>
-            <input
-              id={`cfg-smtp-pass-${projectId}`}
-              type="password"
-              className={inputClass}
-              value={smtpPass}
-              onChange={(e) => setSmtpPass(e.target.value)}
-              autoComplete="new-password"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`cfg-wh-url-${projectId}`}>
-              Webhook URL
-            </label>
-            <input
-              id={`cfg-wh-url-${projectId}`}
-              type="url"
-              className={inputClass}
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://example.com/hooks/alerts"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`cfg-wh-sec-${projectId}`}>
-              Webhook secret (leave blank to keep)
-            </label>
-            <input
-              id={`cfg-wh-sec-${projectId}`}
-              type="password"
-              className={inputClass}
-              value={webhookSecret}
-              onChange={(e) => setWebhookSecret(e.target.value)}
-              autoComplete="new-password"
-            />
-          </div>
-        </div>
-      </details>
 
       <div className="flex flex-wrap items-center gap-3">
         <button
