@@ -77,8 +77,11 @@ export function ProjectAlertsForm({
   const [webhookSecret, setWebhookSecret] = useState('');
   const [showWebhookPayloadFormat, setShowWebhookPayloadFormat] = useState(false);
 
-  // For the WhatsApp sender selection (mocking the UI structure as requested)
-  const [whatsappSender, setWhatsappSender] = useState<string>(initial.whatsappSender ?? 'pilot_status');
+  // In OSS, default to the first connected number, or null if none.
+  const firstConnected = initial.numbers?.find(n => n.state === 'CONNECTED')?.id || '';
+  const [whatsappSender, setWhatsappSender] = useState<string>(
+    initial.whatsappSender ?? (process.env.NEXT_PUBLIC_IS_CLOUD === 'true' ? 'pilot_status' : firstConnected)
+  );
 
   function toggleChannel(c: (typeof CHANNELS)[number]) {
     setChannels((prev) => {
@@ -278,24 +281,27 @@ export function ProjectAlertsForm({
             </FormLabelWithHelp>
             
             <div className="mt-3 space-y-3">
-              <label className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${whatsappSender === 'pilot_status' ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5' : 'border-[var(--color-border)] hover:bg-[var(--color-surface)]'}`}>
-                <input 
-                  type="radio" 
-                  name="whatsappSender" 
-                  value="pilot_status" 
-                  className="mt-1"
-                  checked={whatsappSender === 'pilot_status'}
-                  onChange={() => setWhatsappSender('pilot_status')}
-                />
-                <div>
-                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                    {t('Padrão do Sistema (Pilot Status)', 'System Default (Pilot Status)')}
-                  </p>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    {t('Usa o número oficial do monitor para enviar os alertas.', 'Uses the official monitor number to send alerts.')}
-                  </p>
-                </div>
-              </label>
+              {/* This option is hidden in OSS since Pilot Status is a Cloud feature */}
+              {process.env.NEXT_PUBLIC_IS_CLOUD === 'true' && (
+                <label className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${whatsappSender === 'pilot_status' ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5' : 'border-[var(--color-border)] hover:bg-[var(--color-surface)]'}`}>
+                  <input 
+                    type="radio" 
+                    name="whatsappSender" 
+                    value="pilot_status" 
+                    className="mt-1"
+                    checked={whatsappSender === 'pilot_status'}
+                    onChange={() => setWhatsappSender('pilot_status')}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {t('Padrão do Sistema (Pilot Status)', 'System Default (Pilot Status)')}
+                    </p>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {t('Usa o número oficial do monitor para enviar os alertas.', 'Uses the official monitor number to send alerts.')}
+                    </p>
+                  </div>
+                </label>
+              )}
 
               {initial.numbers?.filter(n => n.state === 'CONNECTED').map(num => (
                 <label key={num.id} className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${whatsappSender === num.id ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5' : 'border-[var(--color-border)] hover:bg-[var(--color-surface)]'}`}>
