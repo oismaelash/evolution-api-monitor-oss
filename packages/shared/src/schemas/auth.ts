@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { e164PhoneSchema } from '../phone-e164.js';
+
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),
@@ -8,20 +10,14 @@ export const registerSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-/** E.164 with leading + and country code (10–15 digits after +). */
-const e164Phone = z
-  .string()
-  .trim()
-  .regex(/^\+\d{10,15}$/, 'Invalid E.164 phone');
-
 export const whatsappOtpRequestSchema = z.object({
-  phone: e164Phone,
+  phone: e164PhoneSchema,
 });
 
 export type WhatsappOtpRequestInput = z.infer<typeof whatsappOtpRequestSchema>;
 
 export const whatsappOtpVerifySchema = z.object({
-  phone: e164Phone,
+  phone: e164PhoneSchema,
   code: z.string().trim().regex(/^\d{6}$/, 'Invalid code'),
 });
 

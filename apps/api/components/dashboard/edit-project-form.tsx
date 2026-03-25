@@ -1,10 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { updateProjectSchema } from '@monitor/shared';
+import { useEffect, useState } from 'react';
+import { composedE164FromDdiFields, updateProjectSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
+import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
+import { e164ToDdiAndNational } from '@/lib/e164-fields';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
@@ -30,16 +32,42 @@ export function EditProjectForm({
   const [name, setName] = useState(initialName);
   const [evolutionUrl, setEvolutionUrl] = useState(initialEvolutionUrl);
   const [evolutionApiKey, setEvolutionApiKey] = useState('');
-  const [alertPhone, setAlertPhone] = useState(initialAlertPhone ?? '');
+  const [alertDdi, setAlertDdi] = useState('');
+  const [alertNational, setAlertNational] = useState('');
+
+  useEffect(() => {
+    const { ddi, national } = e164ToDdiAndNational(initialAlertPhone);
+    setAlertDdi(ddi);
+    setAlertNational(national);
+  }, [initialAlertPhone]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
     setOk(null);
+    const alertResult = composedE164FromDdiFields(alertDdi, alertNational);
+    if (alertResult === 'partial') {
+      setMsg(
+        t(
+          'Indique DDI e número no telefone de alerta, ou deixe os dois em branco.',
+          'Enter both country code and number for the alert phone, or leave both empty.',
+        ),
+      );
+      return;
+    }
+    if (alertResult === 'invalid') {
+      setMsg(
+        t(
+          'Telefone de alerta inválido (E.164: + e 10 a 15 dígitos no total).',
+          'Invalid alert phone (E.164: + and 10–15 digits total).',
+        ),
+      );
+      return;
+    }
     const body: Record<string, unknown> = {
       name: name.trim(),
       evolutionUrl: evolutionUrl.trim(),
-      alertPhone: alertPhone.trim() === '' ? null : alertPhone.trim(),
+      alertPhone: alertResult === 'empty' ? null : alertResult,
     };
     const key = evolutionApiKey.trim();
     if (key.length > 0) {
@@ -114,16 +142,17 @@ export function EditProjectForm({
           autoComplete="new-password"
         />
       </div>
-      <div>
-        <label className={labelClass} htmlFor={`edit-alert-${projectId}`}>
-          {t('Telefone de alerta (E.164)', 'Alert phone (E.164)')}
-        </label>
-        <input
-          id={`edit-alert-${projectId}`}
-          className={inputClass}
-          value={alertPhone}
-          onChange={(e) => setAlertPhone(e.target.value)}
-          placeholder="+5511999999999"
+      <div className="space-y-1">
+        <span className={labelClass}>
+          {t('Telefone de alerta', 'Alert phone')}
+        </span>
+        <WhatsappPhoneFields
+          ddiId={`edit-alert-ddi-${projectId}`}
+          nationalId={`edit-alert-national-${projectId}`}
+          ddiValue={alertDdi}
+          nationalValue={alertNational}
+          onDdiChange={setAlertDdi}
+          onNationalChange={setAlertNational}
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">

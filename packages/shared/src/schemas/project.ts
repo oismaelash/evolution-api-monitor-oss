@@ -1,17 +1,36 @@
 import { z } from 'zod';
 
+import { e164PhoneSchema } from '../phone-e164.js';
+
 export const createProjectSchema = z.object({
   name: z.string().min(1).max(200),
   evolutionUrl: z.string().url(),
   evolutionApiKey: z.string().min(1),
-  alertPhone: z.string().optional(),
+  alertPhone: z.preprocess(
+    (v) => {
+      if (v === undefined || v === null) return undefined;
+      if (typeof v !== 'string') return v;
+      const t = v.trim();
+      return t === '' ? undefined : t;
+    },
+    e164PhoneSchema.optional(),
+  ),
 });
 
 export const updateProjectSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   evolutionUrl: z.string().url().optional(),
   evolutionApiKey: z.string().min(1).optional(),
-  alertPhone: z.string().nullable().optional(),
+  alertPhone: z.preprocess(
+    (v) => {
+      if (v === undefined) return undefined;
+      if (v === null) return null;
+      if (typeof v === 'string' && v.trim() === '') return null;
+      if (typeof v === 'string') return v.trim();
+      return v;
+    },
+    z.union([z.null(), e164PhoneSchema]).optional(),
+  ),
 });
 
 export const projectConfigSchema = z.object({

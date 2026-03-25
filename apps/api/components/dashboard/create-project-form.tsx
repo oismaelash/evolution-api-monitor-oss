@@ -3,9 +3,10 @@
 import { ArrowDown2 } from 'iconsax-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { createProjectSchema } from '@monitor/shared';
+import { composedE164FromDdiFields, createProjectSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
+import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
@@ -21,16 +22,36 @@ export function CreateProjectForm() {
   const [name, setName] = useState('');
   const [evolutionUrl, setEvolutionUrl] = useState('');
   const [evolutionApiKey, setEvolutionApiKey] = useState('');
-  const [alertPhone, setAlertPhone] = useState('');
+  const [alertDdi, setAlertDdi] = useState('');
+  const [alertNational, setAlertNational] = useState('');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMsg(null);
+    const alertResult = composedE164FromDdiFields(alertDdi, alertNational);
+    if (alertResult === 'partial') {
+      setMsg(
+        t(
+          'Indique DDI e número no telefone de alerta, ou deixe os dois em branco.',
+          'Enter both country code and number for the alert phone, or leave both empty.',
+        ),
+      );
+      return;
+    }
+    if (alertResult === 'invalid') {
+      setMsg(
+        t(
+          'Telefone de alerta inválido (E.164: + e 10 a 15 dígitos no total).',
+          'Invalid alert phone (E.164: + and 10–15 digits total).',
+        ),
+      );
+      return;
+    }
     const raw = {
       name: name.trim(),
       evolutionUrl: evolutionUrl.trim(),
       evolutionApiKey: evolutionApiKey.trim(),
-      alertPhone: alertPhone.trim() || undefined,
+      alertPhone: alertResult === 'empty' ? undefined : alertResult,
     };
     const parsed = createProjectSchema.safeParse(raw);
     if (!parsed.success) {
@@ -146,17 +167,17 @@ export function CreateProjectForm() {
               required
             />
           </div>
-          <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor="proj-alert">
-              {t('Telefone de alerta (E.164, opcional)', 'Alert phone (E.164, optional)')}
-            </label>
-            <input
-              id="proj-alert"
-              className={inputClass}
-              value={alertPhone}
-              onChange={(e) => setAlertPhone(e.target.value)}
-              placeholder="+5511999999999"
-              autoComplete="off"
+          <div className="sm:col-span-2 space-y-1">
+            <span className={labelClass}>
+              {t('Telefone de alerta (opcional)', 'Alert phone (optional)')}
+            </span>
+            <WhatsappPhoneFields
+              ddiId="proj-alert-ddi"
+              nationalId="proj-alert-national"
+              ddiValue={alertDdi}
+              nationalValue={alertNational}
+              onDdiChange={setAlertDdi}
+              onNationalChange={setAlertNational}
             />
           </div>
         </div>

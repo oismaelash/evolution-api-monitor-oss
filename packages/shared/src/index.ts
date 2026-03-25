@@ -5,6 +5,7 @@ export * from './retry.js';
 export * from './crypto.js';
 export * from './env.js';
 export * from './schemas/index.js';
+export * from './phone-e164.js';
 export * from './evolution/index.js';
 export * from './providers/alert.js';
 export * from './constants.js';

@@ -7,7 +7,13 @@ import { useEffect, useState } from 'react';
 
 import { useT } from '@/components/i18n/i18n-provider';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
 import { AUTH_ERROR_HINTS, normalizeAuthErrorParam } from '@/lib/auth-error-messages';
+import {
+  buildE164FromDdiAndNumber,
+  composedE164FromDdiFields,
+  isValidE164,
+} from '@monitor/shared';
 
 function GoogleLogo({ className }: { className?: string }) {
   return (
@@ -38,20 +44,6 @@ function GitHubLogo({ className }: { className?: string }) {
       <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
     </svg>
   );
-}
-
-/** Build E.164: +DDI + national digits (no spaces). */
-function buildE164FromDdiAndNumber(ddiRaw: string, nationalRaw: string): string {
-  const ddi = ddiRaw.replace(/\D/g, '');
-  const national = nationalRaw.replace(/\D/g, '');
-  if (!ddi || !national) {
-    return '';
-  }
-  return `+${ddi}${national}`;
-}
-
-function isValidE164(phone: string): boolean {
-  return /^\+\d{10,15}$/.test(phone);
 }
 
 export function LoginPageBody() {
@@ -85,8 +77,17 @@ export function LoginPageBody() {
 
   async function handleSendOtp() {
     setOtpError(null);
-    const phone = buildE164FromDdiAndNumber(ddiInput, nationalNumberInput);
-    if (!isValidE164(phone)) {
+    const composed = composedE164FromDdiFields(ddiInput, nationalNumberInput);
+    if (composed === 'partial') {
+      setOtpError(
+        t(
+          'Indique DDI e número, ou deixe os dois em branco.',
+          'Enter both country code and number, or leave both empty.',
+        ),
+      );
+      return;
+    }
+    if (composed === 'empty' || composed === 'invalid') {
       setOtpError(
         t(
           'Indique um DDI e um número válidos (E.164: + e 10 a 15 dígitos no total).',
@@ -95,6 +96,7 @@ export function LoginPageBody() {
       );
       return;
     }
+    const phone = composed;
     setOtpLoading(true);
     try {
       const res = await fetch('/api/auth/whatsapp-otp/request', {
@@ -221,57 +223,14 @@ export function LoginPageBody() {
               ) : null}
               {otpStep === 'phone' ? (
                 <>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
-                    <div className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[7rem]">
-                      <label
-                        htmlFor="login-whatsapp-ddi"
-                        className="text-xs font-medium text-[var(--color-text-muted)]"
-                      >
-                        {t('DDI', 'Country code')}
-                      </label>
-                      <input
-                        id="login-whatsapp-ddi"
-                        type="text"
-                        name="ddi"
-                        inputMode="numeric"
-                        autoComplete="tel-country-code"
-                        placeholder={t('ex.: 55', 'e.g. 55')}
-                        value={ddiInput}
-                        onChange={(e) =>
-                          setDdiInput(e.target.value.replace(/\D/g, '').slice(0, 3))
-                        }
-                        className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-                      />
-                    </div>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <label
-                        htmlFor="login-whatsapp-national"
-                        className="text-xs font-medium text-[var(--color-text-muted)]"
-                      >
-                        {t('Número', 'Number')}
-                      </label>
-                      <input
-                        id="login-whatsapp-national"
-                        type="tel"
-                        name="phone"
-                        autoComplete="tel-national"
-                        placeholder={t('ex.: 11999999999', 'e.g. 11999999999')}
-                        value={nationalNumberInput}
-                        onChange={(e) =>
-                          setNationalNumberInput(
-                            e.target.value.replace(/\D/g, '').slice(0, 15),
-                          )
-                        }
-                        className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    {t(
-                      'Será usado o formato +DDI seguido do número, sem espaços.',
-                      'The app will use +country code followed by the number, no spaces.',
-                    )}
-                  </p>
+                  <WhatsappPhoneFields
+                    ddiId="login-whatsapp-ddi"
+                    nationalId="login-whatsapp-national"
+                    ddiValue={ddiInput}
+                    nationalValue={nationalNumberInput}
+                    onDdiChange={setDdiInput}
+                    onNationalChange={setNationalNumberInput}
+                  />
                   <button
                     type="button"
                     disabled={otpLoading || !whatsappE164Valid}
