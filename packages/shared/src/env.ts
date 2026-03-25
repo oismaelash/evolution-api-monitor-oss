@@ -25,6 +25,8 @@ const rawEnvSchema = z.object({
   PAGUE_DEV_WEBHOOK_SECRET: z.string().optional(),
   MONITOR_STATUS_API_KEY: z.string().optional(),
   MONITOR_STATUS_BASE_URL: z.string().url().optional(),
+  /** Pilot Status API `templateId` (dashboard); default applied in worker if unset */
+  MONITOR_STATUS_TEMPLATE_ID: z.string().optional(),
   PING_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).optional(),
   RESTART_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),

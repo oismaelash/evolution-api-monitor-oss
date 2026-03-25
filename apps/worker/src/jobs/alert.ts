@@ -143,6 +143,8 @@ export function createAlertWorker(connection: RedisClient) {
           ? defaultResolvedText
           : renderMessage(advanced, cfg.alertTemplate, vars, defaultFailureText);
 
+        const pilotStatusTemplateId =
+          env.MONITOR_STATUS_TEMPLATE_ID?.trim() || 'default';
         const isLive = env.MONITOR_STATUS_API_KEY?.startsWith('ps_live_');
         const channels = cfg.alertChannels;
         const channelsSent: string[] = [];
@@ -186,7 +188,7 @@ export function createAlertWorker(connection: RedisClient) {
 
             try {
               const accepted = await client.messages.send({
-                templateId: cfg.alertTemplate || 'default',
+                templateId: pilotStatusTemplateId,
                 destinationNumber: e164Dest,
                 variables: {
                   message: monitorMessage, // Fallback for old templates
