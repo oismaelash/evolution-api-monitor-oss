@@ -1,6 +1,6 @@
-import { Cloud, Code } from 'iconsax-react';
+import Link from 'next/link';
 
-const CLOUD_URL = 'https://cloud.evolutionapi.online';
+import { Cloud, Code } from 'iconsax-react';
 
 export function MarketingOssVsCloud() {
   return (
@@ -49,12 +49,12 @@ export function MarketingOssVsCloud() {
             We host it for you: start with a trial, scale with straightforward billing, and spend less
             time running infrastructure—same capabilities, less ops overhead.
           </p>
-          <a
-            href={CLOUD_URL}
+          <Link
+            href="/dashboard"
             className="mt-6 inline-block rounded-lg bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             Go to Cloud
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import { Cloud, Code } from 'iconsax-react';
 
-const CLOUD_URL = 'https://cloud.evolutionapi.online';
+const DASHBOARD_HREF = '/dashboard';
 
 export function MarketingHeader() {
   return (
@@ -20,19 +20,19 @@ export function MarketingHeader() {
         <a href="#open-source" className="transition-colors hover:text-[var(--color-text-primary)]">
           Open source
         </a>
-        <a
-          href={CLOUD_URL}
+        <Link
+          href={DASHBOARD_HREF}
           className="inline-flex items-center gap-1.5 font-medium text-[var(--color-accent)] transition-opacity hover:opacity-90"
         >
           <Cloud size={18} variant="Bold" color="currentColor" aria-hidden />
           Cloud
-        </a>
-        <a
-          href={CLOUD_URL}
+        </Link>
+        <Link
+          href={DASHBOARD_HREF}
           className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
         >
           Get started
-        </a>
+        </Link>
         <a
           href="https://github.com"
           target="_blank"

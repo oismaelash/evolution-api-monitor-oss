@@ -1,8 +1,6 @@
-const CLOUD_URL = 'https://cloud.evolutionapi.online';
-
 const links = [
   { label: 'Documentation', href: '/docs' },
-  { label: 'Cloud', href: CLOUD_URL },
+  { label: 'Cloud', href: '/dashboard' },
   { label: 'GitHub', href: 'https://github.com' },
   { label: 'Privacy', href: '/privacy' },
   { label: 'Terms', href: '/terms' },

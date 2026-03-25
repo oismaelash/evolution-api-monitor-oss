@@ -1,6 +1,6 @@
-import { Monitor } from 'iconsax-react';
+import Link from 'next/link';
 
-const CLOUD_URL = 'https://cloud.evolutionapi.online';
+import { Monitor } from 'iconsax-react';
 
 export function MarketingHero() {
   return (
@@ -22,12 +22,12 @@ export function MarketingHero() {
           nothing happens in the dark.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <a
-            href={CLOUD_URL}
+          <Link
+            href="/dashboard"
             className="rounded-lg bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           >
             Start on Cloud
-          </a>
+          </Link>
           <a
             href="https://github.com"
             target="_blank"
