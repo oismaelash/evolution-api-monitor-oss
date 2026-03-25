@@ -22,7 +22,7 @@ export function DashboardShell({
 
   const nav = [
     { href: '/dashboard', label: t('Painel', 'Dashboard') },
-    { href: '/onboarding', label: t('Onboarding', 'Onboarding') },
+    // { href: '/onboarding', label: t('Onboarding', 'Onboarding') },
     { href: '/projects', label: t('Projetos', 'Projects') },
     { href: '/logs', label: t('Logs', 'Logs') },
     { href: '/settings/billing', label: t('Cobrança', 'Billing') },
