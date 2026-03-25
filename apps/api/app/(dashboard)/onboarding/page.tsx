@@ -27,7 +27,8 @@ export default async function OnboardingPage() {
           with your Evolution API base URL and API key (form at the top of Projects).
         </li>
         <li>
-          Open the project and use <strong>Sync instances</strong> to import numbers from Evolution.
+          Open the project and use <strong>Sync instances</strong> to list Evolution instances and choose
+          which ones to add.
         </li>
         <li>Choose which instances to monitor and set alert channels in project settings.</li>
       </ol>

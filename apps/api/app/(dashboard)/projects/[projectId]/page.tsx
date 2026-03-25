@@ -101,10 +101,10 @@ export default async function ProjectDetailPage({ params }: Props) {
       <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
         <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Numbers</h2>
         <p className="mb-4 text-sm text-[var(--color-text-muted)]">
-          <strong className="text-[var(--color-text-primary)]">Sync instances</strong> imports
-          every instance name from your Evolution server into this project. Use{' '}
-          <strong className="text-[var(--color-text-primary)]">Add number</strong> if you prefer to
-          register an instance name manually (it must match Evolution).
+          <strong className="text-[var(--color-text-primary)]">Sync instances</strong> loads
+          instance names from your Evolution server; you choose which ones to add to this project.
+          Use <strong className="text-[var(--color-text-primary)]">Add number</strong> if you prefer
+          to register an instance name manually (it must match Evolution).
         </p>
         <div className="mb-8">
           <SyncInstancesButton projectId={project.id} />

@@ -67,10 +67,10 @@ export const NumberService = {
     return { data, meta: buildPaginationMeta(page, limit, total) };
   },
 
-  async syncFromEvolution(userId: string, projectId: string) {
+  /** Lists instances from Evolution and whether each is already registered on this project. */
+  async previewSyncFromEvolution(userId: string, projectId: string) {
     const project = await prisma.project.findFirst({
       where: { id: projectId, userId },
-      include: { config: true },
     });
     if (!project) {
       throw new AppError('UNKNOWN', 'Project not found', 404);
@@ -79,8 +79,49 @@ export const NumberService = {
     const client = new EvolutionClient(project.evolutionUrl, apiKey);
     const raw = await client.fetchInstances();
     const names = parseInstanceNames(raw);
+    const existingRows =
+      names.length === 0
+        ? []
+        : await prisma.number.findMany({
+            where: { projectId, instanceName: { in: names } },
+            select: { instanceName: true },
+          });
+    const existing = new Set(existingRows.map((r) => r.instanceName));
+    const instances = [...names]
+      .sort((a, b) => a.localeCompare(b))
+      .map((instanceName) => ({
+        instanceName,
+        alreadyInProject: existing.has(instanceName),
+      }));
+    return { instances };
+  },
+
+  /** Creates Number rows for the given names (must appear in a fresh Evolution fetchInstances). */
+  async applySyncFromEvolution(userId: string, projectId: string, instanceNames: string[]) {
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, userId },
+      include: { config: true },
+    });
+    if (!project) {
+      throw new AppError('UNKNOWN', 'Project not found', 404);
+    }
+    const unique = [...new Set(instanceNames)];
+    const apiKey = decryptFromStorage(project.evolutionApiKey);
+    const client = new EvolutionClient(project.evolutionUrl, apiKey);
+    const raw = await client.fetchInstances();
+    const names = parseInstanceNames(raw);
+    const allowed = new Set(names);
+    for (const instanceName of unique) {
+      if (!allowed.has(instanceName)) {
+        throw new AppError(
+          'UNKNOWN',
+          `Instance "${instanceName}" is not on Evolution (or was removed since you opened the list).`,
+          400,
+        );
+      }
+    }
     let created = 0;
-    for (const instanceName of names) {
+    for (const instanceName of unique) {
       const existing = await prisma.number.findUnique({
         where: { projectId_instanceName: { projectId, instanceName } },
       });

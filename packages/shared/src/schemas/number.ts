@@ -13,5 +13,11 @@ export const updateNumberSchema = z.object({
   monitored: z.boolean().optional(),
 });
 
+/** Body for POST /api/projects/:id/numbers/sync — only these instances are created (must exist on Evolution). */
+export const syncInstancesApplySchema = z.object({
+  instanceNames: z.array(z.string().min(1).max(200)).max(500),
+});
+
 export type AddNumberInput = z.infer<typeof addNumberSchema>;
 export type UpdateNumberInput = z.infer<typeof updateNumberSchema>;
+export type SyncInstancesApplyInput = z.infer<typeof syncInstancesApplySchema>;
