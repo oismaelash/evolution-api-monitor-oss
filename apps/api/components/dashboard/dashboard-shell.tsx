@@ -8,7 +8,6 @@ import {
   FolderCloud, 
   DocumentText, 
   EmptyWallet, 
-  Logout, 
   ArrowLeft2, 
   ArrowRight2,
   Global
@@ -167,37 +166,6 @@ export function DashboardShell({
 
         {/* User & Footer */}
         <div className="mt-auto border-t border-[var(--color-border)] pt-4 px-2">
-          <div className={`mb-4 flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
-            {!isCollapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="truncate text-xs font-semibold text-[var(--color-text-primary)]">
-                  {userName ?? t('Conta', 'Account')}
-                </span>
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => { window.location.href = '/'; }}
-              className={`group relative flex items-center justify-center rounded-lg p-2 text-[var(--color-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-500 ${isCollapsed ? 'w-full' : ''}`}
-            >
-              <Logout 
-                size="20" 
-                variant="Outline" 
-                color="#94a3b8"
-                className="transition-colors group-hover:text-red-500"
-              />
-              {!isCollapsed && <span className="ml-2 text-xs font-medium">{t('Sair', 'Sign out')}</span>}
-
-              {/* Custom Tooltip for Collapsed State */}
-              {isCollapsed && (
-                <div className="pointer-events-none absolute left-full z-50 ml-6 hidden whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-[var(--color-accent-text)] shadow-2xl transition-all group-hover:block animate-in fade-in slide-in-from-left-2 duration-200">
-                  <div className="absolute -left-1 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 bg-red-600" />
-                  {t('Sair', 'Sign out')}
-                </div>
-              )}
-            </button>
-          </div>
-
           {/* Collapse Toggle */}
           <button
             type="button"
