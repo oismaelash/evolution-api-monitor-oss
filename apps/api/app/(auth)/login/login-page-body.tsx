@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { getProviders, signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { useT } from '@/components/i18n/i18n-provider';
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
@@ -39,14 +40,87 @@ function GitHubLogo({ className }: { className?: string }) {
   );
 }
 
+function normalizeLoginPhone(input: string): string {
+  const t = input.trim().replace(/\s/g, '');
+  if (t.startsWith('+')) {
+    return t;
+  }
+  return `+${t}`;
+}
+
 export function LoginPageBody() {
   const t = useT();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const code = normalizeAuthErrorParam(searchParams.get('error'));
   const hint = code ? AUTH_ERROR_HINTS[code] ?? AUTH_ERROR_HINTS.Default : null;
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
   const hintResolved = hint ? t(hint.pt, hint.en).replaceAll('{origin}', origin) : null;
+
+  const [whatsappOtpAvailable, setWhatsappOtpAvailable] = useState(false);
+  const [otpStep, setOtpStep] = useState<'phone' | 'code'>('phone');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getProviders().then((p) => {
+      if (p?.['whatsapp-otp']) {
+        setWhatsappOtpAvailable(true);
+      }
+    });
+  }, []);
+
+  async function handleSendOtp() {
+    setOtpError(null);
+    const phone = normalizeLoginPhone(phoneInput);
+    setOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/whatsapp-otp/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: unknown };
+        const msg =
+          typeof data.error === 'string'
+            ? data.error
+            : t('Não foi possível enviar o código.', 'Could not send the code.');
+        setOtpError(msg);
+        return;
+      }
+      setOtpStep('code');
+    } finally {
+      setOtpLoading(false);
+    }
+  }
+
+  async function handleVerifyOtp() {
+    setOtpError(null);
+    const phone = normalizeLoginPhone(phoneInput);
+    setOtpLoading(true);
+    try {
+      const res = await signIn('whatsapp-otp', {
+        phone,
+        code: otpCode.trim(),
+        redirect: false,
+        callbackUrl: '/dashboard',
+      });
+      if (res?.error) {
+        setOtpError(t('Código inválido ou expirado.', 'Invalid or expired code.'));
+        return;
+      }
+      if (res?.ok) {
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } finally {
+      setOtpLoading(false);
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
@@ -56,10 +130,15 @@ export function LoginPageBody() {
       <div className="w-full max-w-md rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-8">
         <h1 className="mb-2 text-xl font-semibold">{t('Entrar', 'Sign in')}</h1>
         <p className="mb-6 text-sm text-[var(--color-text-muted)]">
-          {t(
-            'Use sua conta Google ou GitHub para acessar o painel.',
-            'Use your Google or GitHub account to access the dashboard.',
-          )}
+          {whatsappOtpAvailable
+            ? t(
+                'Use Google, GitHub ou seu número em formato E.164 (receberá um código no WhatsApp).',
+                'Use Google, GitHub, or your number in E.164 format (you will receive a code on WhatsApp).',
+              )
+            : t(
+                'Use sua conta Google ou GitHub para acessar o painel.',
+                'Use your Google or GitHub account to access the dashboard.',
+              )}
         </p>
         {code ? (
           <div
@@ -90,6 +169,100 @@ export function LoginPageBody() {
             {t('Continuar com GitHub', 'Continue with GitHub')}
           </button>
         </div>
+        {whatsappOtpAvailable ? (
+          <>
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[var(--color-border)]" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                <span className="bg-[var(--color-surface)] px-2">{t('Ou', 'Or')}</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                {t('Entrar com WhatsApp', 'Sign in with WhatsApp')}
+              </p>
+              {otpError ? (
+                <div
+                  role="alert"
+                  className="rounded-md border border-[var(--color-error)]/40 bg-[var(--color-error)]/10 px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                >
+                  {otpError}
+                </div>
+              ) : null}
+              {otpStep === 'phone' ? (
+                <>
+                  <label htmlFor="login-whatsapp-phone" className="sr-only">
+                    {t('Telefone (E.164)', 'Phone (E.164)')}
+                  </label>
+                  <input
+                    id="login-whatsapp-phone"
+                    type="tel"
+                    name="phone"
+                    autoComplete="tel"
+                    placeholder={t('ex.: +5511999999999', 'e.g. +5511999999999')}
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                  />
+                  <button
+                    type="button"
+                    disabled={otpLoading || !phoneInput.trim()}
+                    onClick={() => void handleSendOtp()}
+                    className="rounded-md border border-[var(--color-accent)] bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  >
+                    {otpLoading
+                      ? t('A enviar…', 'Sending…')
+                      : t('Enviar código', 'Send code')}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    {t('Código enviado para', 'Code sent to')}{' '}
+                    <span className="font-mono">{normalizeLoginPhone(phoneInput)}</span>
+                    .{' '}
+                    <button
+                      type="button"
+                      className="text-[var(--color-accent)] underline"
+                      onClick={() => {
+                        setOtpStep('phone');
+                        setOtpCode('');
+                        setOtpError(null);
+                      }}
+                    >
+                      {t('Alterar número', 'Change number')}
+                    </button>
+                  </p>
+                  <label htmlFor="login-whatsapp-otp" className="sr-only">
+                    {t('Código de verificação', 'Verification code')}
+                  </label>
+                  <input
+                    id="login-whatsapp-otp"
+                    type="text"
+                    name="otp"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    placeholder={t('000000', '000000')}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 font-mono text-lg tracking-widest text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                  />
+                  <button
+                    type="button"
+                    disabled={otpLoading || otpCode.length !== 6}
+                    onClick={() => void handleVerifyOtp()}
+                    className="rounded-md border border-[var(--color-accent)] bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  >
+                    {otpLoading ? t('A entrar…', 'Signing in…') : t('Entrar', 'Sign in')}
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        ) : null}
         <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
           <Link href="/" className="text-[var(--color-accent)] hover:underline">
             {t('Voltar ao início', 'Back to home')}

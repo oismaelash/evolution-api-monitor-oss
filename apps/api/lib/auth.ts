@@ -1,9 +1,15 @@
 import '@/lib/env';
 import type { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import { Prisma, prisma } from '@monitor/database';
-import { loadEnv, SubscriptionStatus } from '@monitor/shared';
+import { loadEnv, SubscriptionStatus, whatsappOtpVerifySchema } from '@monitor/shared';
+
+import {
+  findOrCreateUserByWhatsapp,
+  verifyWhatsappOtp,
+} from '@/services/whatsapp-otp-auth.service';
 
 function isMissingTableError(e: unknown): boolean {
   return e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2021';
@@ -46,6 +52,45 @@ function buildOAuthProviders() {
   return providers;
 }
 
+function buildWhatsappOtpProvider() {
+  const env = loadEnv();
+  if (!env.MONITOR_STATUS_API_KEY?.trim()) {
+    return [];
+  }
+  return [
+    CredentialsProvider({
+      id: 'whatsapp-otp',
+      name: 'WhatsApp OTP',
+      credentials: {
+        phone: { label: 'Phone', type: 'text' },
+        code: { label: 'Code', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.phone || !credentials?.code) {
+          return null;
+        }
+        const parsed = whatsappOtpVerifySchema.safeParse({
+          phone: credentials.phone,
+          code: credentials.code,
+        });
+        if (!parsed.success) {
+          return null;
+        }
+        const ok = await verifyWhatsappOtp(parsed.data.phone, parsed.data.code);
+        if (!ok) {
+          return null;
+        }
+        const dbUser = await findOrCreateUserByWhatsapp(parsed.data.phone);
+        return {
+          id: dbUser.id,
+          name: dbUser.name ?? undefined,
+          email: dbUser.email ?? undefined,
+        };
+      },
+    }),
+  ];
+}
+
 function isGoogleEmailVerified(profile: unknown): boolean {
   if (!profile || typeof profile !== 'object' || !('email_verified' in profile)) {
     return true;
@@ -56,13 +101,16 @@ function isGoogleEmailVerified(profile: unknown): boolean {
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 },
-  providers: buildOAuthProviders(),
+  providers: [...buildOAuthProviders(), ...buildWhatsappOtpProvider()],
   /** Must match the real browser connection: Secure cookies are not stored on HTTP. */
   useSecureCookies: process.env.NODE_ENV === 'production',
   /** Opt-in only: NextAuth debug logs OAuth tokens and provider secrets — never enable in production. */
   debug: process.env.NEXTAUTH_DEBUG === 'true',
   callbacks: {
     async signIn({ user, account, profile }) {
+      if (account?.provider === 'whatsapp-otp') {
+        return Boolean(user?.id);
+      }
       if (account?.provider !== 'google' && account?.provider !== 'github') {
         return false;
       }
@@ -103,6 +151,13 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async jwt({ token, user, account, profile }) {
+      if (account?.provider === 'whatsapp-otp' && user?.id) {
+        token.sub = user.id;
+        if (typeof user.email === 'string' && user.email.trim()) {
+          token.email = user.email.trim().toLowerCase();
+        }
+        return token;
+      }
       /** Map OAuth session to DB user id whenever we can resolve email (not only on first sign-in). */
       const email =
         oauthEmailFrom(user ?? { email: token.email }, profile) ??

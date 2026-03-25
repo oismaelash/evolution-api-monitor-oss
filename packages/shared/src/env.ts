@@ -39,6 +39,14 @@ const rawEnvSchema = z.object({
   MONITOR_STATUS_BASE_URL: optionalUrl,
   /** Pilot Status API `templateId` (dashboard); default applied in worker if unset */
   MONITOR_STATUS_TEMPLATE_ID: z.string().optional(),
+  /** Pilot Status template for login OTP WhatsApp; default `otp_login_evo_api_manager` */
+  AUTH_OTP_TEMPLATE_ID: z.preprocess(
+    (val) => {
+      const u = emptyStringToUndefined(val);
+      return u === undefined ? 'otp_login_evo_api_manager' : u;
+    },
+    z.string().min(1),
+  ),
   PING_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).optional(),
   RESTART_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -77,6 +85,15 @@ const rawEnvSchema = z.object({
         code: z.ZodIssueCode.custom,
         message:
           'NEXTAUTH_URL is required when Google or GitHub OAuth credentials are set',
+        path: ['NEXTAUTH_URL'],
+      });
+    }
+    const whatsappOtpLogin = Boolean(data.MONITOR_STATUS_API_KEY?.trim());
+    if (whatsappOtpLogin && !data.NEXTAUTH_URL?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'NEXTAUTH_URL is required when MONITOR_STATUS_API_KEY is set (WhatsApp OTP login)',
         path: ['NEXTAUTH_URL'],
       });
     }
@@ -123,4 +140,9 @@ export function getEvolutionTimeoutsMs(): { pingTimeoutMs: number; restartTimeou
     pingTimeoutMs: e.PING_TIMEOUT_MS ?? 5000,
     restartTimeoutMs: e.RESTART_TIMEOUT_MS ?? 10_000,
   };
+}
+
+/** WhatsApp OTP login is enabled when Pilot Status API key is configured (template id has a default). */
+export function isWhatsAppOtpLoginConfigured(env: MonitorEnv): boolean {
+  return Boolean(env.MONITOR_STATUS_API_KEY?.trim());
 }
