@@ -44,7 +44,7 @@ export function ProjectAlertPhoneSection({
 
   return (
     <fieldset className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]/40 p-4">
-      <legend className="w-full px-0.5 pb-3 text-left">
+      <legend className="relative z-10 w-full px-0.5 pb-3 text-left">
         <span className="inline-flex max-w-full items-start gap-1.5">
           <span className="text-sm font-medium text-[var(--color-text-primary)]">{title}</span>
           <FieldHelp description={description} value={preview} />
