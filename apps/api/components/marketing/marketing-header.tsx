@@ -31,6 +31,9 @@ export async function MarketingHeader() {
           <a href="#features" className="transition-colors hover:text-[var(--color-text-primary)]">
             {t('Recursos', 'Features')}
           </a>
+          <a href="#pricing" className="transition-colors hover:text-[var(--color-text-primary)]">
+            {t('Preços', 'Pricing')}
+          </a>
           <a href="#open-source" className="transition-colors hover:text-[var(--color-text-primary)]">
             {t('Open source', 'Open source')}
           </a>

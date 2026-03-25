@@ -104,8 +104,14 @@ services:
       CHOKIDAR_USEPOLLING: 'true'
     volumes:
       - .:/app
-      # Anonymous volume hides host node_modules; populate via image `npm ci` or `docker compose exec api npm ci`
+      # Anonymous volumes hide host node_modules and keep the ones from the container build
       - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/apps/worker/node_modules
+      - /app/packages/config/node_modules
+      - /app/packages/shared/node_modules
+      - /app/packages/database/node_modules
+      - /app/apps/api/.next
     working_dir: /app
     command: npm run dev --workspace=api
 
@@ -142,10 +148,17 @@ services:
       MONITOR_STATUS_TEMPLATE_ID: ${MONITOR_STATUS_TEMPLATE_ID:-}
       PING_TIMEOUT_MS: ${PING_TIMEOUT_MS:-}
       RESTART_TIMEOUT_MS: ${RESTART_TIMEOUT_MS:-}
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
     volumes:
       - .:/app
-      # Anonymous volume hides host node_modules; populate via image `npm ci` or `docker compose exec api npm ci`
+      # Anonymous volumes hide host node_modules and keep the ones from the container build
       - /app/node_modules
+      - /app/apps/api/node_modules
+      - /app/apps/worker/node_modules
+      - /app/packages/config/node_modules
+      - /app/packages/shared/node_modules
+      - /app/packages/database/node_modules
     working_dir: /app
     command: npm run dev --workspace=worker
 

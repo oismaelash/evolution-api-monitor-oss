@@ -41,8 +41,8 @@ export async function MarketingHero() {
 
         <p className="mx-auto mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-[var(--color-text-muted)] sm:text-xl">
           {t(
-            'Não espere o cliente reclamar que seu bot parou. Receba alertas imediatos e garanta 100% de estabilidade na sua Evolution API ou Evolution GO.',
-            'Don\'t wait for customers to complain that your bot stopped. Get instant alerts and ensure 100% stability for your Evolution API or Evolution GO.',
+            'Não espere o cliente reclamar que sua operacao parou. Receba alertas imediatos e garanta 100% de estabilidade na sua Evolution API ou Evolution GO.',
+            'Don\'t wait for customers to complain that your operation stopped. Get instant alerts and ensure 100% stability for your Evolution API or Evolution GO.',
           )}
         </p>
 

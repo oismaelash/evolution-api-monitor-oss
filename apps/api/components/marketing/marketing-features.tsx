@@ -57,7 +57,7 @@ export async function MarketingFeatures() {
       <div className="mx-auto max-w-2xl text-center">
         <h2
           id="features-heading"
-          className="text-3xl font-bold tracking-tight text-white sm:text-5xl"
+          className="text-3xl font-bold tracking-tight text-[var(--color-text-primary)] sm:text-5xl"
         >
           {t('Sua operação não pode parar', 'Your operation can\'t stop')}
         </h2>
@@ -72,13 +72,13 @@ export async function MarketingFeatures() {
         {features.map(({ title, description, Icon }) => (
           <li
             key={title}
-            className="group relative rounded-3xl border border-white/10 bg-white/5 p-8 transition-all hover:bg-white/10 hover:border-[var(--color-accent)]/50 hover:shadow-2xl hover:shadow-accent/10"
+            className="group relative rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 transition-all hover:bg-[var(--color-border)]/50 hover:border-[var(--color-accent)]/50 hover:shadow-2xl hover:shadow-[var(--color-accent)]/10"
           >
             <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] transition-colors group-hover:bg-[var(--color-accent)] group-hover:text-white">
               <Icon size={28} variant="Bold" color="currentColor" aria-hidden />
             </div>
-            <h3 className="text-xl font-bold text-white">{title}</h3>
-            <p className="mt-4 text-base leading-relaxed text-[var(--color-text-muted)] group-hover:text-white/80 transition-colors">
+            <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
+            <p className="mt-4 text-base leading-relaxed text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] transition-colors">
               {description}
             </p>
           </li>

@@ -40,9 +40,9 @@ export function ThemeSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
         aria-label="Toggle theme"
       >
         {isDark ? (
-          <Moon size="16" variant="Outline" className="transition-transform group-hover:scale-110" />
+          <Moon size="16" color="currentColor" variant="Outline" className="transition-transform group-hover:scale-110" />
         ) : (
-          <Sun size="16" variant="Outline" className="transition-transform group-hover:scale-110" />
+          <Sun size="16" color="currentColor" variant="Outline" className="transition-transform group-hover:scale-110" />
         )}
       </button>
     </div>

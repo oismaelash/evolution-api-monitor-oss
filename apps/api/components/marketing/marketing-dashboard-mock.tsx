@@ -22,26 +22,26 @@ export function MarketingDashboardMock() {
   const max = Math.max(...mockBuckets.map(b => b.ok + b.fail));
 
   return (
-    <div className="flex w-full aspect-[16/10] overflow-hidden rounded-2xl border border-white/10 bg-[#0f172a] text-white shadow-2xl">
+    <div className="flex w-full aspect-[16/10] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-2xl">
       {/* Sidebar */}
-      <aside className="hidden md:flex w-16 lg:w-48 shrink-0 flex-col border-r border-white/5 bg-[#0f172a]/50 p-3 lg:p-4">
+      <aside className="hidden md:flex w-16 lg:w-48 shrink-0 flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]/50 p-3 lg:p-4">
         <div className="mb-8 flex items-center gap-3 px-1 lg:px-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500 text-white shadow-lg shadow-indigo-500/20">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20">
             <Global size="18" variant="Bold" />
           </div>
-          <span className="hidden lg:block font-bold tracking-tight">Evo <span className="text-indigo-400">Monitor</span></span>
+          <span className="hidden lg:block font-bold tracking-tight text-[var(--color-text-primary)]">Evo <span className="text-[var(--color-accent)]">Monitor</span></span>
         </div>
 
         <nav className="flex flex-col gap-2">
-          {[
-            { icon: Element3, label: 'Painel', active: true },
-            { icon: FolderCloud, label: 'Projetos' },
-            { icon: DocumentText, label: 'Logs' },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className={`flex items-center gap-3 rounded-lg px-2 lg:px-3 py-2 transition-colors ${item.active ? 'bg-indigo-500/10 text-indigo-400' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
-            >
+            {[
+              { icon: Element3, label: 'Dashboard', active: true },
+              { icon: FolderCloud, label: 'Projetos' },
+              { icon: DocumentText, label: 'Logs' },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className={`flex items-center gap-3 rounded-lg px-2 lg:px-3 py-2 transition-colors ${item.active ? 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/50 hover:text-[var(--color-text-primary)]'}`}
+              >
               <item.icon size="20" variant={item.active ? "Bold" : "Outline"} />
               <span className="hidden lg:block text-xs font-medium">{item.label}</span>
             </div>
@@ -50,17 +50,17 @@ export function MarketingDashboardMock() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#020617]/40">
+      <main className="flex-1 flex flex-col min-w-0 bg-[var(--color-bg)]/40">
         {/* Header */}
-        <header className="h-14 flex items-center justify-between px-4 lg:px-6 border-b border-white/5">
+        <header className="h-14 flex items-center justify-between px-4 lg:px-6 border-b border-[var(--color-border)]">
           <div className="relative flex-1 max-w-sm">
-            <SearchNormal1 size="14" className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            <div className="h-8 w-full rounded-lg bg-white/5 border border-white/5 pl-9 pr-3" />
+            <SearchNormal1 size="14" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+            <div className="h-8 w-full rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] pl-9 pr-3" />
           </div>
           <div className="flex items-center gap-4 ml-4">
-            <Notification size="18" className="text-slate-400" />
-            <div className="h-8 w-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center">
-              <User size="16" className="text-slate-300" />
+            <Notification size="18" className="text-[var(--color-text-muted)]" />
+            <div className="h-8 w-8 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] flex items-center justify-center">
+              <User size="16" className="text-[var(--color-text-muted)]" />
             </div>
           </div>
         </header>
@@ -70,29 +70,29 @@ export function MarketingDashboardMock() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3 lg:gap-4 mb-6">
             {[
-              { label: 'Total', value: '12', color: 'text-white' },
-              { label: 'Saudáveis', value: '11', color: 'text-emerald-400' },
-              { label: 'Erros', value: '1', color: 'text-rose-400' },
+              { label: 'Total', value: '12', color: 'text-[var(--color-text-primary)]' },
+              { label: 'Saudáveis', value: '11', color: 'text-emerald-500' },
+              { label: 'Erros', value: '1', color: 'text-rose-500' },
             ].map((stat) => (
-              <div key={stat.label} className="rounded-xl border border-white/5 bg-white/5 p-3 lg:p-4">
-                <div className="text-[10px] lg:text-xs text-slate-500 mb-1">{stat.label}</div>
+              <div key={stat.label} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 lg:p-4">
+                <div className="text-[10px] lg:text-xs text-[var(--color-text-muted)] mb-1">{stat.label}</div>
                 <div className={`text-lg lg:text-2xl font-bold ${stat.color}`}>{stat.value}</div>
               </div>
             ))}
           </div>
 
           {/* Chart */}
-          <div className="mb-6 rounded-xl border border-white/5 bg-white/5 p-4 transition-all hover:border-white/10">
+          <div className="mb-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 transition-all hover:border-[var(--color-border)]/80">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-semibold text-slate-400">Status nas últimas 24h</h3>
+              <h3 className="text-xs font-semibold text-[var(--color-text-muted)]">Status nas últimas 24h</h3>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] text-slate-500">OK</span>
+                  <span className="text-[10px] text-[var(--color-text-muted)]">OK</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                  <span className="text-[10px] text-slate-500">Falha</span>
+                  <span className="text-[10px] text-[var(--color-text-muted)]">Falha</span>
                 </div>
               </div>
             </div>
@@ -115,19 +115,19 @@ export function MarketingDashboardMock() {
           </div>
 
           {/* Table Mockup */}
-          <div className="rounded-xl border border-white/5 bg-white/5 overflow-hidden">
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
             {[
               { name: 'Suporte VIP', uptime: '99.9%', status: 'emerald' },
               { name: 'Comercial 01', uptime: '98.5%', status: 'emerald' },
               { name: 'Financeiro', uptime: '64.2%', status: 'rose' },
             ].map((row, i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+              <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] last:border-0 hover:bg-[var(--color-border)]/30 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`h-1.5 w-1.5 rounded-full bg-${row.status}-500 shadow-[0_0_8px_currentColor] text-${row.status}-500`} />
-                  <span className="text-xs font-medium truncate">{row.name}</span>
+                  <span className="text-xs font-medium text-[var(--color-text-primary)] truncate">{row.name}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="hidden sm:block w-16 h-1 rounded-full bg-slate-800 overflow-hidden">
+                  <div className="hidden sm:block w-16 h-1 rounded-full bg-[var(--color-border)] overflow-hidden">
                     <div className={`h-full bg-${row.status}-500/50`} style={{ width: row.uptime }} />
                   </div>
                   <span className={`text-xs font-bold text-${row.status}-400 w-10 text-right`}>{row.uptime}</span>
