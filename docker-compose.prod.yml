@@ -5,7 +5,6 @@
 # e sem rota padrão para a internet. `api` e `worker` usam `backend` + `egress` para
 # falar com DB/Redis e ainda acessar APIs externas (Evolution, billing, alertas).
 #
-# Prerequisites: copy .env.example → .env and set secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY, etc.).
 #
 # Migrations (run before first start or after schema changes):
 #   docker compose -f docker-compose.prod.yml --profile migrate run --rm migrate
@@ -13,7 +12,6 @@
 # Start:
 #   docker compose -f docker-compose.prod.yml up -d
 #
-# API: http://localhost:${API_PORT:-3000}  (set NEXTAUTH_URL to the public URL in production)
 
 networks:
   backend:
@@ -74,15 +72,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_URL: ${NEXTAUTH_URL}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GITHUB_ID: ${GITHUB_ID:-}
-      GITHUB_SECRET: ${GITHUB_SECRET:-}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
       MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
       MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
       MONITOR_STATUS_TEMPLATE_ID: ${MONITOR_STATUS_TEMPLATE_ID:-}
@@ -104,8 +94,6 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      NEXTAUTH_URL: ${NEXTAUTH_URL}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
       MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
       MONITOR_STATUS_TEMPLATE_ID: ${MONITOR_STATUS_TEMPLATE_ID:-}
