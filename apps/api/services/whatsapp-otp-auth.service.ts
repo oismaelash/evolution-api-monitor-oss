@@ -138,7 +138,8 @@ export async function requestWhatsappOtp(phoneRaw: string): Promise<
     await client.messages.send({
       templateId: env.AUTH_OTP_TEMPLATE_ID,
       destinationNumber: e164,
-      variables: { code },
+      /** Template Evo API Manager uses `{{codigo_otp}}` in Pilot Status. */
+      variables: { codigo_otp: code },
     });
   } catch (e) {
     await redis.del(otpStoreKey(e164));
