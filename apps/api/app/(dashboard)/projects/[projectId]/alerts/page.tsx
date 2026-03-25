@@ -16,7 +16,7 @@ export default async function ProjectAlertsPage({ params }: Props) {
   
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId },
-    include: { config: true },
+    include: { config: true, numbers: { select: { id: true, instanceName: true, phoneNumber: true, state: true } } },
   });
   if (!project) notFound();
 
@@ -33,6 +33,7 @@ export default async function ProjectAlertsPage({ params }: Props) {
     smtpPort: cfg.smtpPort,
     smtpUser: cfg.smtpUser,
     webhookUrl: cfg.webhookUrl,
+    numbers: project.numbers.map(n => ({ id: n.id, instanceName: n.instanceName, phoneNumber: n.phoneNumber, state: n.state })),
   };
 
   return (

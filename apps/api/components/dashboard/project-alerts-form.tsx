@@ -12,7 +12,7 @@ import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
 import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
-import { Save2, Eye, EyeSlash } from 'iconsax-react';
+import { Save2, Eye, EyeSlash, MessageText1, Sms, Link as LinkIcon } from 'iconsax-react';
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
@@ -45,6 +45,7 @@ export type ProjectAlertsFormInitial = {
   smtpPort: number | null;
   smtpUser: string | null;
   webhookUrl: string | null;
+  numbers?: { id: string; instanceName: string; phoneNumber: string | null; state: string }[];
 };
 
 export function ProjectAlertsForm({
@@ -59,6 +60,7 @@ export function ProjectAlertsForm({
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'MONITOR_STATUS' | 'EMAIL' | 'WEBHOOK'>('MONITOR_STATUS');
 
   const [alertCooldown, setAlertCooldown] = useState(String(initial.alertCooldown));
   const [alertTemplate, setAlertTemplate] = useState(initial.alertTemplate ?? '');
@@ -73,6 +75,9 @@ export function ProjectAlertsForm({
   const [webhookUrl, setWebhookUrl] = useState(initial.webhookUrl ?? '');
   const [webhookSecret, setWebhookSecret] = useState('');
   const [showWebhookPayloadFormat, setShowWebhookPayloadFormat] = useState(false);
+
+  // For the WhatsApp sender selection (mocking the UI structure as requested)
+  const [whatsappSender, setWhatsappSender] = useState<string>('pilot_status');
 
   function toggleChannel(c: (typeof CHANNELS)[number]) {
     setChannels((prev) => {
@@ -194,43 +199,154 @@ export function ProjectAlertsForm({
             <SecondsInputHint value={alertCooldown} />
           </div>
         </div>
-        <div>
-          <FormLabelWithHelp
-            description={t(
-              'Onde enviar notificações quando um número monitorado falha. Você pode marcar vários canais ao mesmo tempo.',
-              'Where to send notifications when a monitored number fails. You can enable multiple channels.',
-            )}
-            value={
-              CHANNELS.filter((c) => channels.has(c))
-                .map((c) => channelLabel(c, t))
-                .join(', ') || t('(nenhum)', '(none)')
-            }
-          >
-            {t('Canais de alerta', 'Alert channels')}
-          </FormLabelWithHelp>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
-            {CHANNELS.map((c) => (
-              <label
-                key={c}
-                className="flex items-center gap-2 text-sm text-[var(--color-text-primary)]"
-              >
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-[var(--color-border)]"
-                  checked={channels.has(c)}
-                  onChange={() => toggleChannel(c)}
-                />
-                {channelLabel(c, t)}
-              </label>
-            ))}
-          </div>
-        </div>
       </section>
 
-      <section className="space-y-4 border-t border-[var(--color-border)] pt-8">
-        <h3 className="text-base font-medium text-[var(--color-text-primary)]">
-          {t('E-mail (SMTP)', 'Email (SMTP)')}
-        </h3>
+      <section className="space-y-6 pt-6">
+        <div className="flex border-b border-[var(--color-border)]">
+          <button
+            type="button"
+            onClick={() => setActiveTab('MONITOR_STATUS')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'MONITOR_STATUS'
+                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border)]'
+            }`}
+          >
+            <MessageText1 size="18" />
+            WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('EMAIL')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'EMAIL'
+                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border)]'
+            }`}
+          >
+            <Sms size="18" />
+            {t('E-mail', 'Email')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('WEBHOOK')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'WEBHOOK'
+                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border)]'
+            }`}
+          >
+            <LinkIcon size="18" />
+            Webhook
+          </button>
+        </div>
+
+        {/* WHATSAPP TAB */}
+        <div className={activeTab === 'MONITOR_STATUS' ? 'block space-y-4' : 'hidden'}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-[var(--color-text-primary)]">
+              {t('Notificações via WhatsApp', 'WhatsApp Notifications')}
+            </h3>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                {channels.has('MONITOR_STATUS') ? t('Ativado', 'Enabled') : t('Desativado', 'Disabled')}
+              </span>
+              <div className="relative inline-block w-10 h-6">
+                <input 
+                  type="checkbox" 
+                  className="peer sr-only"
+                  checked={channels.has('MONITOR_STATUS')}
+                  onChange={() => toggleChannel('MONITOR_STATUS')}
+                />
+                <div className="block h-6 w-10 rounded-full bg-[var(--color-border)] transition peer-checked:bg-[var(--color-accent)]"></div>
+                <div className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+          </div>
+          
+          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]/50 p-4">
+            <FormLabelWithHelp
+              description={t(
+                'Escolha por qual número as notificações de alerta serão enviadas.',
+                'Choose which number will send the alert notifications.',
+              )}
+              value={whatsappSender}
+            >
+              {t('Remetente do WhatsApp', 'WhatsApp Sender')}
+            </FormLabelWithHelp>
+            
+            <div className="mt-3 space-y-3">
+              <label className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${whatsappSender === 'pilot_status' ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5' : 'border-[var(--color-border)] hover:bg-[var(--color-surface)]'}`}>
+                <input 
+                  type="radio" 
+                  name="whatsappSender" 
+                  value="pilot_status" 
+                  className="mt-1"
+                  checked={whatsappSender === 'pilot_status'}
+                  onChange={() => setWhatsappSender('pilot_status')}
+                />
+                <div>
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {t('Padrão do Sistema (Pilot Status)', 'System Default (Pilot Status)')}
+                  </p>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    {t('Usa o número oficial do monitor para enviar os alertas.', 'Uses the official monitor number to send alerts.')}
+                  </p>
+                </div>
+              </label>
+
+              {initial.numbers?.filter(n => n.state === 'CONNECTED').map(num => (
+                <label key={num.id} className={`flex items-start gap-3 p-3 rounded-md border cursor-pointer transition-colors ${whatsappSender === num.id ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5' : 'border-[var(--color-border)] hover:bg-[var(--color-surface)]'}`}>
+                  <input 
+                    type="radio" 
+                    name="whatsappSender" 
+                    value={num.id} 
+                    className="mt-1"
+                    checked={whatsappSender === num.id}
+                    onChange={() => setWhatsappSender(num.id)}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {num.instanceName} {num.phoneNumber ? `(${num.phoneNumber})` : ''}
+                    </p>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                      {t('Usa este número conectado para enviar as mensagens.', 'Uses this connected number to send the messages.')}
+                    </p>
+                  </div>
+                </label>
+              ))}
+
+              {(!initial.numbers || initial.numbers.filter(n => n.state === 'CONNECTED').length === 0) && (
+                <p className="text-xs text-[var(--color-text-muted)] italic mt-2">
+                  {t('* Nenhum outro número conectado e saudável encontrado neste projeto para ser usado como remetente.', '* No other connected and healthy numbers found in this project to be used as sender.')}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* EMAIL TAB */}
+        <div className={activeTab === 'EMAIL' ? 'block space-y-4' : 'hidden'}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-[var(--color-text-primary)]">
+              {t('Configurações de E-mail (SMTP)', 'Email Settings (SMTP)')}
+            </h3>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                {channels.has('EMAIL') ? t('Ativado', 'Enabled') : t('Desativado', 'Disabled')}
+              </span>
+              <div className="relative inline-block w-10 h-6">
+                <input 
+                  type="checkbox" 
+                  className="peer sr-only"
+                  checked={channels.has('EMAIL')}
+                  onChange={() => toggleChannel('EMAIL')}
+                />
+                <div className="block h-6 w-10 rounded-full bg-[var(--color-border)] transition peer-checked:bg-[var(--color-accent)]"></div>
+                <div className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+          </div>
         <p className="text-sm text-[var(--color-text-muted)] mb-2">
           {t(
             'Obrigatório quando o canal E-mail está ativo. A senha é armazenada criptografada; deixe em branco para manter o valor atual.',
@@ -368,13 +484,31 @@ export function ProjectAlertsForm({
             />
           </div>
         </div>
-      </section>
+        </div>
 
-      <section className="space-y-4 border-t border-[var(--color-border)] pt-8">
-        <h3 className="text-base font-medium text-[var(--color-text-primary)]">
-          {t('Webhook', 'Webhook')}
-        </h3>
-        <p className="text-sm text-[var(--color-text-muted)] mb-2">
+        {/* WEBHOOK TAB */}
+        <div className={activeTab === 'WEBHOOK' ? 'block space-y-4' : 'hidden'}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-medium text-[var(--color-text-primary)]">
+              {t('Webhook', 'Webhook')}
+            </h3>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                {channels.has('WEBHOOK') ? t('Ativado', 'Enabled') : t('Desativado', 'Disabled')}
+              </span>
+              <div className="relative inline-block w-10 h-6">
+                <input 
+                  type="checkbox" 
+                  className="peer sr-only"
+                  checked={channels.has('WEBHOOK')}
+                  onChange={() => toggleChannel('WEBHOOK')}
+                />
+                <div className="block h-6 w-10 rounded-full bg-[var(--color-border)] transition peer-checked:bg-[var(--color-accent)]"></div>
+                <div className="absolute left-1 top-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+          </div>
+          <p className="text-sm text-[var(--color-text-muted)] mb-2">
           {t(
             'Envia payloads JSON ao endpoint quando o canal Webhook está ativo. Segredo opcional para verificação, armazenado criptografado.',
             'POST JSON payloads to your endpoint when the Webhook channel is enabled. Optional secret is sent for verification and stored encrypted.',
@@ -489,6 +623,7 @@ export function ProjectAlertsForm({
               </div>
             ) : null}
           </div>
+        </div>
         </div>
       </section>
 
