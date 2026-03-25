@@ -3,6 +3,7 @@ import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { DeleteNumberButton } from '@/components/dashboard/delete-number-button';
+import { LocalDateTime } from '@/components/ui/local-datetime';
 
 type Props = { params: Promise<{ numberId: string }> };
 
@@ -45,7 +46,9 @@ export default async function NumberDetailPage({ params }: Props) {
           <tbody>
             {checks.map((c: (typeof checks)[number]) => (
               <tr key={c.id} className="border-t border-[var(--color-border)]">
-                <td className="px-4 py-2">{c.checkedAt.toISOString()}</td>
+                <td className="px-4 py-2">
+                  <LocalDateTime iso={c.checkedAt.toISOString()} />
+                </td>
                 <td className="px-4 py-2">{c.status}</td>
                 <td className="px-4 py-2">{c.responseTimeMs ?? '—'}</td>
               </tr>

@@ -3,6 +3,7 @@ import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { CreateProjectForm } from '@/components/dashboard/create-project-form';
+import { LocalDateTime } from '@/components/ui/local-datetime';
 
 export default async function ProjectsPage() {
   const session = await getServerSession(authOptions);
@@ -57,7 +58,7 @@ export default async function ProjectsPage() {
                   </td>
                   <td className="px-4 py-2">{p._count.numbers}</td>
                   <td className="px-4 py-2 text-[var(--color-text-muted)]">
-                    {p.updatedAt.toISOString()}
+                    <LocalDateTime iso={p.updatedAt.toISOString()} />
                   </td>
                 </tr>
               ))

@@ -3,6 +3,8 @@ import { prisma } from '@monitor/database';
 import type { NumberState } from '@monitor/shared';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { HealthChart24h } from '@/components/dashboard/health-chart-24h';
+import { LocalDateTime } from '@/components/ui/local-datetime';
 import { computeUptimeDisplayPercent } from '@/lib/uptime';
 
 function bucketHour(ts: Date): number {
@@ -39,14 +41,14 @@ export default async function DashboardPage() {
     else cur.fail += 1;
     buckets.set(b, cur);
   }
-  const chartBuckets: { label: string; ok: number; fail: number }[] = [];
+  const chartBuckets: { ts: number; ok: number; fail: number }[] = [];
   const now = Date.now();
   for (let i = 23; i >= 0; i--) {
     const t = new Date(now - i * 60 * 60 * 1000);
     const b = bucketHour(t);
     const v = buckets.get(b) ?? { ok: 0, fail: 0 };
     chartBuckets.push({
-      label: `${t.getHours().toString().padStart(2, '0')}h`,
+      ts: t.getTime(),
       ok: v.ok,
       fail: v.fail,
     });
@@ -99,30 +101,7 @@ export default async function DashboardPage() {
       </div>
 
       <h2 className="mb-4 text-lg font-medium">Health checks (24h)</h2>
-      <div className="mb-10 flex h-40 items-end gap-0.5 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-        {chartBuckets.map((row) => {
-          const max = Math.max(1, ...chartBuckets.map((r) => r.ok + r.fail));
-          const hOk = (row.ok / max) * 100;
-          const hFail = (row.fail / max) * 100;
-          return (
-            <div key={row.label} className="flex min-w-[10px] flex-1 flex-col items-center gap-1">
-              <div className="flex w-full flex-1 flex-col justify-end gap-px">
-                <div
-                  className="w-full rounded-sm bg-[var(--color-success)]"
-                  style={{ height: `${hOk}%`, minHeight: row.ok ? 2 : 0 }}
-                  title={`${row.ok} healthy`}
-                />
-                <div
-                  className="w-full rounded-sm bg-[var(--color-error)]"
-                  style={{ height: `${hFail}%`, minHeight: row.fail ? 2 : 0 }}
-                  title={`${row.fail} unhealthy`}
-                />
-              </div>
-              <span className="text-[10px] text-[var(--color-text-muted)]">{row.label}</span>
-            </div>
-          );
-        })}
-      </div>
+      <HealthChart24h buckets={chartBuckets} />
 
       <h2 className="mb-4 text-lg font-medium">Uptime (24h) by number</h2>
       <div className="mb-10 overflow-hidden rounded-lg border border-[var(--color-border)]">
@@ -186,7 +165,9 @@ export default async function DashboardPage() {
             ) : (
               recentAlerts.map((a: (typeof recentAlerts)[number]) => (
                 <tr key={a.id} className="border-t border-[var(--color-border)]">
-                  <td className="px-4 py-2">{a.sentAt.toISOString()}</td>
+                  <td className="px-4 py-2">
+                    <LocalDateTime iso={a.sentAt.toISOString()} />
+                  </td>
                   <td className="px-4 py-2">
                     <Link
                       href={`/numbers/${a.numberId}`}

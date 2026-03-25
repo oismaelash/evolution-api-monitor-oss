@@ -6,6 +6,7 @@ import { prisma } from '@monitor/database';
 import { authOptions } from '@/lib/auth';
 import { LogService } from '@/services/log.service';
 import { LogsFilters } from '@/components/dashboard/logs-filters';
+import { LocalDateTime } from '@/components/ui/local-datetime';
 
 const LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'] as const;
 
@@ -162,7 +163,7 @@ export default async function LogsPage({ searchParams }: Props) {
               data.map((row) => (
                 <tr key={row.id} className="border-t border-[var(--color-border)] align-top">
                   <td className="whitespace-nowrap px-4 py-2 text-[var(--color-text-muted)]">
-                    {row.createdAt.toISOString()}
+                    <LocalDateTime iso={row.createdAt.toISOString()} />
                   </td>
                   <td className="px-4 py-2 font-medium" style={{ color: levelColor(row.level) }}>
                     {row.level}
