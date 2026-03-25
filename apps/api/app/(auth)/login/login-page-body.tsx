@@ -70,15 +70,17 @@ export function LoginPageBody() {
           <button
             type="button"
             onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
-            className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
+            className="flex items-center justify-center gap-3 rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
           >
+            <GoogleLogo className="h-5 w-5 shrink-0" />
             Continue with Google
           </button>
           <button
             type="button"
             onClick={() => signIn('github', { callbackUrl: '/dashboard' })}
-            className="rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
+            className="flex items-center justify-center gap-3 rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
           >
+            <GitHubLogo className="h-5 w-5 shrink-0" />
             Continue with GitHub
           </button>
         </div>
