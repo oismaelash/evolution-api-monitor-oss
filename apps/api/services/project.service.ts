@@ -12,7 +12,6 @@ import {
   type UpdateProjectInput,
 } from '@monitor/shared';
 import { encryptForStorage } from '@/lib/encryption';
-import { BillingSyncService } from '@/services/billing-sync.service';
 
 async function ensureProjectOwned(userId: string, projectId: string) {
   const p = await prisma.project.findFirst({
@@ -98,7 +97,7 @@ export const ProjectService = {
       await removeHealthSchedule(n.id);
     }
     await prisma.project.delete({ where: { id: projectId } });
-    await BillingSyncService.syncActiveNumberCount(userId);
+    
   },
 
   async upsertConfig(userId: string, projectId: string, input: ProjectConfigInput) {

@@ -1,13 +1,11 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { DashboardService } from '@/services/dashboard.service';
 import { DashboardOverviewPolling } from '@/components/dashboard/dashboard-overview-polling';
 
 export default async function DashboardPage() {
   const t = await getServerTranslator();
-  const session = await getServerSession(authOptions);
-  const userId = session!.user!.id;
+  const userId = 'oss-user-id';
+  
   const initialData = await DashboardService.getOverview(userId);
 
   return (

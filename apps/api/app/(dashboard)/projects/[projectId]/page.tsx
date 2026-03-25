@@ -2,8 +2,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowDown2 } from 'iconsax-react';
 import { prisma } from '@monitor/database';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { formatNumberStateLabel } from '@/lib/number-state-label';
 import { e164ToDdiAndNational } from '@/lib/e164-fields';
@@ -25,8 +23,8 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
   const t = await getServerTranslator();
   const { projectId } = await params;
   const { tab = 'connection' } = await searchParams;
-  const session = await getServerSession(authOptions);
-  const userId = session!.user!.id;
+  const userId = 'oss-user-id';
+  
 
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId },

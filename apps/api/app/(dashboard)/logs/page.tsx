@@ -1,8 +1,6 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
 import { prisma } from '@monitor/database';
-import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { LogService } from '@/services/log.service';
 import { LogsFilters } from '@/components/dashboard/logs-filters';
@@ -19,8 +17,8 @@ type Props = {
 
 export default async function LogsPage({ searchParams }: Props) {
   const t = await getServerTranslator();
-  const session = await getServerSession(authOptions);
-  const userId = session!.user!.id;
+  const userId = 'oss-user-id';
+  
   const sp = await searchParams;
 
   const projects = await prisma.project.findMany({

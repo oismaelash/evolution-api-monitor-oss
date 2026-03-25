@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { Queue } from 'bullmq';
 import IORedis from 'ioredis';
 import { prisma } from '@monitor/database';
 import { loadEnv, UserRole } from '@monitor/shared';
-import { authOptions } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const userId = 'oss-user-id';
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   if (user?.role !== UserRole.ADMIN) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }

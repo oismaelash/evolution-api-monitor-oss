@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@monitor/database';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import {
   ProjectAlertsForm,
@@ -14,8 +12,8 @@ type Props = { params: Promise<{ projectId: string }> };
 export default async function ProjectAlertsPage({ params }: Props) {
   const t = await getServerTranslator();
   const { projectId } = await params;
-  const session = await getServerSession(authOptions);
-  const userId = session!.user!.id;
+  const userId = 'oss-user-id';
+  
   const project = await prisma.project.findFirst({
     where: { id: projectId, userId },
     include: { config: true },

@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { 
   Element3, 
@@ -178,7 +177,7 @@ export function DashboardShell({
             )}
             <button
               type="button"
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => { window.location.href = '/'; }}
               className={`group relative flex items-center justify-center rounded-lg p-2 text-[var(--color-text-muted)] transition-colors hover:bg-red-500/10 hover:text-red-500 ${isCollapsed ? 'w-full' : ''}`}
             >
               <Logout 

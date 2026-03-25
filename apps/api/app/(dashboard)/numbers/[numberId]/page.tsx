@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@monitor/database';
 import { buildPaginationMeta } from '@monitor/shared';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { DeleteNumberButton } from '@/components/dashboard/delete-number-button';
 import { NumberDetailPolling } from '@/components/dashboard/number-detail-polling';
@@ -12,8 +10,8 @@ type Props = { params: Promise<{ numberId: string }> };
 export default async function NumberDetailPage({ params }: Props) {
   const t = await getServerTranslator();
   const { numberId } = await params;
-  const session = await getServerSession(authOptions);
-  const userId = session!.user!.id;
+  const userId = 'oss-user-id';
+  
   const number = await prisma.number.findFirst({
     where: { id: numberId, project: { userId } },
     include: { project: true },

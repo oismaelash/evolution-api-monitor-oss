@@ -1,13 +1,11 @@
 import Link from 'next/link';
 import { prisma } from '@monitor/database';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 
 export default async function OnboardingPage() {
   const t = await getServerTranslator();
-  const session = await getServerSession(authOptions);
-  const userId = session!.user!.id;
+  const userId = 'oss-user-id';
+  
   const projects = await prisma.project.findMany({
     where: { userId },
     include: { _count: { select: { numbers: true } } },

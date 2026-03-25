@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { NumberService } from '@/services/number.service';
 import { toErrorResponse } from '@/lib/http';
 
@@ -8,12 +6,9 @@ type Ctx = { params: Promise<{ numberId: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = 'oss-user-id';
     const { numberId } = await ctx.params;
-    const n = await NumberService.getById(session.user.id, numberId);
+    const n = await NumberService.getById(userId, numberId);
     return NextResponse.json(n);
   } catch (e) {
     return toErrorResponse(e);
@@ -22,13 +17,10 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = 'oss-user-id';
     const { numberId } = await ctx.params;
     const body = await req.json();
-    const n = await NumberService.update(session.user.id, numberId, body);
+    const n = await NumberService.update(userId, numberId, body);
     return NextResponse.json(n);
   } catch (e) {
     return toErrorResponse(e);
@@ -37,12 +29,9 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const userId = 'oss-user-id';
     const { numberId } = await ctx.params;
-    await NumberService.delete(session.user.id, numberId);
+    await NumberService.delete(userId, numberId);
     return NextResponse.json({ ok: true });
   } catch (e) {
     return toErrorResponse(e);

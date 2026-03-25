@@ -1,6 +1,5 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
 import { I18nProvider } from '@/components/i18n/i18n-provider';
@@ -20,7 +19,7 @@ export function Providers({
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <I18nProvider initialLocale={initialLocale}>
-        <SessionProvider>{children}</SessionProvider>
+        {children}
       </I18nProvider>
     </ThemeProvider>
   );

@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import { prisma } from '@monitor/database';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { CreateProjectForm } from '@/components/dashboard/create-project-form';
 import { ProjectRow } from '@/components/dashboard/project-row';
@@ -9,8 +7,8 @@ import { LocalDateTime } from '@/components/ui/local-datetime';
 
 export default async function ProjectsPage() {
   const t = await getServerTranslator();
-  const session = await getServerSession(authOptions);
-  const userId = session!.user!.id;
+  const userId = 'oss-user-id';
+  
   const projects = await prisma.project.findMany({
     where: { userId },
     orderBy: { updatedAt: 'desc' },

@@ -10,4 +10,3 @@ export * from './evolution/index.js';
 export * from './providers/alert.js';
 export * from './constants.js';
 export * from './webhook-alert-payload.js';
-export * from './providers/payment/index.js';

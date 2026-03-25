@@ -10,7 +10,6 @@ import {
 } from '@monitor/shared';
 import { decryptFromStorage } from '@/lib/encryption';
 import { computeUptimeDisplayPercent } from '@/lib/uptime';
-import { BillingSyncService } from '@/services/billing-sync.service';
 
 async function ensureNumberOwned(userId: string, numberId: string) {
   const n = await prisma.number.findFirst({
@@ -125,7 +124,7 @@ export const NumberService = {
     for (const id of createdIds) {
       await enqueueImmediateHealthCheck(id);
     }
-    await BillingSyncService.syncActiveNumberCount(userId);
+    
     return { synced: names.length, created };
   },
 
@@ -154,7 +153,7 @@ export const NumberService = {
       await upsertHealthSchedule(n.id, ping);
       await enqueueImmediateHealthCheck(n.id);
     }
-    await BillingSyncService.syncActiveNumberCount(userId);
+    
     return n;
   },
 
@@ -181,7 +180,7 @@ export const NumberService = {
     } else {
       await removeHealthSchedule(updated.id);
     }
-    await BillingSyncService.syncActiveNumberCount(userId);
+    
     return updated;
   },
 
@@ -190,7 +189,7 @@ export const NumberService = {
     const { removeHealthSchedule } = await import('@/lib/queues');
     await removeHealthSchedule(numberId);
     await prisma.number.delete({ where: { id: numberId } });
-    await BillingSyncService.syncActiveNumberCount(userId);
+    
   },
 
   async restart(userId: string, numberId: string) {
