@@ -1,4 +1,4 @@
-import { parsePhoneNumberFromString } from 'libphonenumber-js/min';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 /**
  * Split a stored E.164 value into DDI + national digits for the WhatsApp phone fields.
