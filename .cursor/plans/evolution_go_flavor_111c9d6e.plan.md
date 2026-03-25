@@ -4,28 +4,28 @@ overview: Habilitar a escolha Evolution Go ao criar/editar projeto (hoje bloquea
 todos:
   - id: schema-zod
     content: Relaxar create/update project Zod para EVOLUTION_V2 | EVOLUTION_GO
-    status: pending
+    status: completed
   - id: ui-forms
     content: Habilitar radio Go + ligar create/edit project ao valor selecionado (remover hardcode V2)
-    status: pending
+    status: completed
   - id: evolution-client-go
     content: "Ramificar EvolutionClient (Go): fetchInstances, checkHealth, getConnect; resolver token via /instance/all; sem restart"
-    status: pending
+    status: completed
   - id: parse-instances
     content: Estender parseInstanceNames para payload Go (data[] com name)
-    status: pending
+    status: completed
   - id: wire-workers-api
     content: Passar evolutionFlavor ao EvolutionClient (number.service, health-check, alert); restart worker só relevante para v2
-    status: pending
+    status: completed
   - id: health-go-alert-first
     content: "Health-check: se EVOLUTION_GO e falha de saúde (desconectado), alerta na 1ª vez — sem fila restart nem esperar FAILURES_BEFORE_RESTART/maxRetries"
-    status: pending
+    status: completed
   - id: docs-skill-rule
     content: Atualizar SKILL/rule com fluxo Go (sem restart; alerta imediato na primeira falha de desconexão)
-    status: pending
+    status: completed
   - id: tests
     content: Testes unitários para parsing e health branch Go
-    status: pending
+    status: completed
 isProject: false
 ---
 
