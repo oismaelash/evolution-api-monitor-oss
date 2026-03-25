@@ -48,6 +48,7 @@ export const ProjectService = {
       data: {
         userId,
         name: parsed.name,
+        evolutionFlavor: parsed.evolutionFlavor,
         evolutionUrl: parsed.evolutionUrl,
         evolutionApiKey: encryptForStorage(parsed.evolutionApiKey),
         alertPhone: parsed.alertPhone,
@@ -72,6 +73,7 @@ export const ProjectService = {
     const parsed = updateProjectSchema.parse(input);
     const data: Record<string, unknown> = {};
     if (parsed.name !== undefined) data.name = parsed.name;
+    if (parsed.evolutionFlavor !== undefined) data.evolutionFlavor = parsed.evolutionFlavor;
     if (parsed.evolutionUrl !== undefined) data.evolutionUrl = parsed.evolutionUrl;
     if (parsed.evolutionApiKey !== undefined) {
       data.evolutionApiKey = encryptForStorage(parsed.evolutionApiKey);

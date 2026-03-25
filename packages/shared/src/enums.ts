@@ -58,6 +58,13 @@ export const RetryStrategy = {
 } as const;
 export type RetryStrategy = (typeof RetryStrategy)[keyof typeof RetryStrategy];
 
+/** Evolution server product line — mirrors Prisma `EvolutionFlavor` */
+export const EvolutionFlavor = {
+  EVOLUTION_V2: 'EVOLUTION_V2',
+  EVOLUTION_GO: 'EVOLUTION_GO',
+} as const;
+export type EvolutionFlavor = (typeof EvolutionFlavor)[keyof typeof EvolutionFlavor];
+
 export const LogLevel = {
   DEBUG: 'DEBUG',
   INFO: 'INFO',

@@ -120,10 +120,16 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
+enum EvolutionFlavor {
+  EVOLUTION_V2
+  EVOLUTION_GO
+}
+
 model Project {
-  id               String         @id @default(cuid())
+  id               String           @id @default(cuid())
   userId           String
   name             String
+  evolutionFlavor EvolutionFlavor  @default(EVOLUTION_V2)
   evolutionUrl     String
   evolutionApiKey  String
   alertPhone       String?

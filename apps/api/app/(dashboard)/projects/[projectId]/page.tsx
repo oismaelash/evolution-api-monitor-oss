@@ -62,6 +62,10 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       <h1 className="mb-2 text-2xl font-semibold">{project.name}</h1>
       <p className="mb-8 text-sm text-[var(--color-text-muted)]">
+        {project.evolutionFlavor === 'EVOLUTION_GO'
+          ? t('Evolution Go', 'Evolution Go')
+          : t('Evolution API v2', 'Evolution API v2')}
+        {' · '}
         {t('URL Evolution:', 'Evolution URL:')} {project.evolutionUrl}
       </p>
 
@@ -94,6 +98,7 @@ export default async function ProjectDetailPage({ params }: Props) {
             projectId={project.id}
             initialName={project.name}
             initialEvolutionUrl={project.evolutionUrl}
+            initialEvolutionFlavor={project.evolutionFlavor}
             initialAlertDdi={initialAlertDdi}
             initialAlertNational={initialAlertNational}
           />

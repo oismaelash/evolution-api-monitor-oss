@@ -3,12 +3,13 @@
 import { ArrowDown2 } from 'iconsax-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { composedE164FromDdiFields, createProjectSchema } from '@monitor/shared';
+import { composedE164FromDdiFields, createProjectSchema, EvolutionFlavor } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { ProjectAlertPhoneSection } from '@/components/dashboard/project-alert-phone-section';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
+import { EvolutionFlavorFields } from '@/components/dashboard/evolution-flavor-fields';
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
@@ -49,6 +50,7 @@ export function CreateProjectForm() {
     }
     const raw = {
       name: name.trim(),
+      evolutionFlavor: EvolutionFlavor.EVOLUTION_V2,
       evolutionUrl: evolutionUrl.trim(),
       evolutionApiKey: evolutionApiKey.trim(),
       alertPhone: alertResult === 'empty' ? undefined : alertResult,
@@ -123,6 +125,9 @@ export function CreateProjectForm() {
           )}
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <EvolutionFlavorFields idSuffix="create" />
+          </div>
           <div className="sm:col-span-2">
             <FormLabelWithHelp
               htmlFor="proj-name"

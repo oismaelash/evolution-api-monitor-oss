@@ -38,6 +38,7 @@ export default async function ProjectsPage() {
           <thead className="bg-[var(--color-surface)] text-[var(--color-text-muted)]">
             <tr>
               <th className="px-4 py-2">{t('Nome', 'Name')}</th>
+              <th className="px-4 py-2">{t('Tipo', 'Type')}</th>
               <th className="px-4 py-2">{t('Números', 'Numbers')}</th>
               <th className="px-4 py-2">{t('Atualizado', 'Updated')}</th>
             </tr>
@@ -45,7 +46,7 @@ export default async function ProjectsPage() {
           <tbody>
             {projects.length === 0 ? (
               <tr>
-                <td className="px-4 py-8 text-[var(--color-text-muted)]" colSpan={3}>
+                <td className="px-4 py-8 text-[var(--color-text-muted)]" colSpan={4}>
                   {t(
                     'Nenhum projeto ainda. Use o formulário acima para criar.',
                     'No projects yet. Use the form above to create one.',
@@ -62,6 +63,11 @@ export default async function ProjectsPage() {
                     >
                       {p.name}
                     </Link>
+                  </td>
+                  <td className="px-4 py-2 text-[var(--color-text-muted)]">
+                    {p.evolutionFlavor === 'EVOLUTION_GO'
+                      ? t('Evolution Go', 'Evolution Go')
+                      : t('Evolution API v2', 'Evolution API v2')}
                   </td>
                   <td className="px-4 py-2">{p._count.numbers}</td>
                   <td className="px-4 py-2 text-[var(--color-text-muted)]">
