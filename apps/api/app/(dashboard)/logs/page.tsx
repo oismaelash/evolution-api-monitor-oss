@@ -6,6 +6,7 @@ import { prisma } from '@monitor/database';
 import { authOptions } from '@/lib/auth';
 import { LogService } from '@/services/log.service';
 import { LogsFilters } from '@/components/dashboard/logs-filters';
+import { RouterRefreshInterval } from '@/components/dashboard/router-refresh-interval';
 import { LocalDateTime } from '@/components/ui/local-datetime';
 
 const LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'] as const;
@@ -97,6 +98,7 @@ export default async function LogsPage({ searchParams }: Props) {
 
   return (
     <div>
+      <RouterRefreshInterval />
       <h1 className="mb-2 text-2xl font-semibold">Logs</h1>
       <p className="mb-4 text-[var(--color-text-muted)]">
         Monitor events from workers and health checks (newest first).

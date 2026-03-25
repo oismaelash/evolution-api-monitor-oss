@@ -4,6 +4,7 @@ import type { NumberState } from '@monitor/shared';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { HealthChart24h } from '@/components/dashboard/health-chart-24h';
+import { RouterRefreshInterval } from '@/components/dashboard/router-refresh-interval';
 import { LocalDateTime } from '@/components/ui/local-datetime';
 import { computeUptimeDisplayPercent } from '@/lib/uptime';
 
@@ -83,6 +84,7 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      <RouterRefreshInterval />
       <h1 className="mb-2 text-2xl font-semibold">Dashboard</h1>
       <p className="mb-8 text-[var(--color-text-muted)]">Overview of monitored numbers.</p>
       <div className="mb-10 grid gap-4 sm:grid-cols-3">
