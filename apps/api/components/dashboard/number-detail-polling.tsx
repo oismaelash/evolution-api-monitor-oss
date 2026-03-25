@@ -2,6 +2,7 @@
 
 import useSWR from 'swr';
 import { useT } from '@/components/i18n/i18n-provider';
+import { formatNumberStateLabel } from '@/lib/number-state-label';
 import { LocalDateTime } from '@/components/ui/local-datetime';
 
 export type NumberDetailHeader = {
@@ -81,7 +82,9 @@ export function NumberDetailPolling({
       <h1 className="mb-2 text-2xl font-semibold">{header.instanceName}</h1>
       <p className="mb-2 text-sm text-[var(--color-text-muted)]">
         {t('Projeto:', 'Project:')} {header.project.name} · {t('Estado:', 'State:')}{' '}
-        <span className="text-[var(--color-text-primary)]">{header.state}</span>
+        <span className="text-[var(--color-text-primary)]">
+          {formatNumberStateLabel(header.state, t)}
+        </span>
       </p>
       <p className="mb-8 text-sm text-[var(--color-text-muted)]">
         {t('Contagem de falhas:', 'Failure count:')} {header.failureCount}

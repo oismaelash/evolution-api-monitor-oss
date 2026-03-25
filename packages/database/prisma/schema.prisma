@@ -26,6 +26,7 @@ enum SubscriptionStatus {
 }
 
 enum NumberState {
+  UNKNOWN
   CONNECTED
   DISCONNECTED
   CONNECTING
@@ -170,7 +171,7 @@ model Number {
   instanceName   String
   phoneNumber    String?
   label          String?
-  state          NumberState  @default(DISCONNECTED)
+  state          NumberState  @default(UNKNOWN)
   failureCount   Int          @default(0)
   restartAttempts Int         @default(0)
   monitored      Boolean      @default(true)

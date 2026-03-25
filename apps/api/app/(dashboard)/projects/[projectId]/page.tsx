@@ -5,6 +5,7 @@ import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
+import { formatNumberStateLabel } from '@/lib/number-state-label';
 import { e164ToDdiAndNational } from '@/lib/e164-fields';
 import { AddNumberForm } from '@/components/dashboard/add-number-form';
 import { EditProjectForm } from '@/components/dashboard/edit-project-form';
@@ -242,7 +243,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                       {n.instanceName}
                     </Link>
                   </td>
-                  <td className="px-4 py-2">{n.state}</td>
+                  <td className="px-4 py-2">{formatNumberStateLabel(n.state, t)}</td>
                   <td className="px-4 py-2">{n.monitored ? t('sim', 'yes') : t('não', 'no')}</td>
                   <td className="px-4 py-2 align-top">
                     <DeleteNumberButton

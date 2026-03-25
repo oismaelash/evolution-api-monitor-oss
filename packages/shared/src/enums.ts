@@ -22,6 +22,7 @@ export const SubscriptionStatus = {
 export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
 
 export const NumberState = {
+  UNKNOWN: 'UNKNOWN',
   CONNECTED: 'CONNECTED',
   DISCONNECTED: 'DISCONNECTED',
   CONNECTING: 'CONNECTING',
