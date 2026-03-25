@@ -40,12 +40,18 @@ function GitHubLogo({ className }: { className?: string }) {
   );
 }
 
-function normalizeLoginPhone(input: string): string {
-  const t = input.trim().replace(/\s/g, '');
-  if (t.startsWith('+')) {
-    return t;
+/** Build E.164: +DDI + national digits (no spaces). */
+function buildE164FromDdiAndNumber(ddiRaw: string, nationalRaw: string): string {
+  const ddi = ddiRaw.replace(/\D/g, '');
+  const national = nationalRaw.replace(/\D/g, '');
+  if (!ddi || !national) {
+    return '';
   }
-  return `+${t}`;
+  return `+${ddi}${national}`;
+}
+
+function isValidE164(phone: string): boolean {
+  return /^\+\d{10,15}$/.test(phone);
 }
 
 export function LoginPageBody() {
@@ -60,10 +66,14 @@ export function LoginPageBody() {
 
   const [whatsappOtpAvailable, setWhatsappOtpAvailable] = useState(false);
   const [otpStep, setOtpStep] = useState<'phone' | 'code'>('phone');
-  const [phoneInput, setPhoneInput] = useState('');
+  const [ddiInput, setDdiInput] = useState('');
+  const [nationalNumberInput, setNationalNumberInput] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
+
+  const composedWhatsappE164 = buildE164FromDdiAndNumber(ddiInput, nationalNumberInput);
+  const whatsappE164Valid = isValidE164(composedWhatsappE164);
 
   useEffect(() => {
     getProviders().then((p) => {
@@ -75,7 +85,16 @@ export function LoginPageBody() {
 
   async function handleSendOtp() {
     setOtpError(null);
-    const phone = normalizeLoginPhone(phoneInput);
+    const phone = buildE164FromDdiAndNumber(ddiInput, nationalNumberInput);
+    if (!isValidE164(phone)) {
+      setOtpError(
+        t(
+          'Indique um DDI e um número válidos (E.164: + e 10 a 15 dígitos no total).',
+          'Enter a valid country code and number (E.164: + and 10–15 digits total).',
+        ),
+      );
+      return;
+    }
     setOtpLoading(true);
     try {
       const res = await fetch('/api/auth/whatsapp-otp/request', {
@@ -100,7 +119,16 @@ export function LoginPageBody() {
 
   async function handleVerifyOtp() {
     setOtpError(null);
-    const phone = normalizeLoginPhone(phoneInput);
+    const phone = buildE164FromDdiAndNumber(ddiInput, nationalNumberInput);
+    if (!isValidE164(phone)) {
+      setOtpError(
+        t(
+          'Indique um DDI e um número válidos.',
+          'Enter a valid country code and number.',
+        ),
+      );
+      return;
+    }
     setOtpLoading(true);
     try {
       const res = await signIn('whatsapp-otp', {
@@ -132,8 +160,8 @@ export function LoginPageBody() {
         <p className="mb-6 text-sm text-[var(--color-text-muted)]">
           {whatsappOtpAvailable
             ? t(
-                'Use Google, GitHub ou seu número em formato E.164 (receberá um código no WhatsApp).',
-                'Use Google, GitHub, or your number in E.164 format (you will receive a code on WhatsApp).',
+                'Use Google, GitHub ou informe o DDI e o número (receberá um código no WhatsApp).',
+                'Use Google, GitHub, or enter country code (DDI) and phone number (you will receive a code on WhatsApp).',
               )
             : t(
                 'Use sua conta Google ou GitHub para acessar o painel.',
@@ -193,22 +221,60 @@ export function LoginPageBody() {
               ) : null}
               {otpStep === 'phone' ? (
                 <>
-                  <label htmlFor="login-whatsapp-phone" className="sr-only">
-                    {t('Telefone (E.164)', 'Phone (E.164)')}
-                  </label>
-                  <input
-                    id="login-whatsapp-phone"
-                    type="tel"
-                    name="phone"
-                    autoComplete="tel"
-                    placeholder={t('ex.: +5511999999999', 'e.g. +5511999999999')}
-                    value={phoneInput}
-                    onChange={(e) => setPhoneInput(e.target.value)}
-                    className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
-                  />
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[7rem]">
+                      <label
+                        htmlFor="login-whatsapp-ddi"
+                        className="text-xs font-medium text-[var(--color-text-muted)]"
+                      >
+                        {t('DDI', 'Country code')}
+                      </label>
+                      <input
+                        id="login-whatsapp-ddi"
+                        type="text"
+                        name="ddi"
+                        inputMode="numeric"
+                        autoComplete="tel-country-code"
+                        placeholder={t('ex.: 55', 'e.g. 55')}
+                        value={ddiInput}
+                        onChange={(e) =>
+                          setDdiInput(e.target.value.replace(/\D/g, '').slice(0, 3))
+                        }
+                        className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <label
+                        htmlFor="login-whatsapp-national"
+                        className="text-xs font-medium text-[var(--color-text-muted)]"
+                      >
+                        {t('Número', 'Number')}
+                      </label>
+                      <input
+                        id="login-whatsapp-national"
+                        type="tel"
+                        name="phone"
+                        autoComplete="tel-national"
+                        placeholder={t('ex.: 11999999999', 'e.g. 11999999999')}
+                        value={nationalNumberInput}
+                        onChange={(e) =>
+                          setNationalNumberInput(
+                            e.target.value.replace(/\D/g, '').slice(0, 15),
+                          )
+                        }
+                        className="w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 font-mono text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)]">
+                    {t(
+                      'Será usado o formato +DDI seguido do número, sem espaços.',
+                      'The app will use +country code followed by the number, no spaces.',
+                    )}
+                  </p>
                   <button
                     type="button"
-                    disabled={otpLoading || !phoneInput.trim()}
+                    disabled={otpLoading || !whatsappE164Valid}
                     onClick={() => void handleSendOtp()}
                     className="rounded-md border border-[var(--color-accent)] bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                   >
@@ -221,7 +287,7 @@ export function LoginPageBody() {
                 <>
                   <p className="text-xs text-[var(--color-text-muted)]">
                     {t('Código enviado para', 'Code sent to')}{' '}
-                    <span className="font-mono">{normalizeLoginPhone(phoneInput)}</span>
+                    <span className="font-mono">{composedWhatsappE164}</span>
                     .{' '}
                     <button
                       type="button"
