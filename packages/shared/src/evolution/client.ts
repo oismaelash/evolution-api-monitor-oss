@@ -9,6 +9,21 @@ export type HealthErr = {
 };
 export type HealthResult = HealthOk | HealthErr;
 
+/** Matches Evolution-style states/messages (e.g. connectionState is close) without substring false positives. */
+const CLOSED_CONNECTION_PATTERN =
+  /\b(close|closed|connection\s+closed|conex[aã]o\s+fechada|desconectad[oa])\b/i;
+
+/**
+ * True when the health failure indicates the WhatsApp/session connection is closed or closing,
+ * so the worker can skip waiting for FAILURES_BEFORE_RESTART and run restart logic immediately.
+ */
+export function isConnectionClosedLikeHealthFailure(result: HealthErr): boolean {
+  const msg = result.message ?? '';
+  if (CLOSED_CONNECTION_PATTERN.test(msg)) return true;
+  const rawStr = JSON.stringify(result.raw ?? {});
+  return CLOSED_CONNECTION_PATTERN.test(rawStr);
+}
+
 const DEFAULT_PING_MS = 5000;
 const DEFAULT_RESTART_MS = 10_000;
 

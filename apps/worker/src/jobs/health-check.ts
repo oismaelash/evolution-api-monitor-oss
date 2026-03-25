@@ -11,6 +11,7 @@ import {
   SubscriptionStatus,
   computeDelayMs,
   getEvolutionTimeoutsMs,
+  isConnectionClosedLikeHealthFailure,
   loadEnv,
   RetryStrategy as RetryStrategyConst,
 } from '@monitor/shared';
@@ -191,8 +192,16 @@ export function createHealthCheckWorker(connection: RedisClient) {
           return;
         }
 
-        if (newCount < FAILURES_BEFORE_RESTART) {
+        const closedLike = isConnectionClosedLikeHealthFailure(result);
+        if (newCount < FAILURES_BEFORE_RESTART && !closedLike) {
           return;
+        }
+        if (closedLike && newCount < FAILURES_BEFORE_RESTART) {
+          logJson('info', 'health_check_connection_closed_fast_restart', {
+            numberId,
+            failureCount: newCount,
+            message: result.message,
+          });
         }
 
         const restartAttempts = number.restartAttempts;
