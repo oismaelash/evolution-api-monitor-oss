@@ -1,36 +1,71 @@
+# Development stack: mesma topologia que prod (Postgres, Redis, API, BullMQ worker).
+# Diferença: API e worker usam Dockerfile.dev + bind mount para hot reload (Next + tsx watch).
+#
+# Migrations (antes do primeiro up ou após mudança de schema):
+#   docker compose -f docker-compose.dev.yml --profile migrate run --rm migrate
+#
+# Subir tudo:
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# API: http://localhost:${API_PORT:-3000}
+
+networks:
+  backend:
+    internal: true
+  egress:
+    driver: bridge
+
 services:
   postgres:
     image: postgres:16-alpine
+    networks: [backend]
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: monitor_status
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-monitor_status}
     volumes:
       - monitor_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
       interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    networks: [backend]
+    command: redis-server --appendonly yes
+    volumes:
+      - monitor_redis:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
 
+  migrate:
+    profiles: [migrate]
+    networks: [backend]
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      # Sempre host `postgres` (não use DATABASE_URL do .env com localhost para jobs no compose)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    working_dir: /app
+    command: npm run db:migrate:deploy
+
   api:
+    networks: [backend, egress]
     build:
       context: .
       dockerfile: Dockerfile.dev
     ports:
-      - "3000:3000"
+      - '${API_PORT:-3000}:3000'
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,25 +73,74 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monitor_status?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
       REDIS_URL: redis://redis:6379
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      CLOUD_BILLING: ${CLOUD_BILLING:-false}
+      CLOUD_ADVANCED_ALERTS: ${CLOUD_ADVANCED_ALERTS:-false}
+      CLOUD_EXPONENTIAL_RETRY: ${CLOUD_EXPONENTIAL_RETRY:-false}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GITHUB_ID: ${GITHUB_ID:-}
       GITHUB_SECRET: ${GITHUB_SECRET:-}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-      WATCHPACK_POLLING: "true"
-      CHOKIDAR_USEPOLLING: "true"
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-}
+      BILLING_PRICE_PER_NUMBER_CENTS: ${BILLING_PRICE_PER_NUMBER_CENTS:-}
+      PAGUE_DEV_API_KEY: ${PAGUE_DEV_API_KEY:-}
+      PAGUE_DEV_WEBHOOK_SECRET: ${PAGUE_DEV_WEBHOOK_SECRET:-}
+      PAGUE_DEV_BASE_URL: ${PAGUE_DEV_BASE_URL:-}
+      MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
+      MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
+      BULL_BOARD_SECRET: ${BULL_BOARD_SECRET:-}
+      WATCHPACK_POLLING: 'true'
+      CHOKIDAR_USEPOLLING: 'true'
     volumes:
       - .:/app
       - /app/node_modules
     working_dir: /app
-    # Apply migrations so OAuth signIn can create users (fresh volumes start empty).
-    command: sh -c "npm run db:migrate:deploy && npm run dev --workspace=api"
+    command: npm run dev --workspace=api
+
+  worker:
+    networks: [backend, egress]
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
+      REDIS_URL: redis://redis:6379
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      CLOUD_BILLING: ${CLOUD_BILLING:-false}
+      CLOUD_ADVANCED_ALERTS: ${CLOUD_ADVANCED_ALERTS:-false}
+      CLOUD_EXPONENTIAL_RETRY: ${CLOUD_EXPONENTIAL_RETRY:-false}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-}
+      PAGUE_DEV_API_KEY: ${PAGUE_DEV_API_KEY:-}
+      PAGUE_DEV_WEBHOOK_SECRET: ${PAGUE_DEV_WEBHOOK_SECRET:-}
+      PAGUE_DEV_BASE_URL: ${PAGUE_DEV_BASE_URL:-}
+      MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
+      MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
+      PING_TIMEOUT_MS: ${PING_TIMEOUT_MS:-}
+      RESTART_TIMEOUT_MS: ${RESTART_TIMEOUT_MS:-}
+    volumes:
+      - .:/app
+      - /app/node_modules
+    working_dir: /app
+    command: npm run dev --workspace=worker
 
 volumes:
   monitor_pgdata:
+  monitor_redis:
