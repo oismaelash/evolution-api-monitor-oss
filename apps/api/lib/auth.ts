@@ -59,7 +59,8 @@ export const authOptions: NextAuthOptions = {
   providers: buildOAuthProviders(),
   /** Must match the real browser connection: Secure cookies are not stored on HTTP. */
   useSecureCookies: process.env.NODE_ENV === 'production',
-  debug: process.env.NODE_ENV === 'development',
+  /** Opt-in only: NextAuth debug logs OAuth tokens and provider secrets — never enable in production. */
+  debug: process.env.NEXTAUTH_DEBUG === 'true',
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider !== 'google' && account?.provider !== 'github') {
