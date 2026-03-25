@@ -126,28 +126,35 @@ if [ -z "${GHCR_USERNAME:-}" ]; then
     exit 1
 fi
 
-API_IMAGE="ghcr.io/${GHCR_USERNAME}/${GHCR_IMAGE_NAME}-api"
-WORKER_IMAGE="ghcr.io/${GHCR_USERNAME}/${GHCR_IMAGE_NAME}-worker"
-MIGRATE_IMAGE="ghcr.io/${GHCR_USERNAME}/${GHCR_IMAGE_NAME}-migrate"
+API_IMAGE="ghcr.io/${GHCR_USERNAME}/${GHCR_IMAGE_NAME}"
 TAG_VER="${GHCR_IMAGE_VERSION}"
 
-echo -e "${GREEN}📋 Imagens:${NC}"
+echo -e "${GREEN}📋 Imagem Única:${NC}"
 echo -e "   ${API_IMAGE}:${TAG_VER} , :latest"
-echo -e "   ${WORKER_IMAGE}:${TAG_VER} , :latest"
-if [[ "${GHCR_PUSH_MIGRATE:-}" == "true" ]]; then
-    echo -e "   ${MIGRATE_IMAGE}:${TAG_VER} , :latest"
-fi
 
 echo -e "${YELLOW}🔐 Login GHCR...${NC}"
 echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
 docker_build_push() {
-    local target="$1"
-    local image_base="$2"
-    echo -e "${YELLOW}🔨 Build --target ${target} → ${image_base}...${NC}"
+    local image_base="$1"
+    echo -e "${YELLOW}🔨 Build unificado → ${image_base}...${NC}"
+    
+    local build_args=()
+    if [ -f "$ENV_FILE" ]; then
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+            if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*= ]]; then
+                local key="${BASH_REMATCH[1]}"
+                if [[ ! "$key" =~ ^GHCR_ ]]; then
+                    build_args+=(--build-arg "${key}=${!key:-}")
+                fi
+            fi
+        done < "$ENV_FILE"
+    fi
+
     docker build \
         -f Dockerfile \
-        --target "$target" \
+        "${build_args[@]}" \
         -t "${image_base}:${TAG_VER}" \
         -t "${image_base}:latest" \
         .
@@ -156,10 +163,6 @@ docker_build_push() {
     echo -e "${GREEN}✅ ${image_base} (${TAG_VER}, latest)${NC}"
 }
 
-docker_build_push api "$API_IMAGE"
-docker_build_push worker "$WORKER_IMAGE"
-if [[ "${GHCR_PUSH_MIGRATE:-}" == "true" ]]; then
-    docker_build_push migrate "$MIGRATE_IMAGE"
-fi
+docker_build_push "$API_IMAGE"
 
 echo -e "${GREEN}🎉 Concluído.${NC}"
