@@ -17,7 +17,7 @@ export async function MarketingHero() {
           <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--color-accent)] backdrop-blur-md">
             <Monitor size={14} variant="Bold" color="currentColor" aria-hidden />
             <span className="bg-gradient-to-r from-[var(--color-accent)] to-purple-400 bg-clip-text text-transparent">
-              {t('Monitoramento Inteligente', 'Intelligent Monitoring')}
+              {t('Monitoramento em Tempo Real', 'Real-time Monitoring')}
             </span>
           </p>
         </div>
@@ -26,16 +26,16 @@ export async function MarketingHero() {
           id="hero-heading"
           className="text-balance text-5xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl"
         >
-          <span className="block">{t('Saiba quando cada', 'Know when every')}</span>
+          <span className="block">{t('Pare de perder dinheiro com', 'Stop losing money with')}</span>
           <span className="mt-2 block bg-gradient-to-r from-indigo-400 via-[var(--color-accent)] to-purple-400 bg-clip-text text-transparent text-glow">
-            {t('número está conectado', 'number is connected')}
+            {t('conexões caindo no WhatsApp', 'WhatsApp connections dropping')}
           </span>
         </h1>
 
         <p className="mx-auto mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-[var(--color-text-muted)] sm:text-xl">
           {t(
-            'Identifique problemas de conexão antes dos seus clientes. Receba alertas onde sua equipe já trabalha e mantenha suas operações rodando sem interrupções.',
-            'Spot connection issues before your customers do. Get alerts where your team already works and keep your operations running smoothly.',
+            'Não espere o cliente reclamar que seu bot parou. Receba alertas imediatos e garanta 100% de estabilidade na sua Evolution API.',
+            'Don\'t wait for customers to complain that your bot stopped. Get instant alerts and ensure 100% stability for your Evolution API.',
           )}
         </p>
 

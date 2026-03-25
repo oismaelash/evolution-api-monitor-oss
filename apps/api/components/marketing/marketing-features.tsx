@@ -8,34 +8,34 @@ export async function MarketingFeatures() {
   const features = [
     {
       title: t(
-        'Detecte problemas antes de afetarem a receita',
-        'Catch problems before they hurt revenue',
+        'Antecipe o caos antes que ele custe caro',
+        'Stop chaos before it costs you',
       ),
       description: t(
-        'Health checks regulares em cada instância para que desconexões silenciosas e sessões instáveis apareçam cedo — não depois de reclamações.',
-        'Regular health checks on every instance so silent disconnects and flaky sessions surface early—not after someone complains.',
+        'Health checks em tempo real para que desconexões silenciosas sejam resolvidas antes de virarem reclamações de suporte.',
+        'Real-time health checks so silent disconnects are resolved before they turn into support tickets.',
       ),
       Icon: Health,
     },
     {
       title: t(
-        'Recuperação que roda enquanto você dorme',
-        'Recovery that runs while you sleep',
+        'Automação que salva sua escala',
+        'Automation that saves your scale',
       ),
       description: t(
-        'Novas tentativas e reinícios automáticos em sequência segura — sua equipe gasta menos tempo apagando incêndio em painéis.',
-        'Automatic retries and restarts in a safe sequence—so your team spends less time firefighting in admin panels.',
+        'Reinícios automáticos inteligentes para que sua equipe pare de apagar incêndios manuais em painéis de administração.',
+        'Smart automatic restarts so your team stops manual firefighting in admin panels.',
       ),
       Icon: RefreshCircle,
     },
     {
       title: t(
-        'Alertas onde sua equipe já está',
-        'Alerts where your team already is',
+        'Alertas onde o dinheiro acontece',
+        'Alerts where the money happens',
       ),
       description: t(
-        'Envie notificações por WhatsApp, e-mail ou seu próprio endpoint — modelos que você controla, com fallback se um canal falhar.',
-        'Send notifications over WhatsApp, email, or your own endpoint—templates you control, with fallbacks if one path fails.',
+        'Envie notificações criticas por WhatsApp ou e-mail. Esteja ciente de quedas no segundo em que elas ocorrem.',
+        'Send critical notifications via WhatsApp or email. Be aware of drops the second they happen.',
       ),
       Icon: Notification,
     },
@@ -59,12 +59,12 @@ export async function MarketingFeatures() {
           id="features-heading"
           className="text-3xl font-bold tracking-tight text-white sm:text-5xl"
         >
-          {t('O que você ganha', 'Everything you need')}
+          {t('Sua operação não pode parar', 'Your operation can\'t stop')}
         </h2>
         <p className="mt-6 text-lg leading-relaxed text-[var(--color-text-muted)]">
           {t(
-            'Menos surpresas, recuperação mais rápida e registro claro de cada incidente — para operações ficar à frente do suporte.',
-            'Fewer surprises, faster recovery, and a clear record of every incident—so operations stays ahead of customer support.',
+            'Recupere o controle total. Menos suporte, mais escala e zero surpresas desagradáveis no seu faturamento.',
+            'Regain total control. Less support, more scale, and zero nasty surprises in your revenue.',
           )}
         </p>
       </div>
