@@ -13,13 +13,14 @@ import { DeleteNumberButton } from '@/components/dashboard/delete-number-button'
 import { DeleteProjectButton } from '@/components/dashboard/delete-project-button';
 import { SyncInstancesButton } from '@/components/dashboard/sync-instances-button';
 
-type Props = { params: { projectId: string } };
+type Props = { params: Promise<{ projectId: string }> };
 
 export default async function ProjectDetailPage({ params }: Props) {
+  const { projectId } = await params;
   const session = await getServerSession(authOptions);
   const userId = session!.user!.id;
   const project = await prisma.project.findFirst({
-    where: { id: params.projectId, userId },
+    where: { id: projectId, userId },
     include: {
       config: true,
       numbers: { orderBy: { updatedAt: 'desc' }, take: 50 },

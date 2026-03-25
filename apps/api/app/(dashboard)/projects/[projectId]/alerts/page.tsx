@@ -8,13 +8,14 @@ import {
   type ProjectAlertsFormInitial,
 } from '@/components/dashboard/project-alerts-form';
 
-type Props = { params: { projectId: string } };
+type Props = { params: Promise<{ projectId: string }> };
 
 export default async function ProjectAlertsPage({ params }: Props) {
+  const { projectId } = await params;
   const session = await getServerSession(authOptions);
   const userId = session!.user!.id;
   const project = await prisma.project.findFirst({
-    where: { id: params.projectId, userId },
+    where: { id: projectId, userId },
     include: { config: true },
   });
   if (!project) notFound();

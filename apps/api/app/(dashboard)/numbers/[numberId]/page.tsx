@@ -4,13 +4,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { DeleteNumberButton } from '@/components/dashboard/delete-number-button';
 
-type Props = { params: { numberId: string } };
+type Props = { params: Promise<{ numberId: string }> };
 
 export default async function NumberDetailPage({ params }: Props) {
+  const { numberId } = await params;
   const session = await getServerSession(authOptions);
   const userId = session!.user!.id;
   const number = await prisma.number.findFirst({
-    where: { id: params.numberId, project: { userId } },
+    where: { id: numberId, project: { userId } },
     include: { project: true },
   });
   if (!number) notFound();
