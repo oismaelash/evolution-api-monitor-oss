@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ArrowDown2 } from 'iconsax-react';
 import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -56,65 +57,116 @@ export default async function ProjectDetailPage({ params }: Props) {
         Evolution URL: {project.evolutionUrl}
       </p>
 
-      <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
-        <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Connection</h2>
-        <p className="mb-6 text-sm text-[var(--color-text-muted)]">
-          Update display name, Evolution base URL, or API key. Pairing WhatsApp still happens in
-          Evolution; this monitor only stores credentials and polls health.
-        </p>
-        <EditProjectForm
-          projectId={project.id}
-          initialName={project.name}
-          initialEvolutionUrl={project.evolutionUrl}
-          initialAlertPhone={project.alertPhone}
-        />
-        <div className="mt-10 border-t border-[var(--color-border)] pt-8">
-          <h3 className="mb-1 text-base font-medium text-[var(--color-text-primary)]">Danger zone</h3>
-          <p className="mb-4 text-sm text-[var(--color-text-muted)]">
-            Deleting this project removes it permanently and deletes every number registered under it
-            (database cascade). Health check jobs for those numbers are cleared first.
-          </p>
-          <DeleteProjectButton
-            projectId={project.id}
-            projectName={project.name}
-            numberCount={project._count.numbers}
+      <details
+        open
+        className="group mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
+      >
+        <summary className="flex cursor-pointer list-none items-start justify-between gap-4 p-6 [&::-webkit-details-marker]:hidden">
+          <div className="min-w-0 flex-1">
+            <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Connection</h2>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Update display name, Evolution base URL, or API key. Pairing WhatsApp still happens in
+              Evolution; this monitor only stores credentials and polls health.
+            </p>
+          </div>
+          <ArrowDown2
+            size={20}
+            variant="Linear"
+            color="var(--color-text-muted)"
+            className="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-180"
+            aria-hidden
           />
+        </summary>
+        <div className="border-t border-[var(--color-border)] px-6 pb-6 pt-6">
+          <EditProjectForm
+            projectId={project.id}
+            initialName={project.name}
+            initialEvolutionUrl={project.evolutionUrl}
+            initialAlertPhone={project.alertPhone}
+          />
+          <div className="mt-10 border-t border-[var(--color-border)] pt-8">
+            <h3 className="mb-1 text-base font-medium text-[var(--color-text-primary)]">Danger zone</h3>
+            <p className="mb-4 text-sm text-[var(--color-text-muted)]">
+              Deleting this project removes it permanently and deletes every number registered under it
+              (database cascade). Health check jobs for those numbers are cleared first.
+            </p>
+            <DeleteProjectButton
+              projectId={project.id}
+              projectName={project.name}
+              numberCount={project._count.numbers}
+            />
+          </div>
         </div>
-      </section>
+      </details>
 
       {configInitial ? (
-        <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
-          <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Monitoring</h2>
-          <p className="mb-6 text-sm text-[var(--color-text-muted)]">
-            Health checks and retry behaviour.{' '}
-            <Link
-              href={`/projects/${project.id}/alerts`}
-              className="font-medium text-[var(--color-accent)] hover:underline"
-            >
-              Alert settings
-            </Link>{' '}
-            — channels, SMTP, webhook, templates.
-          </p>
-          <ProjectConfigForm projectId={project.id} initial={configInitial} />
-        </section>
+        <details
+          open
+          className="group mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
+        >
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-4 p-6 [&::-webkit-details-marker]:hidden">
+            <div className="min-w-0 flex-1">
+              <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Monitoring</h2>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Health checks and retry behaviour. Open the section for alert channels, SMTP, webhook,
+                and templates.
+              </p>
+            </div>
+            <ArrowDown2
+              size={20}
+              variant="Linear"
+              color="var(--color-text-muted)"
+              className="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-180"
+              aria-hidden
+            />
+          </summary>
+          <div className="border-t border-[var(--color-border)] px-6 pb-6 pt-6">
+            <p className="mb-6 text-sm text-[var(--color-text-muted)]">
+              <Link
+                href={`/projects/${project.id}/alerts`}
+                className="font-medium text-[var(--color-accent)] hover:underline"
+              >
+                Alert settings
+              </Link>{' '}
+              — channels, SMTP, webhook, templates.
+            </p>
+            <ProjectConfigForm projectId={project.id} initial={configInitial} />
+          </div>
+        </details>
       ) : null}
 
-      <section className="mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
-        <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Numbers</h2>
-        <p className="mb-4 text-sm text-[var(--color-text-muted)]">
-          <strong className="text-[var(--color-text-primary)]">Sync instances</strong> loads
-          instance names from your Evolution server; you choose which ones to add to this project.
-          Use <strong className="text-[var(--color-text-primary)]">Add number</strong> if you prefer
-          to register an instance name manually (it must match Evolution).
-        </p>
-        <div className="mb-8">
-          <SyncInstancesButton projectId={project.id} />
+      <details
+        open
+        className="group mb-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
+      >
+        <summary className="flex cursor-pointer list-none items-start justify-between gap-4 p-6 [&::-webkit-details-marker]:hidden">
+          <div className="min-w-0 flex-1">
+            <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Numbers</h2>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              <strong className="text-[var(--color-text-primary)]">Sync instances</strong> loads
+              instance names from your Evolution server; you choose which ones to add to this project.
+              Use <strong className="text-[var(--color-text-primary)]">Add number</strong> if you prefer
+              to register an instance name manually (it must match Evolution).
+            </p>
+          </div>
+          <ArrowDown2
+            size={20}
+            variant="Linear"
+            color="var(--color-text-muted)"
+            className="mt-1 shrink-0 transition-transform duration-200 group-open:rotate-180"
+            aria-hidden
+          />
+        </summary>
+        <div className="border-t border-[var(--color-border)] px-6 pb-6 pt-6">
+          <div className="mb-8">
+            <SyncInstancesButton projectId={project.id} />
+          </div>
+          <h3 className="mb-4 text-base font-medium text-[var(--color-text-primary)]">
+            Add number manually
+          </h3>
+          <AddNumberForm projectId={project.id} />
         </div>
-        <h3 className="mb-4 text-base font-medium text-[var(--color-text-primary)]">
-          Add number manually
-        </h3>
-        <AddNumberForm projectId={project.id} />
-      </section>
+      </details>
 
       <h2 className="mb-4 text-lg font-medium">Registered numbers</h2>
       <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
