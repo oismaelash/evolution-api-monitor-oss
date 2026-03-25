@@ -39,6 +39,7 @@ export type ProjectAlertsFormInitial = {
   alertCooldown: number;
   alertChannels: string[];
   alertTemplate: string | null;
+  whatsappSender: string | null;
   alertEmail: string | null;
   smtpFrom: string | null;
   smtpHost: string | null;
@@ -77,7 +78,7 @@ export function ProjectAlertsForm({
   const [showWebhookPayloadFormat, setShowWebhookPayloadFormat] = useState(false);
 
   // For the WhatsApp sender selection (mocking the UI structure as requested)
-  const [whatsappSender, setWhatsappSender] = useState<string>('pilot_status');
+  const [whatsappSender, setWhatsappSender] = useState<string>(initial.whatsappSender ?? 'pilot_status');
 
   function toggleChannel(c: (typeof CHANNELS)[number]) {
     setChannels((prev) => {
@@ -108,6 +109,7 @@ export function ProjectAlertsForm({
         CHANNELS.includes(x as (typeof CHANNELS)[number])
       ),
       alertTemplate: alertTemplate.trim() === '' ? null : alertTemplate.trim(),
+      whatsappSender: whatsappSender,
       alertEmail: alertEmail.trim() === '' ? null : alertEmail.trim(),
       smtpFrom: smtpFrom.trim() === '' ? null : smtpFrom.trim(),
       smtpHost: smtpHost.trim() === '' ? null : smtpHost.trim(),

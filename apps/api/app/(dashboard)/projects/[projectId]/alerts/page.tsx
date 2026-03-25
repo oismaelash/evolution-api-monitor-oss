@@ -27,6 +27,7 @@ export default async function ProjectAlertsPage({ params }: Props) {
     alertCooldown: cfg.alertCooldown,
     alertChannels: [...cfg.alertChannels],
     alertTemplate: cfg.alertTemplate,
+    whatsappSender: cfg.whatsappSender,
     alertEmail: cfg.alertEmail,
     smtpFrom: cfg.smtpFrom,
     smtpHost: cfg.smtpHost,
@@ -61,7 +62,7 @@ export default async function ProjectAlertsPage({ params }: Props) {
           'Escolha canais de notificação, ajuste o intervalo entre alertas e configure SMTP ou webhook. O agendamento de health checks fica em',
           'Choose notification channels, tune cooldown, and configure SMTP or a webhook endpoint. Health check timing stays under',
         )}{' '}
-        <Link href={`/projects/${project.id}`} className="text-[var(--color-accent)] hover:underline">
+        <Link href={`/projects/${project.id}?tab=monitoring`} className="text-[var(--color-accent)] hover:underline">
           {t('Monitoramento', 'Monitoring')}
         </Link>{' '}
         {t('na página do projeto.', 'on the project page.')}

@@ -154,6 +154,7 @@ model ProjectConfig {
   alertCooldown   Int             @default(1800)
   alertChannels   AlertChannel[]  @default([MONITOR_STATUS])
   alertTemplate   String?
+  whatsappSender  String?         @default("pilot_status")
   alertEmail      String?
   smtpFrom        String?
   smtpHost        String?

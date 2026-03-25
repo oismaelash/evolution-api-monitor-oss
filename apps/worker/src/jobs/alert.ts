@@ -145,12 +145,7 @@ export function createAlertWorker(connection: RedisClient) {
         const channelsSent: string[] = [];
 
         for (const ch of channels) {
-          if (ch === AlertChannel.MONITOR_STATUS && env.MONITOR_STATUS_API_KEY) {
-            const { PilotStatusClient } = await import('@pilot-status/sdk');
-            const client = new PilotStatusClient({
-              apiKey: env.MONITOR_STATUS_API_KEY,
-            });
-
+          if (ch === AlertChannel.MONITOR_STATUS) {
             const dest = number.project.alertPhone ?? '';
             if (!dest) {
               logJson('warn', 'alert_monitor_missing_phone', { numberId });
@@ -158,6 +153,53 @@ export function createAlertWorker(connection: RedisClient) {
             }
 
             const e164Dest = dest.startsWith('+') ? dest : `+${dest.replace(/^\+/, '')}`;
+
+            // Check if user selected a custom whatsapp sender from their own instances
+            if (cfg.whatsappSender && cfg.whatsappSender !== 'pilot_status') {
+              try {
+                // Find the sender number
+                const senderNumber = await prisma.number.findUnique({
+                  where: { id: cfg.whatsappSender },
+                });
+                
+                if (!senderNumber || senderNumber.state !== 'CONNECTED') {
+                  logJson('warn', 'alert_custom_sender_not_connected', { numberId, senderId: cfg.whatsappSender });
+                  continue;
+                }
+
+                const row = await prisma.alert.create({
+                  data: {
+                    numberId,
+                    channel: AlertChannel.MONITOR_STATUS as never,
+                    payload: { ...payload, message: monitorMessage, sender: senderNumber.instanceName } as object,
+                  },
+                });
+
+                const formattedMessage = `*Evolution Monitor*\n\nProjeto: ${number.project.name}\nInstância: ${number.instanceName}\nStatus: ${isResolved ? 'Healthy' : 'Error'}\nTipo: ${errorType || 'None'}\n\n${monitorMessage}`;
+
+                await evo.sendText(senderNumber.instanceName, e164Dest, formattedMessage);
+
+                await prisma.alert.update({
+                  where: { id: row.id },
+                  data: { delivered: true },
+                });
+                channelsSent.push('MONITOR_STATUS_CUSTOM');
+                continue; // Skip the Pilot Status logic since we sent it via Evolution
+              } catch (e) {
+                logJson('error', 'alert_custom_sender_failed', { numberId, message: (e as Error).message });
+                // We could fallback to Pilot Status here, but for now we just log and let it fail or continue
+              }
+            }
+
+            if (!env.MONITOR_STATUS_API_KEY) {
+              logJson('warn', 'alert_monitor_missing_api_key', { numberId });
+              continue;
+            }
+
+            const { PilotStatusClient } = await import('@pilot-status/sdk');
+            const client = new PilotStatusClient({
+              apiKey: env.MONITOR_STATUS_API_KEY,
+            });
 
             // Check Opt-in if LIVE
             if (isLive) {

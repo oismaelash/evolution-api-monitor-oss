@@ -46,6 +46,7 @@ export const projectConfigSchema = z.object({
   alertCooldown: z.number().int().min(60).max(86400).optional(),
   alertChannels: z.array(z.enum(['MONITOR_STATUS', 'EMAIL', 'WEBHOOK'])).optional(),
   alertTemplate: z.string().nullable().optional(),
+  whatsappSender: z.string().nullable().optional(),
   alertEmail: z.preprocess(
     (v) => (v === '' ? null : v),
     z.union([z.string().email(), z.null()]).optional()

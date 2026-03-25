@@ -377,6 +377,29 @@ export class EvolutionClient {
     }
   }
 
+  async sendText(instanceName: string, number: string, text: string): Promise<void> {
+    const enc = encodeURIComponent(instanceName);
+    const body = {
+      number,
+      text,
+      delay: 1200,
+      linkPreview: false,
+    };
+    const res = await fetchWithTimeout(
+      this.url(`/message/sendText/${enc}`),
+      {
+        method: 'POST',
+        headers: this.headers(),
+        body: JSON.stringify(body),
+      },
+      this.opts?.pingTimeoutMs ?? DEFAULT_PING_MS
+    );
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(`sendText failed: ${res.status} ${t}`);
+    }
+  }
+
   /**
    * v2: GET /instance/connect/:name. Go: GET /instance/qr with instance token.
    */

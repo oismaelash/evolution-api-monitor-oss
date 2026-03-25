@@ -111,6 +111,7 @@ export const ProjectService = {
       alertCooldown?: number;
       alertChannels?: AlertChannel[];
       alertTemplate?: string | null;
+      whatsappSender?: string | null;
       alertEmail?: string | null;
       smtpFrom?: string | null;
       smtpHost?: string | null;
@@ -131,6 +132,7 @@ export const ProjectService = {
       data.alertChannels = parsed.alertChannels as AlertChannel[];
     }
     if (parsed.alertTemplate !== undefined) data.alertTemplate = parsed.alertTemplate;
+    if (parsed.whatsappSender !== undefined) data.whatsappSender = parsed.whatsappSender;
     if (parsed.alertEmail !== undefined) data.alertEmail = parsed.alertEmail;
     if (parsed.smtpFrom !== undefined) data.smtpFrom = parsed.smtpFrom;
     if (parsed.smtpHost !== undefined) data.smtpHost = parsed.smtpHost;
