@@ -3,6 +3,7 @@ import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { DeleteNumberButton } from '@/components/dashboard/delete-number-button';
+import { RouterRefreshInterval } from '@/components/dashboard/router-refresh-interval';
 import { LocalDateTime } from '@/components/ui/local-datetime';
 
 type Props = { params: Promise<{ numberId: string }> };
@@ -25,6 +26,7 @@ export default async function NumberDetailPage({ params }: Props) {
 
   return (
     <div>
+      <RouterRefreshInterval />
       <h1 className="mb-2 text-2xl font-semibold">{number.instanceName}</h1>
       <p className="mb-2 text-sm text-[var(--color-text-muted)]">
         Project: {number.project.name} · State:{' '}
