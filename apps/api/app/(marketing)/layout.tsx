@@ -11,7 +11,7 @@ export default function MarketingLayout({
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--color-accent)]/20 blur-[120px] animate-glow" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500/10 blur-[120px] animate-glow" style={{ animationDelay: '-2s' }} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500/10 blur-[120px] animate-glow" style={{ animationDelay: '-2s' }} />
         <div className="bg-mesh absolute inset-0 opacity-[0.15] dark:opacity-40" />
       </div>
 

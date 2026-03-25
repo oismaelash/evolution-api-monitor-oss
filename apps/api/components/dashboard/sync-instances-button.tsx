@@ -124,7 +124,7 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         type="button"
         onClick={() => void openModal()}
         disabled={loading && !open}
-        className="flex w-fit items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="flex w-fit items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-text)] transition-opacity hover:opacity-90 disabled:opacity-60"
       >
         <Refresh2 size="18" className={loading && !open ? 'animate-spin' : ''} />
         {loading && !open ? t('Carregando…', 'Loading…') : t('Sincronizar instâncias', 'Sync instances')}
@@ -223,7 +223,7 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
                 type="button"
                 disabled={loading || !!previewError || rows.length === 0 || newCount === 0}
                 onClick={() => void confirmAdd()}
-                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-text)] disabled:opacity-60"
               >
                 {loading
                   ? t('Salvando…', 'Saving…')

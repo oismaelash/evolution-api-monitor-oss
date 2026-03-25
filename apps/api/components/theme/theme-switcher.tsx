@@ -31,7 +31,7 @@ export function ThemeSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
   };
 
   return (
-    <div className={`inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-0.5 shadow-sm h-full ${
+    <div className={`inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5 shadow-sm h-full ${
       isCollapsed ? 'w-full' : ''
     }`}>
       <button

@@ -24,10 +24,12 @@ export function DashboardShell({
   children,
   userName,
   requiresDisplayName,
+  isBillingEnabled = true,
 }: {
   children: React.ReactNode;
   userName?: string | null;
   requiresDisplayName?: boolean;
+  isBillingEnabled?: boolean;
 }) {
   const pathname = usePathname();
   const t = useT();
@@ -71,12 +73,15 @@ export function DashboardShell({
       label: t('Logs', 'Logs'),
       icon: DocumentText
     },
-    { 
+  ];
+
+  if (isBillingEnabled) {
+    nav.push({ 
       href: '/settings/billing', 
       label: t('Cobrança', 'Billing'),
       icon: EmptyWallet
-    },
-  ];
+    });
+  }
 
   const sidebarWidth = isCollapsed ? 'w-20' : 'w-64';
 
@@ -89,14 +94,14 @@ export function DashboardShell({
       >
         {/* Logo / Branding */}
         <div className="mb-8 flex items-center gap-3 px-2">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20">
+          {/* <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent)] text-[var(--color-accent-text)] shadow-lg shadow-[var(--color-accent)]/20">
             <Global size="24" variant="Bold" />
-          </div>
+          </div> */}
           {!isCollapsed && (
             <div className="overflow-hidden whitespace-nowrap">
               <div className="text-lg font-bold tracking-tight text-[var(--color-text-primary)]">
                 Evolution
-                <span className="text-[var(--color-accent)]">Monitor</span>
+                <span className="text-[var(--color-accent)]"> Monitor</span>
               </div>
             </div>
           )}
@@ -125,19 +130,19 @@ export function DashboardShell({
               <Link
                 key={item.href}
                 href={item.href}
-                className={`group relative flex items-center transition-all duration-200 
+                className={`group relative flex items-center transition-all duration-200 border
                   ${isCollapsed ? 'h-11 w-11 justify-center rounded-xl' : 'gap-3 rounded-xl px-3 py-2.5'}
                   ${active
-                    ? 'bg-[var(--color-accent)] text-white shadow-md shadow-[var(--color-accent)]/10'
-                    : 'text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/40 hover:text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-accent)] text-[var(--color-accent-text)] shadow-md shadow-[var(--color-accent)]/10 border-[var(--color-border)]'
+                    : 'border-transparent text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/40 hover:text-[var(--color-text-primary)]'
                   }`}
               >
                 <div className={`flex shrink-0 items-center justify-center ${isCollapsed ? 'h-full w-full' : ''}`}>
                   <Icon 
                     size="22" 
                     variant={active ? "Bold" : "Outline"} 
-                    color={active ? "#ffffff" : "#94a3b8"}
-                    className={`transition-all duration-200 ${!active ? 'group-hover:scale-110 group-hover:text-[#f8fafc]' : ''}`}
+                    color={active ? "var(--color-accent-text)" : "currentColor"}
+                    className={`transition-all duration-200 ${!active ? 'group-hover:scale-110 group-hover:text-[var(--color-text-primary)]' : ''}`}
                   />
                 </div>
                 
@@ -146,7 +151,7 @@ export function DashboardShell({
                 )}
                 
                 {active && !isCollapsed && (
-                  <div className="ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
+                  <div className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--color-accent-text)]/60" />
                 )}
 
                 {/* Custom Tooltip for Collapsed State */}
@@ -186,7 +191,7 @@ export function DashboardShell({
 
               {/* Custom Tooltip for Collapsed State */}
               {isCollapsed && (
-                <div className="pointer-events-none absolute left-full z-50 ml-6 hidden whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-white shadow-2xl transition-all group-hover:block animate-in fade-in slide-in-from-left-2 duration-200">
+                <div className="pointer-events-none absolute left-full z-50 ml-6 hidden whitespace-nowrap rounded-lg bg-red-600 px-3 py-2 text-xs font-bold text-[var(--color-accent-text)] shadow-2xl transition-all group-hover:block animate-in fade-in slide-in-from-left-2 duration-200">
                   <div className="absolute -left-1 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 bg-red-600" />
                   {t('Sair', 'Sign out')}
                 </div>

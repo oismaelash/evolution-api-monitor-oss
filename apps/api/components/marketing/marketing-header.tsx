@@ -55,7 +55,7 @@ export async function MarketingHeader() {
           </div>
           <Link
             href={DASHBOARD_HREF}
-            className="hidden sm:flex rounded-xl bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/25 transition-all hover:shadow-accent/40 hover:scale-[1.02] active:scale-[0.98]"
+            className="hidden sm:flex rounded-xl border border-[var(--color-border)] bg-[var(--color-accent)] px-5 py-2.5 text-sm font-bold text-[var(--color-accent-text)] shadow-lg shadow-accent/25 transition-all hover:shadow-accent/40 hover:scale-[1.02] active:scale-[0.98]"
           >
             {t('Começar', 'Get started')}
           </Link>

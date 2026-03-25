@@ -69,13 +69,13 @@ export async function MarketingFeatures() {
         </p>
       </div>
       <ul className="mt-20 grid gap-8 sm:grid-cols-2 lg:gap-10">
-        {features.map(({ title, description, Icon }) => (
-          <li
-            key={title}
-            className="group relative rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 transition-all hover:bg-[var(--color-border)]/50 hover:border-[var(--color-accent)]/50 hover:shadow-2xl hover:shadow-[var(--color-accent)]/10"
-          >
-            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] transition-colors group-hover:bg-[var(--color-accent)] group-hover:text-white">
-              <Icon size={28} variant="Bold" color="currentColor" aria-hidden />
+          {features.map(({ title, description, Icon }) => (
+            <li
+              key={title}
+              className="group relative rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 transition-all hover:bg-[var(--color-border)]/20 hover:border-[var(--color-accent)]/50 hover:shadow-xl shadow-sm"
+            >
+              <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] transition-colors group-hover:bg-[var(--color-accent)] group-hover:text-[var(--color-accent-text)]">
+                <Icon size={28} variant="Bold" color="currentColor" aria-hidden />
             </div>
             <h3 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h3>
             <p className="mt-4 text-base leading-relaxed text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] transition-colors">

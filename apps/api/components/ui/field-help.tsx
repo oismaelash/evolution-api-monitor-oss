@@ -52,7 +52,7 @@ export function FieldHelp({ description, value }: FieldHelpProps) {
   return (
     <div
       ref={wrapRef}
-      className="relative z-20 inline-flex shrink-0"
+      className={`relative inline-flex shrink-0 ${show ? 'z-[99999]' : 'z-10'}`}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -74,10 +74,10 @@ export function FieldHelp({ description, value }: FieldHelpProps) {
         <div
           id={panelId}
           role="region"
-          className="absolute right-0 top-full z-[100] pt-1"
+          className="absolute right-0 top-full z-[99999] pt-1"
         >
           {/* pt-1 bridges button → panel so hover is not lost in the gap */}
-          <div className="w-72 max-w-[min(18rem,calc(100vw-1.5rem))] rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-left shadow-lg">
+          <div className="w-72 max-w-[min(18rem,calc(100vw-1.5rem))] rounded-md border border-[var(--color-border)] bg-white dark:bg-[#18181b] p-3 text-left shadow-lg">
             <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">{description}</p>
             <p className="mt-2 text-xs text-[var(--color-text-primary)]">
               <span className="font-semibold text-[var(--color-text-primary)]">
@@ -114,7 +114,7 @@ export function FormLabelWithHelp({
   const labelClass =
     'text-sm font-medium leading-snug text-[var(--color-text-muted)]';
   return (
-    <div className="relative z-10 mb-1">
+    <div className="mb-1">
       <span className="inline-flex max-w-full items-start gap-1.5">
         {htmlFor !== undefined ? (
           <label htmlFor={htmlFor} className={labelClass}>

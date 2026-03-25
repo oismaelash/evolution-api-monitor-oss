@@ -22,7 +22,7 @@ export async function MarketingOssVsCloud() {
         {t('Open source e Cloud', 'Open source and Cloud')}
       </h2>
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8">
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 shadow-sm">
           <div className="flex items-center gap-2 text-[var(--color-accent)]">
             <Code size={22} variant="Bold" color="currentColor" aria-hidden />
             <span className="text-sm font-semibold uppercase tracking-wide">
@@ -47,7 +47,7 @@ export async function MarketingOssVsCloud() {
             {t('Ver repositório no GitHub →', 'View repository on GitHub →')}
           </a>
         </div>
-        <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-surface)] p-8 ring-1 ring-[var(--color-accent)]/20">
+        <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-surface)] p-8 ring-1 ring-[var(--color-accent)]/20 shadow-md">
           <div className="flex items-center gap-2 text-[var(--color-accent)]">
             <Cloud size={22} variant="Bold" color="currentColor" aria-hidden />
             <span className="text-sm font-semibold uppercase tracking-wide">
@@ -65,7 +65,7 @@ export async function MarketingOssVsCloud() {
           </p>
           <Link
             href="/dashboard"
-            className="mt-6 inline-block rounded-lg bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            className="mt-6 inline-block rounded-lg border border-[var(--color-border)] bg-[var(--color-accent)] px-5 py-2.5 text-sm font-bold text-[var(--color-accent-text)] transition-opacity hover:opacity-90"
           >
             {t('Ir para a Cloud', 'Go to Cloud')}
           </Link>

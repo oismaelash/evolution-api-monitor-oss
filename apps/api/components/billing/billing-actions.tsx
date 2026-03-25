@@ -59,7 +59,7 @@ export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) 
         type="button"
         onClick={() => void checkout()}
         disabled={loading !== null}
-        className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-text)] disabled:opacity-60"
       >
         {loading === 'checkout'
           ? t('Redirecionando…', 'Redirecting…')

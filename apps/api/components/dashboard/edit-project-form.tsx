@@ -273,7 +273,7 @@ export function EditProjectForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60 transition-opacity hover:opacity-90"
+          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-text)] disabled:opacity-60 transition-opacity hover:opacity-90"
         >
           {step < 3 ? (
             t('Próximo', 'Next')

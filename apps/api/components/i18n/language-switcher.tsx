@@ -33,7 +33,7 @@ export function LanguageSwitcher({ className, isCollapsed }: { className?: strin
       role="group"
       aria-label={t('Idioma', 'Language')}
     >
-      <div className={`inline-flex ${isCollapsed ? 'flex-col' : 'items-center'} rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-0.5 shadow-sm`}>
+      <div className={`inline-flex ${isCollapsed ? 'flex-col' : 'items-center'} rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5 shadow-sm`}>
         <button
           type="button"
           onClick={() => switchTo('pt')}
