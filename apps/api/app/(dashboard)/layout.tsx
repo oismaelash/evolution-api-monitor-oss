@@ -13,7 +13,10 @@ export default async function DashboardGroupLayout({
     redirect('/login');
   }
   return (
-    <DashboardShell userName={session.user.name ?? session.user.email}>
+    <DashboardShell
+      userName={session.user.name ?? session.user.email}
+      requiresDisplayName={session.user.requiresDisplayName === true}
+    >
       {children}
     </DashboardShell>
   );

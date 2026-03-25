@@ -26,3 +26,9 @@ export const whatsappOtpVerifySchema = z.object({
 });
 
 export type WhatsappOtpVerifyInput = z.infer<typeof whatsappOtpVerifySchema>;
+
+export const updateProfileDisplayNameSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+});
+
+export type UpdateProfileDisplayNameInput = z.infer<typeof updateProfileDisplayNameSchema>;

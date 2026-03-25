@@ -6,13 +6,16 @@ import { signOut } from 'next-auth/react';
 
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { useT } from '@/components/i18n/i18n-provider';
+import { WhatsAppDisplayNameModal } from '@/components/dashboard/whatsapp-display-name-modal';
 
 export function DashboardShell({
   children,
   userName,
+  requiresDisplayName,
 }: {
   children: React.ReactNode;
   userName?: string | null;
+  requiresDisplayName?: boolean;
 }) {
   const pathname = usePathname();
   const t = useT();
@@ -26,7 +29,8 @@ export function DashboardShell({
   ];
 
   return (
-    <div className="flex min-h-screen">
+    <div className="relative flex min-h-screen">
+      {requiresDisplayName ? <WhatsAppDisplayNameModal /> : null}
       <aside className="w-60 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4">
         <div className="mb-6 space-y-3">
           <div className="text-sm font-semibold text-[var(--color-accent)]">Evolution Monitor</div>

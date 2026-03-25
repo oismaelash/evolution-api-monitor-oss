@@ -7,6 +7,8 @@ declare module 'next-auth' {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      /** True when user signed up with WhatsApp OTP and has not set a display name yet. */
+      requiresDisplayName?: boolean;
     };
   }
 }

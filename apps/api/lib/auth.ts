@@ -179,19 +179,22 @@ export const authOptions: NextAuthOptions = {
         session.user.email?.trim().toLowerCase() ??
         (typeof token.email === 'string' ? token.email.trim().toLowerCase() : '');
       try {
-        if (email) {
-          const dbUser = await prisma.user.findUnique({ where: { email } });
-          if (dbUser) {
-            session.user.id = dbUser.id;
-            return session;
-          }
+        let dbUser =
+          email.length > 0
+            ? await prisma.user.findUnique({ where: { email } })
+            : null;
+        if (!dbUser && token.sub) {
+          dbUser = await prisma.user.findUnique({ where: { id: token.sub } });
         }
-        if (token.sub) {
-          const byId = await prisma.user.findUnique({ where: { id: token.sub } });
-          if (byId) {
-            session.user.id = byId.id;
-            return session;
-          }
+        if (dbUser) {
+          session.user.id = dbUser.id;
+          session.user.name = dbUser.name;
+          session.user.email = dbUser.email;
+          session.user.image = dbUser.image;
+          session.user.requiresDisplayName = Boolean(
+            dbUser.whatsappNumber && !(dbUser.name && dbUser.name.trim().length > 0),
+          );
+          return session;
         }
         session.user.id = '';
       } catch (e) {
