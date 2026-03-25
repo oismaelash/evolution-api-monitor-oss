@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { CreateProjectForm } from '@/components/dashboard/create-project-form';
+import { ProjectRow } from '@/components/dashboard/project-row';
 import { LocalDateTime } from '@/components/ui/local-datetime';
 
 export default async function ProjectsPage() {
@@ -55,25 +56,16 @@ export default async function ProjectsPage() {
               </tr>
             ) : (
               projects.map((p: (typeof projects)[number]) => (
-                <tr key={p.id} className="border-t border-[var(--color-border)]">
-                  <td className="px-4 py-2">
-                    <Link
-                      href={`/projects/${p.id}`}
-                      className="font-medium text-[var(--color-accent)] hover:underline"
-                    >
-                      {p.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2 text-[var(--color-text-muted)]">
-                    {p.evolutionFlavor === 'EVOLUTION_GO'
-                      ? t('Evolution Go', 'Evolution Go')
-                      : t('Evolution API v2', 'Evolution API v2')}
-                  </td>
-                  <td className="px-4 py-2">{p._count.numbers}</td>
-                  <td className="px-4 py-2 text-[var(--color-text-muted)]">
-                    <LocalDateTime iso={p.updatedAt.toISOString()} />
-                  </td>
-                </tr>
+                <ProjectRow
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  evolutionFlavor={p.evolutionFlavor}
+                  numbersCount={p._count.numbers}
+                  updatedAt={p.updatedAt.toISOString()}
+                  flavorGoText={t('Evolution Go', 'Evolution Go')}
+                  flavorApiText={t('Evolution API v2', 'Evolution API v2')}
+                />
               ))
             )}
           </tbody>
