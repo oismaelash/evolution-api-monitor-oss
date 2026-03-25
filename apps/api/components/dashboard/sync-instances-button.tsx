@@ -7,6 +7,8 @@ import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
 type PreviewRow = { instanceName: string; alreadyInProject: boolean };
 
+import { Refresh2 } from 'iconsax-react';
+
 export function SyncInstancesButton({ projectId }: { projectId: string }) {
   const t = useT();
   const router = useRouter();
@@ -122,8 +124,9 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         type="button"
         onClick={() => void openModal()}
         disabled={loading && !open}
-        className="w-fit rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="flex w-fit items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
       >
+        <Refresh2 size="18" className={loading && !open ? 'animate-spin' : ''} />
         {loading && !open ? t('Carregando…', 'Loading…') : t('Sincronizar instâncias', 'Sync instances')}
       </button>
       {msg ? <p className="text-sm text-[var(--color-text-muted)]">{msg}</p> : null}

@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
+import { Trash } from 'iconsax-react';
+
 export function DeleteNumberButton({
   numberId,
   instanceName,
@@ -55,8 +57,8 @@ export function DeleteNumberButton({
   }
 
   const btnClass = compact
-    ? 'rounded border border-[var(--color-error)] bg-transparent px-2 py-1 text-xs font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 disabled:opacity-60'
-    : 'rounded-md border border-[var(--color-error)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 disabled:opacity-60';
+    ? 'flex items-center gap-1.5 rounded border border-[var(--color-error)] bg-transparent px-2 py-1 text-xs font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 disabled:opacity-60 transition-colors'
+    : 'flex items-center gap-2 rounded-md border border-[var(--color-error)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 disabled:opacity-60 transition-colors';
 
   return (
     <div className="space-y-2">
@@ -66,6 +68,7 @@ export function DeleteNumberButton({
         onClick={() => void onDelete()}
         className={btnClass}
       >
+        <Trash size={compact ? "14" : "18"} variant="Outline" />
         {loading ? t('Removendo…', 'Removing…') : t('Remover', 'Remove')}
       </button>
       {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}

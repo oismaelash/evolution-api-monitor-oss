@@ -62,16 +62,12 @@ export function NumberDetailPolling({
 
   const { data: numberRaw } = useSWR(numberUrl, fetchNumber, {
     fallbackData: initialHeader as unknown,
-    refreshInterval: 60_000,
-    revalidateOnFocus: false,
-    revalidateOnMount: false,
+    refreshInterval: 10_000,
   });
 
   const { data: checksPayload } = useSWR(checksUrl, fetchHealthChecks, {
     fallbackData: initialChecksPayload,
-    refreshInterval: 60_000,
-    revalidateOnFocus: false,
-    revalidateOnMount: false,
+    refreshInterval: 10_000,
   });
 
   const header = pickHeader(numberRaw ?? initialHeader);

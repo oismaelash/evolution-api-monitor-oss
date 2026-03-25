@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowDown2 } from 'iconsax-react';
+import { ArrowDown2, Add } from 'iconsax-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -106,9 +106,14 @@ export function CreateProjectForm() {
         onClick={() => setOpen((v) => !v)}
         className={`relative z-0 flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-[var(--color-bg)]/40 sm:px-6 ${open ? 'rounded-t-lg' : 'rounded-lg'}`}
       >
-        <span className="text-lg font-medium text-[var(--color-text-primary)]">
-          {t('Novo projeto', 'New project')}
-        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
+            <Add size="20" variant="Outline" />
+          </div>
+          <span className="text-lg font-medium text-[var(--color-text-primary)]">
+            {t('Novo projeto', 'New project')}
+          </span>
+        </div>
         <ArrowDown2
           size={20}
           variant="Linear"
@@ -223,8 +228,9 @@ export function CreateProjectForm() {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
           >
+            <Add size="18" variant="Outline" />
             {loading ? t('Criando…', 'Creating…') : t('Criar projeto', 'Create project')}
           </button>
           {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}

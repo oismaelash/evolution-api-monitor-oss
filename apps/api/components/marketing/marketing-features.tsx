@@ -53,30 +53,34 @@ export async function MarketingFeatures() {
   ] as const;
 
   return (
-    <section id="features" className="py-20 sm:py-24" aria-labelledby="features-heading">
+    <section id="features" className="py-24 sm:py-32" aria-labelledby="features-heading">
       <div className="mx-auto max-w-2xl text-center">
         <h2
           id="features-heading"
-          className="text-3xl font-semibold tracking-tight text-[var(--color-text-primary)]"
+          className="text-3xl font-bold tracking-tight text-white sm:text-5xl"
         >
-          {t('O que você ganha', 'What you get')}
+          {t('O que você ganha', 'Everything you need')}
         </h2>
-        <p className="mt-4 text-[var(--color-text-muted)]">
+        <p className="mt-6 text-lg leading-relaxed text-[var(--color-text-muted)]">
           {t(
             'Menos surpresas, recuperação mais rápida e registro claro de cada incidente — para operações ficar à frente do suporte.',
             'Fewer surprises, faster recovery, and a clear record of every incident—so operations stays ahead of customer support.',
           )}
         </p>
       </div>
-      <ul className="mt-14 grid gap-6 sm:grid-cols-2">
+      <ul className="mt-20 grid gap-8 sm:grid-cols-2 lg:gap-10">
         {features.map(({ title, description, Icon }) => (
           <li
             key={title}
-            className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 transition-colors hover:border-[var(--color-accent)]/40"
+            className="group relative rounded-3xl border border-white/10 bg-white/5 p-8 transition-all hover:bg-white/10 hover:border-[var(--color-accent)]/50 hover:shadow-2xl hover:shadow-accent/10"
           >
-            <Icon size={24} variant="Bold" color="var(--color-accent)" aria-hidden />
-            <h3 className="mt-4 text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">{description}</p>
+            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] transition-colors group-hover:bg-[var(--color-accent)] group-hover:text-white">
+              <Icon size={28} variant="Bold" color="currentColor" aria-hidden />
+            </div>
+            <h3 className="text-xl font-bold text-white">{title}</h3>
+            <p className="mt-4 text-base leading-relaxed text-[var(--color-text-muted)] group-hover:text-white/80 transition-colors">
+              {description}
+            </p>
           </li>
         ))}
       </ul>

@@ -14,7 +14,7 @@ function setLocaleCookie(locale: AppLocale): void {
 const btnBase =
   'min-w-[2.25rem] rounded px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]';
 
-export function LanguageSwitcher({ className }: { className?: string }) {
+export function LanguageSwitcher({ className, isCollapsed }: { className?: string; isCollapsed?: boolean }) {
   const router = useRouter();
   const locale = useLocale();
   const t = useT();
@@ -33,28 +33,32 @@ export function LanguageSwitcher({ className }: { className?: string }) {
       role="group"
       aria-label={t('Idioma', 'Language')}
     >
-      <div className="inline-flex items-center rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-0.5 shadow-sm">
+      <div className={`inline-flex ${isCollapsed ? 'flex-col' : 'items-center'} rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-0.5 shadow-sm`}>
         <button
           type="button"
           onClick={() => switchTo('pt')}
-          className={`${btnBase} ${
+          title={isCollapsed ? "Português" : undefined}
+          className={`${btnBase} flex items-center justify-center gap-1.5 ${
             locale === 'pt'
               ? 'bg-[var(--color-border)] text-[var(--color-text-primary)]'
               : 'text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/50 hover:text-[var(--color-text-primary)]'
           }`}
         >
-          PT
+          <span>🇧🇷</span>
+          {!isCollapsed && <span>PT</span>}
         </button>
         <button
           type="button"
           onClick={() => switchTo('en')}
-          className={`${btnBase} ${
+          title={isCollapsed ? "English" : undefined}
+          className={`${btnBase} flex items-center justify-center gap-1.5 ${
             locale === 'en'
               ? 'bg-[var(--color-border)] text-[var(--color-text-primary)]'
               : 'text-[var(--color-text-muted)] hover:bg-[var(--color-border)]/50 hover:text-[var(--color-text-primary)]'
           }`}
         >
-          EN
+          <span>🇺🇸</span>
+          {!isCollapsed && <span>EN</span>}
         </button>
       </div>
     </div>

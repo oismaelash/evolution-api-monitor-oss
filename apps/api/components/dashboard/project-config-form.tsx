@@ -8,6 +8,7 @@ import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
 import { FormLabelWithHelp } from '@/components/ui/field-help';
+import { Save2 } from 'iconsax-react';
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
@@ -187,8 +188,9 @@ export function ProjectConfigForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
+          <Save2 size="18" variant="Outline" />
           {loading ? t('Salvando…', 'Saving…') : t('Salvar monitoramento', 'Save monitoring settings')}
         </button>
         {ok ? <p className="text-sm text-[var(--color-success)]">{ok}</p> : null}

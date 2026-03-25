@@ -12,6 +12,7 @@ import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
 import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
+import { Save2, Eye, EyeSlash } from 'iconsax-react';
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
@@ -433,11 +434,19 @@ export function ProjectAlertsForm({
             <button
               type="button"
               onClick={() => setShowWebhookPayloadFormat((v) => !v)}
-              className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg)]/80"
+              className="flex items-center gap-2 rounded-md border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg)]/80"
             >
-              {showWebhookPayloadFormat
-                ? t('Ocultar formato do payload', 'Hide payload format')
-                : t('Ver formato do payload', 'View payload format')}
+              {showWebhookPayloadFormat ? (
+                <>
+                  <EyeSlash size="18" variant="Outline" />
+                  {t('Ocultar formato do payload', 'Hide payload format')}
+                </>
+              ) : (
+                <>
+                  <Eye size="18" variant="Outline" />
+                  {t('Ver formato do payload', 'View payload format')}
+                </>
+              )}
             </button>
             {showWebhookPayloadFormat ? (
               <div className="mt-4 space-y-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]/50 p-4">
@@ -485,8 +494,9 @@ export function ProjectAlertsForm({
         <button
           type="submit"
           disabled={loading}
-          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+          className="flex items-center gap-2 rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
+          <Save2 size="18" variant="Outline" />
           {loading ? t('Salvando…', 'Saving…') : t('Salvar alertas', 'Save alert settings')}
         </button>
         {ok ? <p className="text-sm text-[var(--color-success)]">{ok}</p> : null}

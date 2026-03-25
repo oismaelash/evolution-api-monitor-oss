@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 
+import { Trash } from 'iconsax-react';
+
 export function DeleteProjectButton({
   projectId,
   projectName,
@@ -69,8 +71,9 @@ export function DeleteProjectButton({
         type="button"
         disabled={loading}
         onClick={() => void onDelete()}
-        className="rounded-md border border-[var(--color-error)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 disabled:opacity-60"
+        className="flex items-center gap-2 rounded-md border border-[var(--color-error)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--color-error)] transition-colors hover:bg-[var(--color-error)]/10 disabled:opacity-60"
       >
+        <Trash size="18" variant="Outline" />
         {loading ? t('Excluindo…', 'Deleting…') : t('Excluir projeto', 'Delete project')}
       </button>
       {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}
