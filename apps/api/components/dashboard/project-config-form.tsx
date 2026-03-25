@@ -6,6 +6,7 @@ import { projectConfigSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
+import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
@@ -89,16 +90,19 @@ export function ProjectConfigForm({
           <label className={labelClass} htmlFor={`cfg-ping-${projectId}`}>
             {t('Intervalo de ping (segundos)', 'Ping interval (seconds)')}
           </label>
-          <input
-            id={`cfg-ping-${projectId}`}
-            type="number"
-            min={30}
-            max={86400}
-            className={inputClass}
-            value={pingInterval}
-            onChange={(e) => setPingInterval(e.target.value)}
-            required
-          />
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <input
+              id={`cfg-ping-${projectId}`}
+              type="number"
+              min={30}
+              max={86400}
+              className={`${inputClass} min-w-0 flex-1`}
+              value={pingInterval}
+              onChange={(e) => setPingInterval(e.target.value)}
+              required
+            />
+            <SecondsInputHint value={pingInterval} />
+          </div>
         </div>
         <div>
           <label className={labelClass} htmlFor={`cfg-retry-${projectId}`}>
@@ -119,16 +123,19 @@ export function ProjectConfigForm({
           <label className={labelClass} htmlFor={`cfg-delay-${projectId}`}>
             {t('Atraso entre tentativas (segundos)', 'Retry delay (seconds)')}
           </label>
-          <input
-            id={`cfg-delay-${projectId}`}
-            type="number"
-            min={5}
-            max={3600}
-            className={inputClass}
-            value={retryDelay}
-            onChange={(e) => setRetryDelay(e.target.value)}
-            required
-          />
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <input
+              id={`cfg-delay-${projectId}`}
+              type="number"
+              min={5}
+              max={3600}
+              className={`${inputClass} min-w-0 flex-1`}
+              value={retryDelay}
+              onChange={(e) => setRetryDelay(e.target.value)}
+              required
+            />
+            <SecondsInputHint value={retryDelay} />
+          </div>
         </div>
         <div className="sm:col-span-2">
           <label className={labelClass} htmlFor={`cfg-strat-${projectId}`}>

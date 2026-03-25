@@ -6,6 +6,7 @@ import { projectConfigSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
+import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
@@ -164,16 +165,19 @@ export function ProjectAlertsForm({
           <label className={labelClass} htmlFor={`al-cool-${projectId}`}>
             {t('Intervalo entre alertas (segundos)', 'Alert cooldown (seconds)')}
           </label>
-          <input
-            id={`al-cool-${projectId}`}
-            type="number"
-            min={60}
-            max={86400}
-            className={inputClass}
-            value={alertCooldown}
-            onChange={(e) => setAlertCooldown(e.target.value)}
-            required
-          />
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <input
+              id={`al-cool-${projectId}`}
+              type="number"
+              min={60}
+              max={86400}
+              className={`${inputClass} min-w-0 flex-1`}
+              value={alertCooldown}
+              onChange={(e) => setAlertCooldown(e.target.value)}
+              required
+            />
+            <SecondsInputHint value={alertCooldown} />
+          </div>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             {t(
               'Tempo mínimo entre alertas repetidos para o mesmo incidente.',
