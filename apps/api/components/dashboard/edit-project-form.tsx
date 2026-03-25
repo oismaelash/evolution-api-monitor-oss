@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { composedE164FromDdiFields, updateProjectSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
-import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
+import { ProjectAlertPhoneSection } from '@/components/dashboard/project-alert-phone-section';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
 
@@ -163,30 +163,14 @@ export function EditProjectForm({
           autoComplete="new-password"
         />
       </div>
-      <div className="space-y-1">
-        <FormLabelWithHelp
-          description={t(
-            'Destino WhatsApp (E.164) para alertas do canal Monitor Status.',
-            'E.164 WhatsApp destination for Monitor Status alerts.',
-          )}
-          value={
-            alertDdi.length > 0 || alertNational.length > 0
-              ? `+${alertDdi}${alertNational}`
-              : ''
-          }
-        >
-          {t('Telefone de alerta', 'Alert phone')}
-        </FormLabelWithHelp>
-        <WhatsappPhoneFields
-          ddiId={`edit-alert-ddi-${projectId}`}
-          nationalId={`edit-alert-national-${projectId}`}
-          ddiValue={alertDdi}
-          nationalValue={alertNational}
-          onDdiChange={setAlertDdi}
-          onNationalChange={setAlertNational}
-          perFieldHelp
-        />
-      </div>
+      <ProjectAlertPhoneSection
+        ddiId={`edit-alert-ddi-${projectId}`}
+        nationalId={`edit-alert-national-${projectId}`}
+        ddiValue={alertDdi}
+        nationalValue={alertNational}
+        onDdiChange={setAlertDdi}
+        onNationalChange={setAlertNational}
+      />
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="submit"

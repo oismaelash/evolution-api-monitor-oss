@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { composedE164FromDdiFields, createProjectSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
-import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
+import { ProjectAlertPhoneSection } from '@/components/dashboard/project-alert-phone-section';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
 
@@ -188,28 +188,15 @@ export function CreateProjectForm() {
               required
             />
           </div>
-          <div className="sm:col-span-2 space-y-1">
-            <FormLabelWithHelp
-              description={t(
-                'WhatsApp em E.164 para o canal Monitor Status receber alertas. Opcional; pode configurar depois.',
-                'E.164 WhatsApp for the Monitor Status channel. Optional; you can set it later.',
-              )}
-              value={
-                alertDdi.length > 0 || alertNational.length > 0
-                  ? `+${alertDdi}${alertNational}`
-                  : ''
-              }
-            >
-              {t('Telefone de alerta (opcional)', 'Alert phone (optional)')}
-            </FormLabelWithHelp>
-            <WhatsappPhoneFields
+          <div className="sm:col-span-2">
+            <ProjectAlertPhoneSection
               ddiId="proj-alert-ddi"
               nationalId="proj-alert-national"
               ddiValue={alertDdi}
               nationalValue={alertNational}
               onDdiChange={setAlertDdi}
               onNationalChange={setAlertNational}
-              perFieldHelp
+              optional
             />
           </div>
         </div>
