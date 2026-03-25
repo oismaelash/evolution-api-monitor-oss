@@ -5,6 +5,8 @@ import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@monitor/database';
 import { loadEnv, SubscriptionStatus } from '@monitor/shared';
 
+/** OAuth providers — see https://next-auth.js.org/providers/google and https://next-auth.js.org/providers/github */
+
 function oauthEmailFrom(
   user: { email?: string | null },
   profile: unknown
@@ -40,6 +42,14 @@ function buildOAuthProviders() {
   return providers;
 }
 
+function isGoogleEmailVerified(profile: unknown): boolean {
+  if (!profile || typeof profile !== 'object' || !('email_verified' in profile)) {
+    return true;
+  }
+  const v = (profile as { email_verified?: boolean }).email_verified;
+  return v !== false;
+}
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 },
   providers: buildOAuthProviders(),
@@ -47,6 +57,9 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider !== 'google' && account?.provider !== 'github') {
+        return false;
+      }
+      if (account?.provider === 'google' && !isGoogleEmailVerified(profile)) {
         return false;
       }
       const email = oauthEmailFrom(user, profile);
