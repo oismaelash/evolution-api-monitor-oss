@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { projectConfigSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
+import { formatZodIssues } from '@/lib/zod-validation-i18n';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
@@ -110,7 +111,7 @@ export function ProjectAlertsForm({
 
     const parsed = projectConfigSchema.safeParse(body);
     if (!parsed.success) {
-      setMsg(parsed.error.errors.map((x) => `${x.path.join('.')}: ${x.message}`).join(' · '));
+      setMsg(formatZodIssues(parsed.error.issues, t, { withPath: true }));
       return;
     }
 

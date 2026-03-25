@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { addNumberSchema } from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
+import { formatZodIssues } from '@/lib/zod-validation-i18n';
 
 const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
@@ -33,7 +34,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
     };
     const parsed = addNumberSchema.safeParse(raw);
     if (!parsed.success) {
-      setMsg(parsed.error.errors.map((x) => x.message).join(' · '));
+      setMsg(formatZodIssues(parsed.error.issues, t));
       return;
     }
     setLoading(true);
