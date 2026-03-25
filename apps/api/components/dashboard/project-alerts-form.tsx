@@ -225,37 +225,28 @@ export function ProjectAlertsForm({
             ))}
           </div>
         </div>
-        <div>
-          <FormLabelWithHelp
-            htmlFor={`al-tpl-${projectId}`}
-            description={t(
-              'Modelo opcional em Handlebars para personalizar o texto do alerta nos canais que suportam corpo customizado.',
-              'Optional Handlebars template to customize alert text on channels that support a custom body.',
-            )}
-            value={alertTemplate}
-          >
-            {t('Modelo de alerta (opcional, Handlebars)', 'Alert template (optional, Handlebars)')}
-          </FormLabelWithHelp>
-          <textarea
-            id={`al-tpl-${projectId}`}
-            rows={4}
-            className={inputClass}
-            value={alertTemplate}
-            onChange={(e) => setAlertTemplate(e.target.value)}
-            placeholder={t('Corpo da mensagem personalizado', 'Custom message body for alerts')}
-          />
-        </div>
       </section>
 
       <section className="space-y-4 border-t border-[var(--color-border)] pt-8">
         <h3 className="text-base font-medium text-[var(--color-text-primary)]">
           {t('E-mail (SMTP)', 'Email (SMTP)')}
         </h3>
-        <p className="text-sm text-[var(--color-text-muted)]">
+        <p className="text-sm text-[var(--color-text-muted)] mb-2">
           {t(
             'Obrigatório quando o canal E-mail está ativo. A senha é armazenada criptografada; deixe em branco para manter o valor atual.',
             'Required when the Email channel is enabled. Password is stored encrypted; leave blank to keep the current value.',
           )}
+        </p>
+        <p className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg)] p-3 rounded-lg border border-[var(--color-border)]">
+          {t('Não sabe como pegar os dados do SMTP do seu Gmail? ', "Don't know how to get your Gmail SMTP settings? ")}
+          <a 
+            href="https://www.gmass.co/blog/gmail-smtp/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-[var(--color-accent)] hover:underline"
+          >
+            {t('Clique aqui para ver um tutorial.', 'Click here for a tutorial.')}
+          </a>
         </p>
         <div className="flex flex-col gap-4">
           <div className="sm:col-span-2">
@@ -383,11 +374,22 @@ export function ProjectAlertsForm({
         <h3 className="text-base font-medium text-[var(--color-text-primary)]">
           {t('Webhook', 'Webhook')}
         </h3>
-        <p className="text-sm text-[var(--color-text-muted)]">
+        <p className="text-sm text-[var(--color-text-muted)] mb-2">
           {t(
             'Envia payloads JSON ao endpoint quando o canal Webhook está ativo. Segredo opcional para verificação, armazenado criptografado.',
             'POST JSON payloads to your endpoint when the Webhook channel is enabled. Optional secret is sent for verification and stored encrypted.',
           )}
+        </p>
+        <p className="text-xs text-[var(--color-text-muted)] bg-[var(--color-bg)] p-3 rounded-lg border border-[var(--color-border)]">
+          {t('Precisa de um webhook para testar? Use o ', 'Need a webhook to test? Use ')}
+          <a 
+            href="https://webhookguru.online/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-[var(--color-accent)] hover:underline"
+          >
+            WebhookGuru
+          </a>
         </p>
         <div className="flex flex-col gap-4">
           <div className="sm:col-span-2">
