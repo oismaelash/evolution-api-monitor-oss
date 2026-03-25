@@ -30,6 +30,10 @@ export const LogService = {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        include: {
+          project: { select: { id: true, name: true } },
+          number: { select: { id: true, instanceName: true } },
+        },
       }),
       prisma.log.count({ where }),
     ]);

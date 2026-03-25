@@ -18,8 +18,8 @@ build/
 # Deploy local com segredos (não versionar)
 ilumin.yml
 
-# Logs
-logs/
+# Logs (only top-level log output dir, not app routes named logs)
+/logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
