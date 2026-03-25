@@ -9,6 +9,7 @@ import {
   ProjectConfigForm,
   type ProjectConfigFormInitial,
 } from '@/components/dashboard/project-config-form';
+import { DeleteNumberButton } from '@/components/dashboard/delete-number-button';
 import { DeleteProjectButton } from '@/components/dashboard/delete-project-button';
 import { SyncInstancesButton } from '@/components/dashboard/sync-instances-button';
 
@@ -122,12 +123,13 @@ export default async function ProjectDetailPage({ params }: Props) {
               <th className="px-4 py-2">Instance</th>
               <th className="px-4 py-2">State</th>
               <th className="px-4 py-2">Monitored</th>
+              <th className="px-4 py-2 w-28">Actions</th>
             </tr>
           </thead>
           <tbody>
             {project.numbers.length === 0 ? (
               <tr>
-                <td className="px-4 py-6 text-[var(--color-text-muted)]" colSpan={3}>
+                <td className="px-4 py-6 text-[var(--color-text-muted)]" colSpan={4}>
                   No numbers yet. Sync instances or add one manually above.
                 </td>
               </tr>
@@ -144,6 +146,13 @@ export default async function ProjectDetailPage({ params }: Props) {
                   </td>
                   <td className="px-4 py-2">{n.state}</td>
                   <td className="px-4 py-2">{n.monitored ? 'yes' : 'no'}</td>
+                  <td className="px-4 py-2 align-top">
+                    <DeleteNumberButton
+                      numberId={n.id}
+                      instanceName={n.instanceName}
+                      compact
+                    />
+                  </td>
                 </tr>
               ))
             )}

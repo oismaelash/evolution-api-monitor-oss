@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { DeleteNumberButton } from '@/components/dashboard/delete-number-button';
 
 type Props = { params: { numberId: string } };
 
@@ -51,6 +52,19 @@ export default async function NumberDetailPage({ params }: Props) {
           </tbody>
         </table>
       </div>
+
+      <section className="mt-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">Danger zone</h2>
+        <p className="mb-4 text-sm text-[var(--color-text-muted)]">
+          Remove this number from the project. Health schedules are cleared. The WhatsApp instance on
+          Evolution is not deleted on the server—only this monitor&apos;s record.
+        </p>
+        <DeleteNumberButton
+          numberId={number.id}
+          instanceName={number.instanceName}
+          redirectAfter={`/projects/${number.projectId}`}
+        />
+      </section>
     </div>
   );
 }
