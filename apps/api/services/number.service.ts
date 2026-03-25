@@ -121,14 +121,16 @@ export const NumberService = {
       }
     }
     let created = 0;
+    const createdIds: string[] = [];
     for (const instanceName of unique) {
       const existing = await prisma.number.findUnique({
         where: { projectId_instanceName: { projectId, instanceName } },
       });
       if (existing) continue;
-      await prisma.number.create({
+      const row = await prisma.number.create({
         data: { projectId, instanceName, monitored: true },
       });
+      createdIds.push(row.id);
       created += 1;
     }
     const cfg = project.config;
@@ -137,11 +139,14 @@ export const NumberService = {
       where: { projectId },
       select: { id: true, monitored: true },
     });
-    const { upsertHealthSchedule } = await import('@/lib/queues');
+    const { upsertHealthSchedule, enqueueImmediateHealthCheck } = await import('@/lib/queues');
     for (const n of numbers) {
       if (n.monitored) {
         await upsertHealthSchedule(n.id, ping);
       }
+    }
+    for (const id of createdIds) {
+      await enqueueImmediateHealthCheck(id);
     }
     await BillingSyncService.syncActiveNumberCount(userId);
     return { synced: names.length, created };
@@ -168,8 +173,9 @@ export const NumberService = {
     });
     if (n.monitored) {
       const ping = project.config?.pingInterval ?? 300;
-      const { upsertHealthSchedule } = await import('@/lib/queues');
+      const { upsertHealthSchedule, enqueueImmediateHealthCheck } = await import('@/lib/queues');
       await upsertHealthSchedule(n.id, ping);
+      await enqueueImmediateHealthCheck(n.id);
     }
     await BillingSyncService.syncActiveNumberCount(userId);
     return n;

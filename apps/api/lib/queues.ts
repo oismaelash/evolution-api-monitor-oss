@@ -44,6 +44,17 @@ export async function removeHealthSchedule(numberId: string): Promise<void> {
   }
 }
 
+/** One-off health check so state is updated right after a Number is added (repeatable job may run later). */
+export async function enqueueImmediateHealthCheck(numberId: string): Promise<void> {
+  const conn = getConnection();
+  const queue = new Queue('health-check', { connection: conn as never });
+  await queue.add(
+    'health-check',
+    { numberId },
+    { jobId: `immediate-health:${numberId}:${Date.now()}` }
+  );
+}
+
 export async function enqueueManualRestart(numberId: string): Promise<void> {
   const conn = getConnection();
   const queue = new Queue('restart', { connection: conn as never });
