@@ -1,0 +1,13 @@
+---
+description: Padrões para Tailwind CSS e estilização
+globs: **/*.tsx, **/*.css
+alwaysApply: false
+---
+
+# Tailwind CSS
+
+- Use Tailwind CSS v4 (ou superior suportado no projeto).
+- Siga as variáveis de cores definidas em `globals.css` (ex: `var(--color-bg)`).
+- Não use inline styles para cores, prefira as variáveis CSS ou classes Tailwind.
+- Siga as regras de UI/UX descritas em `003-nextjs-frontend.mdc`.
+- Agrupe classes relacionadas e mantenha consistência com a identidade visual dark/developer-focused.

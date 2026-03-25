@@ -1,0 +1,14 @@
+---
+description: Padrões para arquitetura de Monorepo (npm workspaces)
+globs: package.json, apps/**/package.json, packages/**/package.json
+alwaysApply: false
+---
+
+# Arquitetura de Monorepo
+
+- O projeto utiliza **npm workspaces**.
+- Apps estão no diretório `/apps` (ex: `api`, `worker`).
+- Pacotes compartilhados estão em `/packages` (ex: `database`, `shared`, `config`).
+- Sempre que criar código reutilizável (tipos, schemas, helpers de API), coloque em `@monitor/shared` (`packages/shared`).
+- Lógica de banco de dados (Prisma) reside exclusivamente em `@monitor/database` (`packages/database`).
+- Para instalar dependências em um workspace específico, use `npm i <pacote> -w <nome-do-workspace>` ou gerencie os `package.json` diretamente e rode `npm install` na raiz.

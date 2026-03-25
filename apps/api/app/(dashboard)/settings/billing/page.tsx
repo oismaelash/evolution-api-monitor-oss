@@ -97,8 +97,8 @@ export default async function BillingPage() {
           </h3>
         </div>
         <div className="px-6 py-5">
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-6 sm:grid-cols-2">
-            <div className="sm:col-span-1">
+          <dl className="grid grid-cols-1 gap-y-6">
+            <div>
               <dt className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-muted)]">
                 <Clock size={16} />
                 {t('Fim do Período de Teste', 'Trial Ends At')}
@@ -107,7 +107,7 @@ export default async function BillingPage() {
                 {formatDate(sub.trialEndsAt)}
               </dd>
             </div>
-            <div className="sm:col-span-1">
+            <div>
               <dt className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-muted)]">
                 <Clock size={16} />
                 {t('Fim do Ciclo Atual', 'Current Period End')}
@@ -116,7 +116,7 @@ export default async function BillingPage() {
                 {formatDate(sub.currentPeriodEnd)}
               </dd>
             </div>
-            <div className="sm:col-span-1">
+            <div>
               <dt className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-muted)]">
                 <Clock size={16} />
                 {t('Tolerância de Atraso', 'Past Due Grace Ends At')}
@@ -126,7 +126,7 @@ export default async function BillingPage() {
               </dd>
             </div>
             {sub.stripeCustomerId && (
-              <div className="sm:col-span-1">
+              <div>
                 <dt className="flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-muted)]">
                   <InfoCircle size={16} />
                   {t('ID do Cliente Stripe', 'Stripe Customer ID')}

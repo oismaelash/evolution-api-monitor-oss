@@ -22,6 +22,10 @@ alwaysApply: false
 | `009-evolution-api.mdc` | EvolutionClient, health check duplo, parsing, encoding |
 | `010-monitor-status-api.mdc` | Alertas WhatsApp (API pública em pilotstatus.online), `x-api-key`, `/v1`, webhooks, opt-in |
 | `011-git-commit-push.mdc` | Commit + push após trabalho relevante; exceções (sem remote, WIP) |
+| `012-tailwind-css.mdc` | Tailwind v4, variáveis de cor, estrutura dark-theme |
+| `013-docker.mdc` | Dockerfile, compose, separação de API/Worker, ambientes |
+| `014-i18n.mdc` | Custom i18n, `useT()`, tradução de Server/Client components |
+| `015-monorepo.mdc` | NPM workspaces, compartilhamento de pacotes (`shared`, `database`) |
 
 Edite cada arquivo numerado para alterar as regras. Este arquivo (`general.mdc`) não substitui as regras — apenas documenta como usá-las.
 
@@ -44,6 +48,8 @@ Edite cada arquivo numerado para alterar as regras. Este arquivo (`general.mdc`)
 | `monitor-billing` | `PaymentProvider`, webhooks, `CLOUD_BILLING`, sync de quantidade |
 | `monitor-status-api` | Contrato REST do provedor (alinhado a [llms.txt](https://pilotstatus.online/llms.txt)), alertas WhatsApp, webhooks |
 | `tailwind-css` | Tailwind v4, `@theme`, acessibilidade, composição de classes |
+| `docker-deploy` | Estrutura de containers Docker, `docker-compose`, deploy |
+| `i18n-monitor` | Internacionalização customizada, hook `useT()`, server vs client |
 
 Lista curada da comunidade (Next, Stripe, Prisma oficiais, etc.): [VoltAgent/awesome-agent-skills](https://github.com/VoltAgent/awesome-agent-skills) — revisar segurança antes de instalar skills de terceiros; o comportamento deste repo segue `.cursor/rules/` e a tabela acima.
 

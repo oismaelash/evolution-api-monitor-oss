@@ -1,0 +1,13 @@
+---
+description: Padrões para Internacionalização (i18n)
+globs: apps/api/components/i18n/**/*.tsx, apps/api/lib/i18n*.ts, **/*.tsx
+alwaysApply: false
+---
+
+# Internacionalização (i18n)
+
+- O projeto suporta múltiplos idiomas (ex: `pt`, `en`) através de uma implementação customizada.
+- Em Server Components e actions, utilize as funções em `apps/api/lib/i18n-server.ts`.
+- Em Client Components, utilize o hook `useT` e `useLocale` exportados por `apps/api/components/i18n/i18n-provider.tsx`.
+- Evite strings hardcoded em componentes de UI que são visíveis para o usuário final; envolva textos na função de tradução (ex: `t('Português', 'English')`).
+- Mensagens de erro de API ou validação (Zod) também devem seguir a linguagem do usuário, quando aplicável.

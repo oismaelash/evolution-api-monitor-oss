@@ -1,0 +1,13 @@
+---
+description: Padrões para Docker e deploy
+globs: Dockerfile*, docker-compose*.yml
+alwaysApply: false
+---
+
+# Docker & Deploy
+
+- Use `Dockerfile` para o build de produção e `Dockerfile.dev` para ambiente de desenvolvimento.
+- Os serviços devem ser definidos em `docker-compose.yml` (e variantes como `docker-compose.prod.yml`).
+- A API Next.js e o Worker (BullMQ) rodam em containers separados, orquestrados pelo docker-compose.
+- O banco de dados (PostgreSQL) e Redis também podem rodar via Docker Compose no ambiente local.
+- Ao atualizar dependências ou scripts, garanta que os Dockerfiles reflitam as mudanças para manter os builds reprodutíveis.
