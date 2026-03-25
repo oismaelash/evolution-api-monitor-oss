@@ -8,14 +8,13 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/worker/package.json ./apps/worker/
-COPY packages/config/package.json ./packages/config/
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/database/package.json ./packages/database/
-COPY packages/database/prisma ./packages/database/prisma
+# Full package trees so root postinstall can run tsc (tsconfig + src + config extends)
+COPY packages/config ./packages/config
+COPY packages/shared ./packages/shared
+COPY packages/database ./packages/database
 
-RUN npm ci \
-  && npm run build --workspace=@monitor/shared \
-  && npm run build --workspace=@monitor/database
+# postinstall builds @monitor/shared and @monitor/database
+RUN npm ci
 
 EXPOSE 3000
 
