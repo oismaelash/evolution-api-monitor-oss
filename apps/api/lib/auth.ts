@@ -103,22 +103,51 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async jwt({ token, user, account, profile }) {
-      if (account?.provider === 'google' || account?.provider === 'github') {
-        const email =
-          oauthEmailFrom(user ?? { email: token.email }, profile) ??
-          (typeof token.email === 'string' ? token.email.toLowerCase() : undefined);
-        if (email) {
-          const dbUser = await prisma.user.findUnique({ where: { email } });
-          if (dbUser) {
-            token.sub = dbUser.id;
-          }
+      /** Map OAuth session to DB user id whenever we can resolve email (not only on first sign-in). */
+      const email =
+        oauthEmailFrom(user ?? { email: token.email }, profile) ??
+        (typeof token.email === 'string' ? token.email.toLowerCase() : undefined);
+      if (email) {
+        const dbUser = await prisma.user.findUnique({ where: { email } });
+        if (dbUser) {
+          token.sub = dbUser.id;
         }
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.id = token.sub;
+      if (!session.user) {
+        return session;
+      }
+      /** Always use our DB User.id — never trust JWT `sub` alone (OAuth provider ids are not FK-safe). */
+      const email =
+        session.user.email?.trim().toLowerCase() ??
+        (typeof token.email === 'string' ? token.email.trim().toLowerCase() : '');
+      try {
+        if (email) {
+          const dbUser = await prisma.user.findUnique({ where: { email } });
+          if (dbUser) {
+            session.user.id = dbUser.id;
+            return session;
+          }
+        }
+        if (token.sub) {
+          const byId = await prisma.user.findUnique({ where: { id: token.sub } });
+          if (byId) {
+            session.user.id = byId.id;
+            return session;
+          }
+        }
+        session.user.id = '';
+      } catch (e) {
+        if (isMissingTableError(e)) {
+          console.error(
+            '[auth] Database schema missing (e.g. User table). Apply migrations: npm run db:migrate:deploy'
+          );
+          session.user.id = '';
+        } else {
+          throw e;
+        }
       }
       return session;
     },
