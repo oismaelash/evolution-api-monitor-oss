@@ -92,21 +92,23 @@ type FormLabelWithHelpProps = {
 };
 
 /**
- * Label + help icon on the right (inputs, selects, textareas).
+ * Label + help icon immediately after the title (not pushed to the row end).
  */
 export function FormLabelWithHelp({ htmlFor, children, description, example }: FormLabelWithHelpProps) {
   const labelClass =
-    'flex-1 min-w-0 text-sm font-medium leading-snug text-[var(--color-text-muted)]';
+    'text-sm font-medium leading-snug text-[var(--color-text-muted)]';
   return (
-    <div className="mb-1 flex items-start gap-1.5">
-      {htmlFor !== undefined ? (
-        <label htmlFor={htmlFor} className={labelClass}>
-          {children}
-        </label>
-      ) : (
-        <span className={labelClass}>{children}</span>
-      )}
-      <FieldHelp description={description} example={example} />
+    <div className="mb-1">
+      <span className="inline-flex max-w-full items-start gap-1.5">
+        {htmlFor !== undefined ? (
+          <label htmlFor={htmlFor} className={labelClass}>
+            {children}
+          </label>
+        ) : (
+          <span className={labelClass}>{children}</span>
+        )}
+        <FieldHelp description={description} example={example} />
+      </span>
     </div>
   );
 }

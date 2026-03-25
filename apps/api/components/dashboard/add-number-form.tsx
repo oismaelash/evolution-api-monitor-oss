@@ -132,10 +132,10 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
             checked={monitored}
             onChange={(e) => setMonitored(e.target.checked)}
           />
-          <div className="flex min-w-0 flex-1 items-start gap-1.5">
+          <span className="inline-flex max-w-full items-start gap-1.5">
             <label
               htmlFor={`add-mon-${projectId}`}
-              className="flex-1 text-sm leading-snug text-[var(--color-text-primary)]"
+              className="text-sm leading-snug text-[var(--color-text-primary)]"
             >
               {t('Monitorado (health checks e alertas)', 'Monitored (health checks & alerts)')}
             </label>
@@ -146,7 +146,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
               )}
               example={t('Desmarque para pausar só este número sem apagar', 'Uncheck to pause this number without deleting it')}
             />
-          </div>
+          </span>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">

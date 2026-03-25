@@ -36,10 +36,10 @@ export function WhatsappPhoneFields({
     <div className="space-y-2">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[7rem]">
-          <div className="flex items-start gap-1">
+          <div className="inline-flex max-w-full items-start gap-1">
             <label
               htmlFor={ddiId}
-              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
+              className="text-xs font-medium leading-snug text-[var(--color-text-muted)]"
             >
               {t('DDI', 'Country code')}
             </label>
@@ -66,10 +66,10 @@ export function WhatsappPhoneFields({
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-start gap-1">
+          <div className="inline-flex max-w-full items-start gap-1">
             <label
               htmlFor={nationalId}
-              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
+              className="text-xs font-medium leading-snug text-[var(--color-text-muted)]"
             >
               {t('Número', 'Number')}
             </label>
