@@ -65,7 +65,7 @@ export function FieldHelp({ description, example }: FieldHelpProps) {
         <div
           id={panelId}
           role="region"
-          className="absolute left-0 top-full z-50 pt-1"
+          className="absolute right-0 top-full z-50 pt-1"
         >
           {/* pt-1 bridges button → panel so hover is not lost in the gap */}
           <div className="w-72 max-w-[min(18rem,calc(100vw-1.5rem))] rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-left shadow-lg">
@@ -92,14 +92,13 @@ type FormLabelWithHelpProps = {
 };
 
 /**
- * Help icon (left) + label (use for inputs, selects, textareas).
+ * Label + help icon on the right (inputs, selects, textareas).
  */
 export function FormLabelWithHelp({ htmlFor, children, description, example }: FormLabelWithHelpProps) {
   const labelClass =
     'flex-1 min-w-0 text-sm font-medium leading-snug text-[var(--color-text-muted)]';
   return (
     <div className="mb-1 flex items-start gap-1.5">
-      <FieldHelp description={description} example={example} />
       {htmlFor !== undefined ? (
         <label htmlFor={htmlFor} className={labelClass}>
           {children}
@@ -107,6 +106,7 @@ export function FormLabelWithHelp({ htmlFor, children, description, example }: F
       ) : (
         <span className={labelClass}>{children}</span>
       )}
+      <FieldHelp description={description} example={example} />
     </div>
   );
 }

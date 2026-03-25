@@ -37,6 +37,12 @@ export function WhatsappPhoneFields({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[7rem]">
           <div className="flex items-start gap-1">
+            <label
+              htmlFor={ddiId}
+              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
+            >
+              {t('DDI', 'Country code')}
+            </label>
             {perFieldHelp ? (
               <FieldHelp
                 description={t(
@@ -46,12 +52,6 @@ export function WhatsappPhoneFields({
                 example={t('55 para Brasil', '55 for Brazil')}
               />
             ) : null}
-            <label
-              htmlFor={ddiId}
-              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
-            >
-              {t('DDI', 'Country code')}
-            </label>
           </div>
           <input
             id={ddiId}
@@ -67,6 +67,12 @@ export function WhatsappPhoneFields({
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex items-start gap-1">
+            <label
+              htmlFor={nationalId}
+              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
+            >
+              {t('Número', 'Number')}
+            </label>
             {perFieldHelp ? (
               <FieldHelp
                 description={t(
@@ -76,12 +82,6 @@ export function WhatsappPhoneFields({
                 example={t('11999999999 (SP, celular)', '11999999999 (mobile, São Paulo)')}
               />
             ) : null}
-            <label
-              htmlFor={nationalId}
-              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
-            >
-              {t('Número', 'Number')}
-            </label>
           </div>
           <input
             id={nationalId}
