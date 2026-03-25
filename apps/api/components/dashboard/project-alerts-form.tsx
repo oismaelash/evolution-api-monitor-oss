@@ -7,7 +7,7 @@ import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
-import { FormLabelWithHelp } from '@/components/ui/field-help';
+import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
@@ -168,7 +168,7 @@ export function ProjectAlertsForm({
               'Tempo mínimo entre alertas repetidos para o mesmo incidente (evita spam enquanto o problema continua).',
               'Minimum time between repeated alerts for the same incident (reduces spam while the issue persists).',
             )}
-            example={t('600 (no máximo um alerta a cada 10 minutos)', '600 (at most one alert every 10 minutes)')}
+            value={alertCooldown}
           >
             {t('Intervalo entre alertas (segundos)', 'Alert cooldown (seconds)')}
           </FormLabelWithHelp>
@@ -192,10 +192,11 @@ export function ProjectAlertsForm({
               'Onde enviar notificações quando um número monitorado falha. Você pode marcar vários canais ao mesmo tempo.',
               'Where to send notifications when a monitored number fails. You can enable multiple channels.',
             )}
-            example={t(
-              'Monitor Status (WhatsApp no telefone de alerta) + E-mail',
-              'Monitor Status (WhatsApp to the alert phone) + Email',
-            )}
+            value={
+              CHANNELS.filter((c) => channels.has(c))
+                .map((c) => channelLabel(c, t))
+                .join(', ') || t('(nenhum)', '(none)')
+            }
           >
             {t('Canais de alerta', 'Alert channels')}
           </FormLabelWithHelp>
@@ -223,10 +224,7 @@ export function ProjectAlertsForm({
               'Modelo opcional em Handlebars para personalizar o texto do alerta nos canais que suportam corpo customizado.',
               'Optional Handlebars template to customize alert text on channels that support a custom body.',
             )}
-            example={t(
-              'Falha em {{instanceName}} — {{state}}',
-              'Failure on {{instanceName}} — {{state}}',
-            )}
+            value={alertTemplate}
           >
             {t('Modelo de alerta (opcional, Handlebars)', 'Alert template (optional, Handlebars)')}
           </FormLabelWithHelp>
@@ -259,7 +257,7 @@ export function ProjectAlertsForm({
                 'Endereço que receberá os alertas quando o canal E-mail estiver ativo.',
                 'Inbox address that receives alerts when the Email channel is enabled.',
               )}
-              example={t('equipe@empresa.com', 'team@company.com')}
+              value={alertEmail}
             >
               {t('E-mail de destino', 'Destination email')}
             </FormLabelWithHelp>
@@ -280,7 +278,7 @@ export function ProjectAlertsForm({
                 'Cabeçalho From exibido pelo cliente de e-mail. Opcional; o servidor pode preencher um padrão.',
                 'From header shown in the mail client. Optional; your SMTP server may apply a default.',
               )}
-              example={t('Monitor <alertas@empresa.com>', 'Monitor <alerts@company.com>')}
+              value={smtpFrom}
             >
               {t('Remetente (opcional)', 'From (optional)')}
             </FormLabelWithHelp>
@@ -300,7 +298,7 @@ export function ProjectAlertsForm({
                 'Nome do servidor de e-mail (SMTP) que enviará os alertas.',
                 'Hostname of the SMTP server that will send alert emails.',
               )}
-              example={t('smtp.gmail.com ou smtp.sendgrid.net', 'smtp.gmail.com or smtp.sendgrid.net')}
+              value={smtpHost}
             >
               {t('Host SMTP', 'SMTP host')}
             </FormLabelWithHelp>
@@ -319,7 +317,7 @@ export function ProjectAlertsForm({
                 'Porta do servidor SMTP. Com TLS geralmente 587 (STARTTLS) ou 465 (SSL); confira o provedor.',
                 'SMTP server port. With TLS this is often 587 (STARTTLS) or 465 (SSL); check your provider.',
               )}
-              example={t('587', '587')}
+              value={smtpPort}
             >
               {t('Porta SMTP', 'SMTP port')}
             </FormLabelWithHelp>
@@ -338,7 +336,7 @@ export function ProjectAlertsForm({
                 'Usuário para autenticação no SMTP (muitas vezes o próprio e-mail ou um usuário API).',
                 'Username for SMTP authentication (often the mailbox email or an API user).',
               )}
-              example={t('alertas@empresa.com', 'alerts@company.com')}
+              value={smtpUser}
             >
               {t('Usuário SMTP', 'SMTP user')}
             </FormLabelWithHelp>
@@ -357,7 +355,7 @@ export function ProjectAlertsForm({
                 'Senha ou token do SMTP; armazenada criptografada. Deixe em branco para não alterar o valor já salvo.',
                 'SMTP password or app token; stored encrypted. Leave blank to keep the current saved value.',
               )}
-              example={t('Senha da conta ou senha de app', 'Account password or app password')}
+              value={maskSecretInput(smtpPass)}
             >
               {t('Senha SMTP (em branco para manter)', 'SMTP password (leave blank to keep)')}
             </FormLabelWithHelp>
@@ -391,7 +389,7 @@ export function ProjectAlertsForm({
                 'Endpoint HTTPS que receberá POST com JSON quando o canal Webhook estiver ativo.',
                 'HTTPS endpoint that will receive JSON POST payloads when the Webhook channel is enabled.',
               )}
-              example={t('https://api.empresa.com/hooks/monitor', 'https://api.company.com/hooks/monitor')}
+              value={webhookUrl}
             >
               {t('URL do webhook', 'Webhook URL')}
             </FormLabelWithHelp>
@@ -411,7 +409,7 @@ export function ProjectAlertsForm({
                 'Segredo compartilhado para sua API validar que o POST veio do monitor; armazenado criptografado. Deixe em branco para manter.',
                 'Shared secret so your API can verify the POST came from the monitor; stored encrypted. Leave blank to keep.',
               )}
-              example={t('Um token longo gerado por você', 'A long random token you generate')}
+              value={maskSecretInput(webhookSecret)}
             >
               {t('Segredo do webhook (em branco para manter)', 'Webhook secret (leave blank to keep)')}
             </FormLabelWithHelp>

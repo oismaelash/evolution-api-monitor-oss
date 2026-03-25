@@ -49,7 +49,7 @@ export function WhatsappPhoneFields({
                   'Código do país sem o + (apenas dígitos). Junto com o número forma o E.164 usado no WhatsApp de alerta.',
                   'Country calling code without + (digits only). Together with the national number it forms the E.164 alert WhatsApp.',
                 )}
-                example={t('55 para Brasil', '55 for Brazil')}
+                value={ddiValue}
               />
             ) : null}
           </div>
@@ -79,7 +79,7 @@ export function WhatsappPhoneFields({
                   'Número local sem DDI e sem +. Será combinado com o DDI para formar +5511999999999 (E.164).',
                   'Local number without country code or +. Combined with DDI to build +5511999999999 (E.164).',
                 )}
-                example={t('11999999999 (SP, celular)', '11999999999 (mobile, São Paulo)')}
+                value={nationalValue}
               />
             ) : null}
           </div>

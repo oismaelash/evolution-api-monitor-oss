@@ -6,13 +6,20 @@ import { useT } from '@/components/i18n/i18n-provider';
 
 export type FieldHelpProps = {
   description: string;
-  example: string;
+  /** Current value reflected in the help panel (use {@link maskSecretInput} for password fields). */
+  value: string;
 };
+
+/** Mask for password/secret fields — length preserved up to 32 bullets, no plaintext. */
+export function maskSecretInput(raw: string): string {
+  if (raw.length === 0) return '';
+  return '•'.repeat(Math.min(raw.length, 32));
+}
 
 /**
  * Question-mark control: tooltip on hover (and on click for touch / pin).
  */
-export function FieldHelp({ description, example }: FieldHelpProps) {
+export function FieldHelp({ description, value }: FieldHelpProps) {
   const t = useT();
   const [hover, setHover] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -21,6 +28,8 @@ export function FieldHelp({ description, example }: FieldHelpProps) {
   const srTextId = useId();
 
   const show = hover || pinned;
+  const emptyLabel = t('(vazio)', '(empty)');
+  const displayValue = value.trim() === '' ? emptyLabel : value;
 
   useEffect(() => {
     if (!pinned) return;
@@ -48,7 +57,7 @@ export function FieldHelp({ description, example }: FieldHelpProps) {
       onMouseLeave={() => setHover(false)}
     >
       <span id={srTextId} className="sr-only">
-        {description} {t('Exemplo', 'Example')}: {example}
+        {description} {t('Valor no campo', 'Value in field')}: {displayValue}
       </span>
       <button
         type="button"
@@ -72,10 +81,12 @@ export function FieldHelp({ description, example }: FieldHelpProps) {
             <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">{description}</p>
             <p className="mt-2 text-xs text-[var(--color-text-primary)]">
               <span className="font-semibold text-[var(--color-text-primary)]">
-                {t('Exemplo', 'Example')}
+                {t('Valor no campo', 'Value in field')}
                 {': '}
               </span>
-              {example}
+              <span className="break-words whitespace-pre-wrap font-mono text-[var(--color-text-primary)]">
+                {displayValue}
+              </span>
             </p>
           </div>
         </div>
@@ -88,13 +99,18 @@ type FormLabelWithHelpProps = {
   htmlFor?: string;
   children: React.ReactNode;
   description: string;
-  example: string;
+  value: string;
 };
 
 /**
  * Label + help icon immediately after the title (not pushed to the row end).
  */
-export function FormLabelWithHelp({ htmlFor, children, description, example }: FormLabelWithHelpProps) {
+export function FormLabelWithHelp({
+  htmlFor,
+  children,
+  description,
+  value,
+}: FormLabelWithHelpProps) {
   const labelClass =
     'text-sm font-medium leading-snug text-[var(--color-text-muted)]';
   return (
@@ -107,7 +123,7 @@ export function FormLabelWithHelp({ htmlFor, children, description, example }: F
         ) : (
           <span className={labelClass}>{children}</span>
         )}
-        <FieldHelp description={description} example={example} />
+        <FieldHelp description={description} value={value} />
       </span>
     </div>
   );

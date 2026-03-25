@@ -8,7 +8,7 @@ import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
-import { FormLabelWithHelp } from '@/components/ui/field-help';
+import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
@@ -130,7 +130,7 @@ export function CreateProjectForm() {
                 'Nome amigável do projeto no painel (não altera a Evolution).',
                 'Friendly project name in the dashboard (does not change Evolution).',
               )}
-              example={t('WhatsApp produção', 'Production WhatsApp')}
+              value={name}
             >
               {t('Nome', 'Name')}
             </FormLabelWithHelp>
@@ -151,7 +151,7 @@ export function CreateProjectForm() {
                 'URL raiz do servidor Evolution (sem path da instância). O monitor chama a API nesse host.',
                 'Root URL of your Evolution server (no instance path). The monitor calls the API on this host.',
               )}
-              example={t('https://evolution.suaempresa.com', 'https://evolution.yourcompany.com')}
+              value={evolutionUrl}
             >
               {t('URL base da Evolution API', 'Evolution API base URL')}
             </FormLabelWithHelp>
@@ -173,7 +173,7 @@ export function CreateProjectForm() {
                 'Chave global da Evolution (mesma do Evolution Manager / AUTHENTICATION_API_KEY). Usada só no servidor.',
                 'Global Evolution API key (same as Evolution Manager / AUTHENTICATION_API_KEY). Used only on the server.',
               )}
-              example={t('Chave longa em Global apikey no painel Evolution', 'Long key from Global apikey in Evolution')}
+              value={maskSecretInput(evolutionApiKey)}
             >
               {t('API key da Evolution', 'Evolution API key')}
             </FormLabelWithHelp>
@@ -194,7 +194,11 @@ export function CreateProjectForm() {
                 'WhatsApp em E.164 para o canal Monitor Status receber alertas. Opcional; pode configurar depois.',
                 'E.164 WhatsApp for the Monitor Status channel. Optional; you can set it later.',
               )}
-              example={t('+5511999999999', '+5511999999999')}
+              value={
+                alertDdi.length > 0 || alertNational.length > 0
+                  ? `+${alertDdi}${alertNational}`
+                  : ''
+              }
             >
               {t('Telefone de alerta (opcional)', 'Alert phone (optional)')}
             </FormLabelWithHelp>

@@ -93,7 +93,7 @@ export function ProjectConfigForm({
               'Com que frequência o worker consulta a Evolution (health check). Valores menores detectam falhas mais rápido, mas aumentam carga no servidor e na API.',
               'How often the worker polls Evolution for health. Lower values detect outages faster but increase load on your server and the API.',
             )}
-            example={t('300 (uma vez a cada 5 minutos)', '300 (once every 5 minutes)')}
+            value={pingInterval}
           >
             {t('Intervalo de ping (segundos)', 'Ping interval (seconds)')}
           </FormLabelWithHelp>
@@ -118,7 +118,7 @@ export function ProjectConfigForm({
               'Quantas tentativas extras após uma falha antes de considerar o check como falha definitiva e seguir o fluxo de alerta.',
               'How many extra attempts after a failed check before treating the round as failed and moving on to alerts.',
             )}
-            example={t('3 tentativas antes de alertar', '3 attempts before alerting')}
+            value={maxRetries}
           >
             {t('Máx. tentativas', 'Max retries')}
           </FormLabelWithHelp>
@@ -140,7 +140,7 @@ export function ProjectConfigForm({
               'Tempo de espera entre uma tentativa falha e a próxima (usado com a estratégia de retry configurada).',
               'Wait time between a failed attempt and the next retry (used with your retry strategy).',
             )}
-            example={t('60 (espera 1 minuto entre tentativas)', '60 (wait 1 minute between attempts)')}
+            value={retryDelay}
           >
             {t('Atraso entre tentativas (segundos)', 'Retry delay (seconds)')}
           </FormLabelWithHelp>
@@ -165,10 +165,7 @@ export function ProjectConfigForm({
               'Fixo usa sempre o mesmo atraso. Exponential jitter aumenta o intervalo com variação aleatória para evitar que muitas instâncias tentem ao mesmo tempo.',
               'Fixed always uses the same delay. Exponential jitter increases the backoff with random jitter so many instances do not retry in sync.',
             )}
-            example={t(
-              'EXPONENTIAL_JITTER em produção com vários números',
-              'EXPONENTIAL_JITTER in production with many numbers',
-            )}
+            value={retryStrategy}
           >
             {t('Estratégia de retry', 'Retry strategy')}
           </FormLabelWithHelp>

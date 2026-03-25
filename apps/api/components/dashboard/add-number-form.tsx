@@ -73,7 +73,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
               'Nome exato da instância na Evolution (case sensitive). O worker usa isso nas rotas da API.',
               'Exact Evolution instance name (case sensitive). The worker uses it in API paths.',
             )}
-            example={t('minha-loja', 'my-store')}
+            value={instanceName}
           >
             {t('Nome da instância', 'Instance name')}
           </FormLabelWithHelp>
@@ -93,7 +93,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
               'Número exibido no painel (apenas dígitos, sem +). Não precisa ser E.164; ajuda a identificar a linha.',
               'Digits-only display number for the dashboard (no +). Does not need to be E.164; helps identify the line.',
             )}
-            example={t('5511999999999', '5511999999999')}
+            value={phoneNumber}
           >
             {t('Telefone (opcional)', 'Phone (optional)')}
           </FormLabelWithHelp>
@@ -112,7 +112,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
               'Apelido no painel para distinguir instâncias (não altera a Evolution).',
               'Friendly label in the UI to tell instances apart (does not change Evolution).',
             )}
-            example={t('Loja principal', 'Main store')}
+            value={label}
           >
             {t('Rótulo (opcional)', 'Label (optional)')}
           </FormLabelWithHelp>
@@ -144,7 +144,7 @@ export function AddNumberForm({ projectId }: { projectId: string }) {
                 'Se marcado, o worker agenda health checks e envia alertas para este número conforme o projeto.',
                 'When enabled, the worker schedules health checks and sends alerts for this number per project settings.',
               )}
-              example={t('Desmarque para pausar só este número sem apagar', 'Uncheck to pause this number without deleting it')}
+              value={monitored ? t('Sim', 'Yes') : t('Não', 'No')}
             />
           </span>
         </div>

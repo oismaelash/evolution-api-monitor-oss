@@ -7,7 +7,7 @@ import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
-import { FormLabelWithHelp } from '@/components/ui/field-help';
+import { FormLabelWithHelp, maskSecretInput } from '@/components/ui/field-help';
 
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
@@ -110,7 +110,7 @@ export function EditProjectForm({
             'Nome do projeto exibido no painel.',
             'Project name shown in the dashboard.',
           )}
-          example={t('Suporte BR', 'BR Support')}
+          value={name}
         >
           {t('Nome', 'Name')}
         </FormLabelWithHelp>
@@ -129,7 +129,7 @@ export function EditProjectForm({
             'URL raiz do servidor Evolution usada pelo worker para health checks e comandos.',
             'Evolution root URL used by the worker for health checks and commands.',
           )}
-          example={t('https://evolution.suaempresa.com', 'https://evolution.yourcompany.com')}
+          value={evolutionUrl}
         >
           {t('URL base da Evolution API', 'Evolution API base URL')}
         </FormLabelWithHelp>
@@ -149,7 +149,7 @@ export function EditProjectForm({
             'Atualize a chave global da Evolution sem apagar a antiga no banco até você salvar. Deixe em branco para manter.',
             'Rotate the global Evolution key. Leave blank to keep the current key stored for this project.',
           )}
-          example={t('Nova chave copiada do Evolution Manager', 'New key copied from Evolution Manager')}
+          value={maskSecretInput(evolutionApiKey)}
         >
           {t('Nova API key da Evolution (opcional)', 'New Evolution API key (optional)')}
         </FormLabelWithHelp>
@@ -169,7 +169,11 @@ export function EditProjectForm({
             'Destino WhatsApp (E.164) para alertas do canal Monitor Status.',
             'E.164 WhatsApp destination for Monitor Status alerts.',
           )}
-          example={t('+5511999999999', '+5511999999999')}
+          value={
+            alertDdi.length > 0 || alertNational.length > 0
+              ? `+${alertDdi}${alertNational}`
+              : ''
+          }
         >
           {t('Telefone de alerta', 'Alert phone')}
         </FormLabelWithHelp>
