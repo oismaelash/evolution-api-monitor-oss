@@ -1,8 +1,6 @@
 # Development stack: mesma topologia que prod (Postgres, Redis, API, BullMQ worker).
 # Diferença: API e worker usam Dockerfile.dev + bind mount para hot reload (Next + tsx watch).
-#
-# Migrations (antes do primeiro up ou após mudança de schema):
-#   docker compose -f docker-compose.dev.yml --profile migrate run --rm migrate
+# A cada `up`, o serviço `migrate` roda `db:migrate:deploy` antes de api e worker (Compose v2.1+).
 #
 # Subir tudo:
 #   docker compose -f docker-compose.dev.yml up --build
@@ -44,7 +42,6 @@ services:
       retries: 5
 
   migrate:
-    profiles: [migrate]
     networks: [backend]
     build:
       context: .
@@ -67,6 +64,8 @@ services:
     ports:
       - '${API_PORT:-3000}:3000'
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -113,6 +112,8 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
