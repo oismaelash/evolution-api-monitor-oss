@@ -2,8 +2,12 @@ import '@/lib/env';
 import type { NextAuthOptions } from 'next-auth';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
-import { prisma } from '@monitor/database';
+import { Prisma, prisma } from '@monitor/database';
 import { loadEnv, SubscriptionStatus } from '@monitor/shared';
+
+function isMissingTableError(e: unknown): boolean {
+  return e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2021';
+}
 
 /** OAuth providers — see https://next-auth.js.org/providers/google and https://next-auth.js.org/providers/github */
 
@@ -64,26 +68,36 @@ export const authOptions: NextAuthOptions = {
       }
       const email = oauthEmailFrom(user, profile);
       if (!email) return false;
-      let dbUser = await prisma.user.findUnique({ where: { email } });
-      if (!dbUser) {
-        dbUser = await prisma.user.create({
-          data: {
-            email,
-            name: user.name ?? undefined,
-            image: user.image ?? undefined,
-          },
-        });
-        if (loadEnv().CLOUD_BILLING) {
-          await prisma.subscription.create({
+      try {
+        let dbUser = await prisma.user.findUnique({ where: { email } });
+        if (!dbUser) {
+          dbUser = await prisma.user.create({
             data: {
-              userId: dbUser.id,
-              status: SubscriptionStatus.TRIALING as never,
-              trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+              email,
+              name: user.name ?? undefined,
+              image: user.image ?? undefined,
             },
           });
+          if (loadEnv().CLOUD_BILLING) {
+            await prisma.subscription.create({
+              data: {
+                userId: dbUser.id,
+                status: SubscriptionStatus.TRIALING as never,
+                trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+              },
+            });
+          }
         }
+        return true;
+      } catch (e) {
+        if (isMissingTableError(e)) {
+          console.error(
+            '[auth] Database schema missing (e.g. User table). Apply migrations: npm run db:migrate:deploy'
+          );
+          return false;
+        }
+        throw e;
       }
-      return true;
     },
     async jwt({ token, user, account, profile }) {
       if (account?.provider === 'google' || account?.provider === 'github') {

@@ -40,6 +40,8 @@ COPY --from=builder /app/apps/api/public ./apps/api/public
 RUN chown -R node:node /app
 USER node
 EXPOSE 3000
+# OAuth (Google/GitHub) and NextAuth: set at runtime via compose/K8s — GOOGLE_* / GITHUB_* / GITHUB_CLIENT_*,
+# NEXTAUTH_URL, NEXTAUTH_SECRET (do not bake secrets into the image).
 CMD ["node", "apps/api/server.js"]
 
 # --- BullMQ worker ---

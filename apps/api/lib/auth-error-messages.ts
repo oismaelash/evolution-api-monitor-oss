@@ -10,7 +10,7 @@ export const AUTH_ERROR_HINTS: Record<string, string> = {
   EmailSignin: 'The email sign-in link could not be sent.',
   CredentialsSignin: 'Invalid credentials.',
   AccessDenied:
-    'Sign-in was denied (for example, no email on the account or the sign-in callback rejected the user).',
+    'Sign-in was denied (missing email, callback rejected the user, or database not migrated). If the project is new, run: npm run db:migrate:deploy',
   SessionRequired: 'You must be signed in to view this page.',
   Configuration:
     'Server configuration problem. Check NEXTAUTH_SECRET and OAuth environment variables.',

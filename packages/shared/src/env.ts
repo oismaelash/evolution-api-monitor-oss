@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-const baseSchema = z.object({
+/** Raw env including GitHub OAuth aliases (entrevistas-style names). */
+const rawEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
@@ -28,8 +29,12 @@ const baseSchema = z.object({
   RESTART_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  /** NextAuth default naming */
   GITHUB_ID: z.string().optional(),
   GITHUB_SECRET: z.string().optional(),
+  /** Alias (e.g. entrevistas project) — merged into GITHUB_ID / GITHUB_SECRET */
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_PRICE_ID: z.string().optional(),
   BILLING_PRICE_PER_NUMBER_CENTS: z.coerce.number().int().positive().optional(),
@@ -41,8 +46,9 @@ const baseSchema = z.object({
     const googleOAuth =
       Boolean(data.GOOGLE_CLIENT_ID?.trim()) &&
       Boolean(data.GOOGLE_CLIENT_SECRET?.trim());
-    const githubOAuth =
-      Boolean(data.GITHUB_ID?.trim()) && Boolean(data.GITHUB_SECRET?.trim());
+    const githubId = data.GITHUB_ID?.trim() || data.GITHUB_CLIENT_ID?.trim();
+    const githubSecret = data.GITHUB_SECRET?.trim() || data.GITHUB_CLIENT_SECRET?.trim();
+    const githubOAuth = Boolean(githubId && githubSecret);
     if ((googleOAuth || githubOAuth) && !data.NEXTAUTH_URL?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -51,7 +57,21 @@ const baseSchema = z.object({
         path: ['NEXTAUTH_URL'],
       });
     }
+  })
+  .transform((data) => {
+    const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, ...rest } = data;
+    const githubId =
+      rest.GITHUB_ID?.trim() || GITHUB_CLIENT_ID?.trim() || undefined;
+    const githubSecret =
+      rest.GITHUB_SECRET?.trim() || GITHUB_CLIENT_SECRET?.trim() || undefined;
+    return {
+      ...rest,
+      GITHUB_ID: githubId,
+      GITHUB_SECRET: githubSecret,
+    };
   });
+
+export const baseSchema = rawEnvSchema;
 
 export type MonitorEnv = z.infer<typeof baseSchema> & {
   CLOUD_BILLING: boolean;

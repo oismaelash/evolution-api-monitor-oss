@@ -20,6 +20,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) for the marketing landing (`apps/api`).
 
+**Before sign-in (OAuth) works**, PostgreSQL must have the Prisma schema applied. After Postgres is up and `DATABASE_URL` points at it, run from the repo root:
+
+```bash
+npm run db:migrate:deploy
+```
+
 Other root scripts: `npm run build`, `npm run lint`, `npm run start`.
 
 ### Docker (hot reload)
@@ -36,6 +42,12 @@ docker compose -f docker-compose.dev.yml up --build
 
 Then open [http://localhost:3000](http://localhost:3000). Edit files under `apps/api` and packages—Next.js will reload.
 
+On a **fresh Postgres volume**, apply migrations once (from the host, with `DATABASE_URL` matching your `.env` — for the default compose DB: `postgresql://postgres:postgres@localhost:5432/monitor_status?schema=public`):
+
+```bash
+npm run db:migrate:deploy
+```
+
 `WATCHPACK_POLLING` and `CHOKIDAR_USEPOLLING` are enabled for reliable file watching on Docker Desktop / some WSL setups. If changes still do not reload, try `docker compose -f docker-compose.dev.yml up --build` after dependency changes (rebuild the image).
 
 ## Environment
@@ -44,16 +56,21 @@ Copy [`.env.example`](.env.example) to `.env` and set at least:
 
 - `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET` (32+ chars), `ENCRYPTION_KEY` (64 hex chars, e.g. `openssl rand -hex 32`)
 
+### OAuth (Google / GitHub)
+
+If you enable Google or GitHub sign-in, set `NEXTAUTH_URL` to the exact origin users open in the browser (including scheme and port), and register the callback URLs from `.env.example` in each provider’s console. For production behind a reverse proxy, set `NEXTAUTH_URL` to the public HTTPS URL the browser uses (not an internal hostname); NextAuth v4 relies on this for OAuth redirects.
+
 ## Database
 
-After dependencies are installed:
+After dependencies are installed, apply **existing** migrations (typical for local/Docker):
 
 ```bash
-npm run db:migrate
-# or: npm run migrate:dev --workspace=@monitor/database
+npm run db:migrate:deploy
 ```
 
-Apply migrations in production with `prisma migrate deploy` from `packages/database`.
+Use `npm run db:migrate` when you need to **create** a new migration during development (`prisma migrate dev`).
+
+Apply migrations in production with `npm run db:migrate:deploy` or `prisma migrate deploy` from `packages/database`.
 
 ## Worker (BullMQ)
 
