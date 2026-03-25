@@ -5,7 +5,7 @@ import { NumberService } from '@/services/number.service';
 import { parsePagination } from '@monitor/shared';
 import { toErrorResponse } from '@/lib/http';
 
-type Ctx = { params: { numberId: string } };
+type Ctx = { params: Promise<{ numberId: string }> };
 
 export async function GET(req: NextRequest, ctx: Ctx) {
   try {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { numberId } = ctx.params;
+    const { numberId } = await ctx.params;
     const { page, limit } = parsePagination(req.nextUrl.searchParams);
     const result = await NumberService.listAlerts(session.user.id, numberId, page, limit);
     return NextResponse.json(result);

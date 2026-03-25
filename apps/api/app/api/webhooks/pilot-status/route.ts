@@ -32,7 +32,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ ok: true, note: 'Alert not found' });
         }
 
-        if (event.event === 'message.delivered' || event.event === 'message.read') {
+        const eventKind = event.event as string;
+        if (eventKind === 'message.delivered' || eventKind === 'message.read') {
             await prisma.alert.update({
                 where: { id: alert.id },
                 data: { delivered: true },

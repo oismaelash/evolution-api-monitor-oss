@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { NumberService } from '@/services/number.service';
 import { toErrorResponse } from '@/lib/http';
 
-type Ctx = { params: { projectId: string } };
+type Ctx = { params: Promise<{ projectId: string }> };
 
 export async function POST(_req: NextRequest, ctx: Ctx) {
   try {
@@ -12,7 +12,7 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { projectId } = ctx.params;
+    const { projectId } = await ctx.params;
     const result = await NumberService.syncFromEvolution(session.user.id, projectId);
     return NextResponse.json(result);
   } catch (e) {

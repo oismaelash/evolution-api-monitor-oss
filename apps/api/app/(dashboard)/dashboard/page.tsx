@@ -1,10 +1,7 @@
 import Link from 'next/link';
 import { prisma } from '@monitor/database';
-import type { HealthStatus } from '@monitor/shared';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-type StatusAgg = { status: HealthStatus; _count: { _all: number } };
 
 function bucketHour(ts: Date): number {
   return Math.floor(ts.getTime() / (60 * 60 * 1000));
@@ -61,13 +58,13 @@ export default async function DashboardPage() {
         take: 20,
       })
     ).map(async (n: { id: string; instanceName: string }) => {
-      const u24 = (await prisma.healthCheck.groupBy({
+      const u24 = await prisma.healthCheck.groupBy({
         by: ['status'],
         where: { numberId: n.id, checkedAt: { gte: since } },
         _count: { _all: true },
-      })) as StatusAgg[];
-      const ok = u24.find((r: StatusAgg) => r.status === 'HEALTHY')?._count._all ?? 0;
-      const bad = u24.find((r: StatusAgg) => r.status === 'UNHEALTHY')?._count._all ?? 0;
+      });
+      const ok = u24.find((r) => r.status === 'HEALTHY')?._count._all ?? 0;
+      const bad = u24.find((r) => r.status === 'UNHEALTHY')?._count._all ?? 0;
       const tot = ok + bad;
       const pct = tot === 0 ? 100 : Math.round((ok / tot) * 1000) / 10;
       return { id: n.id, name: n.instanceName, pct };

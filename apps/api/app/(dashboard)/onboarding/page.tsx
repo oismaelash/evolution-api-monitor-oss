@@ -21,10 +21,10 @@ export default async function OnboardingPage() {
       </p>
       <ol className="mb-8 list-decimal space-y-3 pl-6 text-sm text-[var(--color-text-primary)]">
         <li>
-          <Link href="/projects" className="text-[var(--color-accent)] hover:underline">
+          <Link href="/projects#create-project" className="text-[var(--color-accent)] hover:underline">
             Create a project
           </Link>{' '}
-          with your Evolution API base URL and API key.
+          with your Evolution API base URL and API key (form at the top of Projects).
         </li>
         <li>
           Open the project and use <strong>Sync instances</strong> to import numbers from Evolution.

@@ -5,7 +5,7 @@ import { NumberService } from '@/services/number.service';
 import { parsePagination } from '@monitor/shared';
 import { toErrorResponse } from '@/lib/http';
 
-type Ctx = { params: { projectId: string } };
+type Ctx = { params: Promise<{ projectId: string }> };
 
 export async function GET(req: NextRequest, ctx: Ctx) {
   try {
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { projectId } = ctx.params;
+    const { projectId } = await ctx.params;
     const { page, limit } = parsePagination(req.nextUrl.searchParams);
     const result = await NumberService.listByProject(session.user.id, projectId, page, limit);
     return NextResponse.json(result);
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { projectId } = ctx.params;
+    const { projectId } = await ctx.params;
     const body = await req.json();
     const n = await NumberService.addManual(session.user.id, projectId, body);
     return NextResponse.json(n, { status: 201 });

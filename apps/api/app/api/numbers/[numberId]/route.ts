@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { NumberService } from '@/services/number.service';
 import { toErrorResponse } from '@/lib/http';
 
-type Ctx = { params: { numberId: string } };
+type Ctx = { params: Promise<{ numberId: string }> };
 
 export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
@@ -12,7 +12,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { numberId } = ctx.params;
+    const { numberId } = await ctx.params;
     const n = await NumberService.getById(session.user.id, numberId);
     return NextResponse.json(n);
   } catch (e) {
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { numberId } = ctx.params;
+    const { numberId } = await ctx.params;
     const body = await req.json();
     const n = await NumberService.update(session.user.id, numberId, body);
     return NextResponse.json(n);
@@ -41,7 +41,7 @@ export async function DELETE(_req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { numberId } = ctx.params;
+    const { numberId } = await ctx.params;
     await NumberService.delete(session.user.id, numberId);
     return NextResponse.json({ ok: true });
   } catch (e) {

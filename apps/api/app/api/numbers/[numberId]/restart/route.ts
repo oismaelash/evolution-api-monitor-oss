@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { NumberService } from '@/services/number.service';
 import { toErrorResponse } from '@/lib/http';
 
-type Ctx = { params: { numberId: string } };
+type Ctx = { params: Promise<{ numberId: string }> };
 
 export async function POST(_req: NextRequest, ctx: Ctx) {
   try {
@@ -12,7 +12,7 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const { numberId } = ctx.params;
+    const { numberId } = await ctx.params;
     const result = await NumberService.restart(session.user.id, numberId);
     return NextResponse.json(result);
   } catch (e) {

@@ -1,0 +1,142 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { createProjectSchema } from '@monitor/shared';
+import { apiErrorMessage } from '@/components/dashboard/api-error-message';
+
+const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
+const inputClass =
+  'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
+
+export function CreateProjectForm() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [evolutionUrl, setEvolutionUrl] = useState('');
+  const [evolutionApiKey, setEvolutionApiKey] = useState('');
+  const [alertPhone, setAlertPhone] = useState('');
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+    const raw = {
+      name: name.trim(),
+      evolutionUrl: evolutionUrl.trim(),
+      evolutionApiKey: evolutionApiKey.trim(),
+      alertPhone: alertPhone.trim() || undefined,
+    };
+    const parsed = createProjectSchema.safeParse(raw);
+    if (!parsed.success) {
+      setMsg(parsed.error.errors.map((x) => x.message).join(' · '));
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsed.data),
+      });
+      const data = (await res.json().catch(() => ({}))) as { id?: string; error?: unknown };
+      if (!res.ok) {
+        setMsg(apiErrorMessage(data));
+        return;
+      }
+      if (data.id) {
+        router.push(`/projects/${data.id}`);
+        router.refresh();
+        return;
+      }
+      setMsg('Created but no project id returned');
+    } catch {
+      setMsg('Network error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <form
+      id="create-project"
+      onSubmit={(e) => void onSubmit(e)}
+      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6"
+    >
+      <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">New project</h2>
+      <p className="mb-6 text-sm text-[var(--color-text-muted)]">
+        One Evolution server per project: base URL and global API key (same as Evolution Manager).
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label className={labelClass} htmlFor="proj-name">
+            Name
+          </label>
+          <input
+            id="proj-name"
+            className={inputClass}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Production WhatsApp"
+            autoComplete="off"
+            required
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelClass} htmlFor="proj-url">
+            Evolution API base URL
+          </label>
+          <input
+            id="proj-url"
+            type="url"
+            className={inputClass}
+            value={evolutionUrl}
+            onChange={(e) => setEvolutionUrl(e.target.value)}
+            placeholder="https://evolution.example.com"
+            autoComplete="off"
+            required
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelClass} htmlFor="proj-key">
+            Evolution API key
+          </label>
+          <input
+            id="proj-key"
+            type="password"
+            className={inputClass}
+            value={evolutionApiKey}
+            onChange={(e) => setEvolutionApiKey(e.target.value)}
+            placeholder="••••••••"
+            autoComplete="off"
+            required
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={labelClass} htmlFor="proj-alert">
+            Alert phone (E.164, optional)
+          </label>
+          <input
+            id="proj-alert"
+            className={inputClass}
+            value={alertPhone}
+            onChange={(e) => setAlertPhone(e.target.value)}
+            placeholder="+5511999999999"
+            autoComplete="off"
+          />
+        </div>
+      </div>
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        >
+          {loading ? 'Creating…' : 'Create project'}
+        </button>
+        {msg ? <p className="text-sm text-[var(--color-error)]">{msg}</p> : null}
+      </div>
+    </form>
+  );
+}

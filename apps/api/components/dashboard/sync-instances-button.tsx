@@ -21,7 +21,9 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         setMsg(data.error ?? 'Sync failed');
         return;
       }
-      setMsg(`Synced ${data.synced ?? 0}, created ${data.created ?? 0}`);
+      setMsg(
+        `Synced ${String(data.synced ?? 0)} instance(s), created ${String(data.created ?? 0)} new row(s).`
+      );
       router.refresh();
     } catch {
       setMsg('Network error');
