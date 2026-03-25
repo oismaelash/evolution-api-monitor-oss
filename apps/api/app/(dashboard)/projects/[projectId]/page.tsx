@@ -5,6 +5,7 @@ import { prisma } from '@monitor/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getServerTranslator } from '@/lib/i18n-server';
+import { e164ToDdiAndNational } from '@/lib/e164-fields';
 import { AddNumberForm } from '@/components/dashboard/add-number-form';
 import { EditProjectForm } from '@/components/dashboard/edit-project-form';
 import {
@@ -32,6 +33,10 @@ export default async function ProjectDetailPage({ params }: Props) {
     },
   });
   if (!project) notFound();
+
+  const { ddi: initialAlertDdi, national: initialAlertNational } = e164ToDdiAndNational(
+    project.alertPhone,
+  );
 
   const cfg = project.config;
   const configInitial: ProjectConfigFormInitial | null = cfg
@@ -89,7 +94,8 @@ export default async function ProjectDetailPage({ params }: Props) {
             projectId={project.id}
             initialName={project.name}
             initialEvolutionUrl={project.evolutionUrl}
-            initialAlertPhone={project.alertPhone}
+            initialAlertDdi={initialAlertDdi}
+            initialAlertNational={initialAlertNational}
           />
           <div className="mt-10 border-t border-[var(--color-border)] pt-8">
             <h3 className="mb-1 text-base font-medium text-[var(--color-text-primary)]">

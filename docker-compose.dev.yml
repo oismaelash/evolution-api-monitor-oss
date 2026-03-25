@@ -104,6 +104,7 @@ services:
       CHOKIDAR_USEPOLLING: 'true'
     volumes:
       - .:/app
+      # Anonymous volume hides host node_modules; populate via image `npm ci` or `docker compose exec api npm ci`
       - /app/node_modules
     working_dir: /app
     command: npm run dev --workspace=api
@@ -142,6 +143,7 @@ services:
       RESTART_TIMEOUT_MS: ${RESTART_TIMEOUT_MS:-}
     volumes:
       - .:/app
+      # Anonymous volume hides host node_modules; populate via image `npm ci` or `docker compose exec api npm ci`
       - /app/node_modules
     working_dir: /app
     command: npm run dev --workspace=worker

@@ -3,6 +3,8 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
 /**
  * Split a stored E.164 value into DDI + national digits for the WhatsApp phone fields.
  * Falls back to national-only if parsing fails (legacy or malformed DB value).
+ *
+ * Server-only: do not import from client components (keeps `libphonenumber-js` out of the browser bundle).
  */
 export function e164ToDdiAndNational(e164: string | null | undefined): { ddi: string; national: string } {
   if (!e164 || typeof e164 !== 'string') {

@@ -6,7 +6,6 @@ import { composedE164FromDdiFields, updateProjectSchema } from '@monitor/shared'
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
-import { e164ToDdiAndNational } from '@/lib/e164-fields';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { FormLabelWithHelp } from '@/components/ui/field-help';
 
@@ -17,12 +16,14 @@ export function EditProjectForm({
   projectId,
   initialName,
   initialEvolutionUrl,
-  initialAlertPhone,
+  initialAlertDdi,
+  initialAlertNational,
 }: {
   projectId: string;
   initialName: string;
   initialEvolutionUrl: string;
-  initialAlertPhone: string | null;
+  initialAlertDdi: string;
+  initialAlertNational: string;
 }) {
   const t = useT();
   const router = useRouter();
@@ -32,14 +33,13 @@ export function EditProjectForm({
   const [name, setName] = useState(initialName);
   const [evolutionUrl, setEvolutionUrl] = useState(initialEvolutionUrl);
   const [evolutionApiKey, setEvolutionApiKey] = useState('');
-  const [alertDdi, setAlertDdi] = useState('');
-  const [alertNational, setAlertNational] = useState('');
+  const [alertDdi, setAlertDdi] = useState(initialAlertDdi);
+  const [alertNational, setAlertNational] = useState(initialAlertNational);
 
   useEffect(() => {
-    const { ddi, national } = e164ToDdiAndNational(initialAlertPhone);
-    setAlertDdi(ddi);
-    setAlertNational(national);
-  }, [initialAlertPhone]);
+    setAlertDdi(initialAlertDdi);
+    setAlertNational(initialAlertNational);
+  }, [initialAlertDdi, initialAlertNational]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
