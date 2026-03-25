@@ -54,7 +54,8 @@ services:
         condition: service_healthy
     restart: 'no'
     working_dir: /app
-    command: npm run db:migrate:deploy
+    command: >
+      sh -c "npm run db:migrate:deploy && npm run db:seed"
 
   api:
     networks: [backend, egress]

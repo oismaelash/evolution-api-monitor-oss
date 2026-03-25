@@ -64,6 +64,8 @@ services:
       postgres:
         condition: service_healthy
     restart: 'no'
+    command: >
+      sh -c "npm run db:migrate:deploy && npm run db:seed"
 
   api:
     networks: [backend, egress]
