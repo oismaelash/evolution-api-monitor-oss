@@ -8,8 +8,8 @@ import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
 import { e164ToDdiAndNational } from '@/lib/e164-fields';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
+import { FormLabelWithHelp } from '@/components/ui/field-help';
 
-const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
 
@@ -104,9 +104,16 @@ export function EditProjectForm({
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
       <div>
-        <label className={labelClass} htmlFor={`edit-name-${projectId}`}>
+        <FormLabelWithHelp
+          htmlFor={`edit-name-${projectId}`}
+          description={t(
+            'Nome do projeto exibido no painel.',
+            'Project name shown in the dashboard.',
+          )}
+          example={t('Suporte BR', 'BR Support')}
+        >
           {t('Nome', 'Name')}
-        </label>
+        </FormLabelWithHelp>
         <input
           id={`edit-name-${projectId}`}
           className={inputClass}
@@ -116,9 +123,16 @@ export function EditProjectForm({
         />
       </div>
       <div>
-        <label className={labelClass} htmlFor={`edit-url-${projectId}`}>
+        <FormLabelWithHelp
+          htmlFor={`edit-url-${projectId}`}
+          description={t(
+            'URL raiz do servidor Evolution usada pelo worker para health checks e comandos.',
+            'Evolution root URL used by the worker for health checks and commands.',
+          )}
+          example={t('https://evolution.suaempresa.com', 'https://evolution.yourcompany.com')}
+        >
           {t('URL base da Evolution API', 'Evolution API base URL')}
-        </label>
+        </FormLabelWithHelp>
         <input
           id={`edit-url-${projectId}`}
           type="url"
@@ -129,9 +143,16 @@ export function EditProjectForm({
         />
       </div>
       <div>
-        <label className={labelClass} htmlFor={`edit-key-${projectId}`}>
+        <FormLabelWithHelp
+          htmlFor={`edit-key-${projectId}`}
+          description={t(
+            'Atualize a chave global da Evolution sem apagar a antiga no banco até você salvar. Deixe em branco para manter.',
+            'Rotate the global Evolution key. Leave blank to keep the current key stored for this project.',
+          )}
+          example={t('Nova chave copiada do Evolution Manager', 'New key copied from Evolution Manager')}
+        >
           {t('Nova API key da Evolution (opcional)', 'New Evolution API key (optional)')}
-        </label>
+        </FormLabelWithHelp>
         <input
           id={`edit-key-${projectId}`}
           type="password"
@@ -143,9 +164,15 @@ export function EditProjectForm({
         />
       </div>
       <div className="space-y-1">
-        <span className={labelClass}>
+        <FormLabelWithHelp
+          description={t(
+            'Destino WhatsApp (E.164) para alertas do canal Monitor Status.',
+            'E.164 WhatsApp destination for Monitor Status alerts.',
+          )}
+          example={t('+5511999999999', '+5511999999999')}
+        >
           {t('Telefone de alerta', 'Alert phone')}
-        </span>
+        </FormLabelWithHelp>
         <WhatsappPhoneFields
           ddiId={`edit-alert-ddi-${projectId}`}
           nationalId={`edit-alert-national-${projectId}`}
@@ -153,6 +180,7 @@ export function EditProjectForm({
           nationalValue={alertNational}
           onDdiChange={setAlertDdi}
           onNationalChange={setAlertNational}
+          perFieldHelp
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">

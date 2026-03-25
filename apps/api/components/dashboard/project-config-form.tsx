@@ -7,8 +7,8 @@ import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
+import { FormLabelWithHelp } from '@/components/ui/field-help';
 
-const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
 
@@ -87,9 +87,16 @@ export function ProjectConfigForm({
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={labelClass} htmlFor={`cfg-ping-${projectId}`}>
+          <FormLabelWithHelp
+            htmlFor={`cfg-ping-${projectId}`}
+            description={t(
+              'Com que frequência o worker consulta a Evolution (health check). Valores menores detectam falhas mais rápido, mas aumentam carga no servidor e na API.',
+              'How often the worker polls Evolution for health. Lower values detect outages faster but increase load on your server and the API.',
+            )}
+            example={t('300 (uma vez a cada 5 minutos)', '300 (once every 5 minutes)')}
+          >
             {t('Intervalo de ping (segundos)', 'Ping interval (seconds)')}
-          </label>
+          </FormLabelWithHelp>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <input
               id={`cfg-ping-${projectId}`}
@@ -105,9 +112,16 @@ export function ProjectConfigForm({
           </div>
         </div>
         <div>
-          <label className={labelClass} htmlFor={`cfg-retry-${projectId}`}>
+          <FormLabelWithHelp
+            htmlFor={`cfg-retry-${projectId}`}
+            description={t(
+              'Quantas tentativas extras após uma falha antes de considerar o check como falha definitiva e seguir o fluxo de alerta.',
+              'How many extra attempts after a failed check before treating the round as failed and moving on to alerts.',
+            )}
+            example={t('3 tentativas antes de alertar', '3 attempts before alerting')}
+          >
             {t('Máx. tentativas', 'Max retries')}
-          </label>
+          </FormLabelWithHelp>
           <input
             id={`cfg-retry-${projectId}`}
             type="number"
@@ -120,9 +134,16 @@ export function ProjectConfigForm({
           />
         </div>
         <div>
-          <label className={labelClass} htmlFor={`cfg-delay-${projectId}`}>
+          <FormLabelWithHelp
+            htmlFor={`cfg-delay-${projectId}`}
+            description={t(
+              'Tempo de espera entre uma tentativa falha e a próxima (usado com a estratégia de retry configurada).',
+              'Wait time between a failed attempt and the next retry (used with your retry strategy).',
+            )}
+            example={t('60 (espera 1 minuto entre tentativas)', '60 (wait 1 minute between attempts)')}
+          >
             {t('Atraso entre tentativas (segundos)', 'Retry delay (seconds)')}
-          </label>
+          </FormLabelWithHelp>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <input
               id={`cfg-delay-${projectId}`}
@@ -138,9 +159,19 @@ export function ProjectConfigForm({
           </div>
         </div>
         <div className="sm:col-span-2">
-          <label className={labelClass} htmlFor={`cfg-strat-${projectId}`}>
+          <FormLabelWithHelp
+            htmlFor={`cfg-strat-${projectId}`}
+            description={t(
+              'Fixo usa sempre o mesmo atraso. Exponential jitter aumenta o intervalo com variação aleatória para evitar que muitas instâncias tentem ao mesmo tempo.',
+              'Fixed always uses the same delay. Exponential jitter increases the backoff with random jitter so many instances do not retry in sync.',
+            )}
+            example={t(
+              'EXPONENTIAL_JITTER em produção com vários números',
+              'EXPONENTIAL_JITTER in production with many numbers',
+            )}
+          >
             {t('Estratégia de retry', 'Retry strategy')}
-          </label>
+          </FormLabelWithHelp>
           <select
             id={`cfg-strat-${projectId}`}
             className={inputClass}

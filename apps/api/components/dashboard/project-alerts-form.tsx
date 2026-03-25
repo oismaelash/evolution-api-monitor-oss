@@ -7,8 +7,8 @@ import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
 import { SecondsInputHint } from '@/components/ui/seconds-input-hint';
+import { FormLabelWithHelp } from '@/components/ui/field-help';
 
-const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
 
@@ -162,9 +162,16 @@ export function ProjectAlertsForm({
           .
         </p>
         <div>
-          <label className={labelClass} htmlFor={`al-cool-${projectId}`}>
+          <FormLabelWithHelp
+            htmlFor={`al-cool-${projectId}`}
+            description={t(
+              'Tempo mínimo entre alertas repetidos para o mesmo incidente (evita spam enquanto o problema continua).',
+              'Minimum time between repeated alerts for the same incident (reduces spam while the issue persists).',
+            )}
+            example={t('600 (no máximo um alerta a cada 10 minutos)', '600 (at most one alert every 10 minutes)')}
+          >
             {t('Intervalo entre alertas (segundos)', 'Alert cooldown (seconds)')}
-          </label>
+          </FormLabelWithHelp>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <input
               id={`al-cool-${projectId}`}
@@ -178,15 +185,20 @@ export function ProjectAlertsForm({
             />
             <SecondsInputHint value={alertCooldown} />
           </div>
-          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            {t(
-              'Tempo mínimo entre alertas repetidos para o mesmo incidente.',
-              'Minimum time between repeated alerts for the same incident.',
-            )}
-          </p>
         </div>
         <div>
-          <span className={labelClass}>{t('Canais de alerta', 'Alert channels')}</span>
+          <FormLabelWithHelp
+            description={t(
+              'Onde enviar notificações quando um número monitorado falha. Você pode marcar vários canais ao mesmo tempo.',
+              'Where to send notifications when a monitored number fails. You can enable multiple channels.',
+            )}
+            example={t(
+              'Monitor Status (WhatsApp no telefone de alerta) + E-mail',
+              'Monitor Status (WhatsApp to the alert phone) + Email',
+            )}
+          >
+            {t('Canais de alerta', 'Alert channels')}
+          </FormLabelWithHelp>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
             {CHANNELS.map((c) => (
               <label
@@ -205,9 +217,19 @@ export function ProjectAlertsForm({
           </div>
         </div>
         <div>
-          <label className={labelClass} htmlFor={`al-tpl-${projectId}`}>
+          <FormLabelWithHelp
+            htmlFor={`al-tpl-${projectId}`}
+            description={t(
+              'Modelo opcional em Handlebars para personalizar o texto do alerta nos canais que suportam corpo customizado.',
+              'Optional Handlebars template to customize alert text on channels that support a custom body.',
+            )}
+            example={t(
+              'Falha em {{instanceName}} — {{state}}',
+              'Failure on {{instanceName}} — {{state}}',
+            )}
+          >
             {t('Modelo de alerta (opcional, Handlebars)', 'Alert template (optional, Handlebars)')}
-          </label>
+          </FormLabelWithHelp>
           <textarea
             id={`al-tpl-${projectId}`}
             rows={4}
@@ -231,9 +253,16 @@ export function ProjectAlertsForm({
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`al-email-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-email-${projectId}`}
+              description={t(
+                'Endereço que receberá os alertas quando o canal E-mail estiver ativo.',
+                'Inbox address that receives alerts when the Email channel is enabled.',
+              )}
+              example={t('equipe@empresa.com', 'team@company.com')}
+            >
               {t('E-mail de destino', 'Destination email')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-email-${projectId}`}
               type="email"
@@ -245,9 +274,16 @@ export function ProjectAlertsForm({
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`al-smtp-from-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-smtp-from-${projectId}`}
+              description={t(
+                'Cabeçalho From exibido pelo cliente de e-mail. Opcional; o servidor pode preencher um padrão.',
+                'From header shown in the mail client. Optional; your SMTP server may apply a default.',
+              )}
+              example={t('Monitor <alertas@empresa.com>', 'Monitor <alerts@company.com>')}
+            >
               {t('Remetente (opcional)', 'From (optional)')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-smtp-from-${projectId}`}
               className={inputClass}
@@ -258,9 +294,16 @@ export function ProjectAlertsForm({
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`al-smtp-host-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-smtp-host-${projectId}`}
+              description={t(
+                'Nome do servidor de e-mail (SMTP) que enviará os alertas.',
+                'Hostname of the SMTP server that will send alert emails.',
+              )}
+              example={t('smtp.gmail.com ou smtp.sendgrid.net', 'smtp.gmail.com or smtp.sendgrid.net')}
+            >
               {t('Host SMTP', 'SMTP host')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-smtp-host-${projectId}`}
               className={inputClass}
@@ -270,9 +313,16 @@ export function ProjectAlertsForm({
             />
           </div>
           <div>
-            <label className={labelClass} htmlFor={`al-smtp-port-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-smtp-port-${projectId}`}
+              description={t(
+                'Porta do servidor SMTP. Com TLS geralmente 587 (STARTTLS) ou 465 (SSL); confira o provedor.',
+                'SMTP server port. With TLS this is often 587 (STARTTLS) or 465 (SSL); check your provider.',
+              )}
+              example={t('587', '587')}
+            >
               {t('Porta SMTP', 'SMTP port')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-smtp-port-${projectId}`}
               type="number"
@@ -282,9 +332,16 @@ export function ProjectAlertsForm({
             />
           </div>
           <div>
-            <label className={labelClass} htmlFor={`al-smtp-user-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-smtp-user-${projectId}`}
+              description={t(
+                'Usuário para autenticação no SMTP (muitas vezes o próprio e-mail ou um usuário API).',
+                'Username for SMTP authentication (often the mailbox email or an API user).',
+              )}
+              example={t('alertas@empresa.com', 'alerts@company.com')}
+            >
               {t('Usuário SMTP', 'SMTP user')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-smtp-user-${projectId}`}
               className={inputClass}
@@ -294,9 +351,16 @@ export function ProjectAlertsForm({
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`al-smtp-pass-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-smtp-pass-${projectId}`}
+              description={t(
+                'Senha ou token do SMTP; armazenada criptografada. Deixe em branco para não alterar o valor já salvo.',
+                'SMTP password or app token; stored encrypted. Leave blank to keep the current saved value.',
+              )}
+              example={t('Senha da conta ou senha de app', 'Account password or app password')}
+            >
               {t('Senha SMTP (em branco para manter)', 'SMTP password (leave blank to keep)')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-smtp-pass-${projectId}`}
               type="password"
@@ -321,9 +385,16 @@ export function ProjectAlertsForm({
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`al-wh-url-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-wh-url-${projectId}`}
+              description={t(
+                'Endpoint HTTPS que receberá POST com JSON quando o canal Webhook estiver ativo.',
+                'HTTPS endpoint that will receive JSON POST payloads when the Webhook channel is enabled.',
+              )}
+              example={t('https://api.empresa.com/hooks/monitor', 'https://api.company.com/hooks/monitor')}
+            >
               {t('URL do webhook', 'Webhook URL')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-wh-url-${projectId}`}
               type="url"
@@ -334,9 +405,16 @@ export function ProjectAlertsForm({
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor={`al-wh-sec-${projectId}`}>
+            <FormLabelWithHelp
+              htmlFor={`al-wh-sec-${projectId}`}
+              description={t(
+                'Segredo compartilhado para sua API validar que o POST veio do monitor; armazenado criptografado. Deixe em branco para manter.',
+                'Shared secret so your API can verify the POST came from the monitor; stored encrypted. Leave blank to keep.',
+              )}
+              example={t('Um token longo gerado por você', 'A long random token you generate')}
+            >
               {t('Segredo do webhook (em branco para manter)', 'Webhook secret (leave blank to keep)')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id={`al-wh-sec-${projectId}`}
               type="password"

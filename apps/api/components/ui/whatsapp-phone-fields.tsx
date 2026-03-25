@@ -1,6 +1,7 @@
 'use client';
 
 import { useT } from '@/components/i18n/i18n-provider';
+import { FieldHelp } from '@/components/ui/field-help';
 
 export type WhatsappPhoneFieldsProps = {
   ddiId: string;
@@ -11,6 +12,8 @@ export type WhatsappPhoneFieldsProps = {
   onNationalChange: (value: string) => void;
   /** Same helper line as login (format +DDI + number). */
   showFormatHint?: boolean;
+  /** Show help icons for DDI and national fields (project connection / alert phone). */
+  perFieldHelp?: boolean;
 };
 
 /**
@@ -25,6 +28,7 @@ export function WhatsappPhoneFields({
   onDdiChange,
   onNationalChange,
   showFormatHint = true,
+  perFieldHelp = false,
 }: WhatsappPhoneFieldsProps) {
   const t = useT();
 
@@ -32,12 +36,23 @@ export function WhatsappPhoneFields({
     <div className="space-y-2">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[7rem]">
-          <label
-            htmlFor={ddiId}
-            className="text-xs font-medium text-[var(--color-text-muted)]"
-          >
-            {t('DDI', 'Country code')}
-          </label>
+          <div className="flex items-start gap-1">
+            <label
+              htmlFor={ddiId}
+              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
+            >
+              {t('DDI', 'Country code')}
+            </label>
+            {perFieldHelp ? (
+              <FieldHelp
+                description={t(
+                  'Código do país sem o + (apenas dígitos). Junto com o número forma o E.164 usado no WhatsApp de alerta.',
+                  'Country calling code without + (digits only). Together with the national number it forms the E.164 alert WhatsApp.',
+                )}
+                example={t('55 para Brasil', '55 for Brazil')}
+              />
+            ) : null}
+          </div>
           <input
             id={ddiId}
             type="text"
@@ -51,12 +66,23 @@ export function WhatsappPhoneFields({
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <label
-            htmlFor={nationalId}
-            className="text-xs font-medium text-[var(--color-text-muted)]"
-          >
-            {t('Número', 'Number')}
-          </label>
+          <div className="flex items-start gap-1">
+            <label
+              htmlFor={nationalId}
+              className="flex-1 text-xs font-medium leading-snug text-[var(--color-text-muted)]"
+            >
+              {t('Número', 'Number')}
+            </label>
+            {perFieldHelp ? (
+              <FieldHelp
+                description={t(
+                  'Número local sem DDI e sem +. Será combinado com o DDI para formar +5511999999999 (E.164).',
+                  'Local number without country code or +. Combined with DDI to build +5511999999999 (E.164).',
+                )}
+                example={t('11999999999 (SP, celular)', '11999999999 (mobile, São Paulo)')}
+              />
+            ) : null}
+          </div>
           <input
             id={nationalId}
             type="tel"

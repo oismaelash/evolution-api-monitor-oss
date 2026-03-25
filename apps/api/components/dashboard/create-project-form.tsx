@@ -8,8 +8,8 @@ import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { WhatsappPhoneFields } from '@/components/ui/whatsapp-phone-fields';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
+import { FormLabelWithHelp } from '@/components/ui/field-help';
 
-const labelClass = 'mb-1 block text-sm font-medium text-[var(--color-text-muted)]';
 const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
 
@@ -124,9 +124,16 @@ export function CreateProjectForm() {
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor="proj-name">
+            <FormLabelWithHelp
+              htmlFor="proj-name"
+              description={t(
+                'Nome amigável do projeto no painel (não altera a Evolution).',
+                'Friendly project name in the dashboard (does not change Evolution).',
+              )}
+              example={t('WhatsApp produção', 'Production WhatsApp')}
+            >
               {t('Nome', 'Name')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id="proj-name"
               className={inputClass}
@@ -138,9 +145,16 @@ export function CreateProjectForm() {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor="proj-url">
+            <FormLabelWithHelp
+              htmlFor="proj-url"
+              description={t(
+                'URL raiz do servidor Evolution (sem path da instância). O monitor chama a API nesse host.',
+                'Root URL of your Evolution server (no instance path). The monitor calls the API on this host.',
+              )}
+              example={t('https://evolution.suaempresa.com', 'https://evolution.yourcompany.com')}
+            >
               {t('URL base da Evolution API', 'Evolution API base URL')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id="proj-url"
               type="url"
@@ -153,9 +167,16 @@ export function CreateProjectForm() {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor="proj-key">
+            <FormLabelWithHelp
+              htmlFor="proj-key"
+              description={t(
+                'Chave global da Evolution (mesma do Evolution Manager / AUTHENTICATION_API_KEY). Usada só no servidor.',
+                'Global Evolution API key (same as Evolution Manager / AUTHENTICATION_API_KEY). Used only on the server.',
+              )}
+              example={t('Chave longa em Global apikey no painel Evolution', 'Long key from Global apikey in Evolution')}
+            >
               {t('API key da Evolution', 'Evolution API key')}
-            </label>
+            </FormLabelWithHelp>
             <input
               id="proj-key"
               type="password"
@@ -168,9 +189,15 @@ export function CreateProjectForm() {
             />
           </div>
           <div className="sm:col-span-2 space-y-1">
-            <span className={labelClass}>
+            <FormLabelWithHelp
+              description={t(
+                'WhatsApp em E.164 para o canal Monitor Status receber alertas. Opcional; pode configurar depois.',
+                'E.164 WhatsApp for the Monitor Status channel. Optional; you can set it later.',
+              )}
+              example={t('+5511999999999', '+5511999999999')}
+            >
               {t('Telefone de alerta (opcional)', 'Alert phone (optional)')}
-            </span>
+            </FormLabelWithHelp>
             <WhatsappPhoneFields
               ddiId="proj-alert-ddi"
               nationalId="proj-alert-national"
@@ -178,6 +205,7 @@ export function CreateProjectForm() {
               nationalValue={alertNational}
               onDdiChange={setAlertDdi}
               onNationalChange={setAlertNational}
+              perFieldHelp
             />
           </div>
         </div>
