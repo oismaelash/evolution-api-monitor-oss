@@ -2,7 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { projectConfigSchema } from '@monitor/shared';
+import {
+  projectConfigSchema,
+  getWebhookAlertPayloadExampleStrings,
+  WEBHOOK_ALERT_REQUEST_HEADERS,
+} from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { formatZodIssues } from '@/lib/zod-validation-i18n';
@@ -13,6 +17,8 @@ const inputClass =
   'w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]/70';
 
 const CHANNELS = ['MONITOR_STATUS', 'EMAIL', 'WEBHOOK'] as const;
+
+const webhookAlertPayloadExamples = getWebhookAlertPayloadExampleStrings();
 
 function channelLabel(
   c: (typeof CHANNELS)[number],
@@ -65,6 +71,7 @@ export function ProjectAlertsForm({
   const [smtpPass, setSmtpPass] = useState('');
   const [webhookUrl, setWebhookUrl] = useState(initial.webhookUrl ?? '');
   const [webhookSecret, setWebhookSecret] = useState('');
+  const [showWebhookPayloadFormat, setShowWebhookPayloadFormat] = useState(false);
 
   function toggleChannel(c: (typeof CHANNELS)[number]) {
     setChannels((prev) => {
@@ -421,6 +428,55 @@ export function ProjectAlertsForm({
               onChange={(e) => setWebhookSecret(e.target.value)}
               autoComplete="new-password"
             />
+          </div>
+          <div className="sm:col-span-2">
+            <button
+              type="button"
+              onClick={() => setShowWebhookPayloadFormat((v) => !v)}
+              className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg)]/80"
+            >
+              {showWebhookPayloadFormat
+                ? t('Ocultar formato do payload', 'Hide payload format')
+                : t('Ver formato do payload', 'View payload format')}
+            </button>
+            {showWebhookPayloadFormat ? (
+              <div className="mt-4 space-y-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]/50 p-4">
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  {t('Método', 'Method')}: <code className="font-mono text-[var(--color-text-primary)]">POST</code>
+                  {' · '}
+                  {t('Corpo', 'Body')}:{' '}
+                  <code className="font-mono text-[var(--color-text-primary)]">
+                    {WEBHOOK_ALERT_REQUEST_HEADERS.contentType}
+                  </code>
+                </p>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                  {t(
+                    'Se um segredo estiver salvo no projeto, cada requisição inclui o header',
+                    'When a secret is saved on the project, each request includes header',
+                  )}{' '}
+                  <code className="rounded bg-[var(--color-surface)] px-1 font-mono text-[var(--color-text-primary)]">
+                    {WEBHOOK_ALERT_REQUEST_HEADERS.secretHeaderName}
+                  </code>{' '}
+                  {t('com o mesmo valor.', 'with the same value.')}
+                </p>
+                <div>
+                  <p className="mb-1 text-xs font-medium text-[var(--color-text-primary)]">
+                    {t('Falha (alerta)', 'Failure (alert)')}
+                  </p>
+                  <pre className="max-h-64 overflow-auto rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-xs leading-relaxed text-[var(--color-text-primary)]">
+                    {webhookAlertPayloadExamples.failure}
+                  </pre>
+                </div>
+                <div>
+                  <p className="mb-1 text-xs font-medium text-[var(--color-text-primary)]">
+                    {t('Recuperação', 'Recovery')}
+                  </p>
+                  <pre className="max-h-64 overflow-auto rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] p-3 text-xs leading-relaxed text-[var(--color-text-primary)]">
+                    {webhookAlertPayloadExamples.resolved}
+                  </pre>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

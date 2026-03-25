@@ -9,6 +9,7 @@ import {
   LogLevel,
   getEvolutionTimeoutsMs,
   loadEnv,
+  type WebhookAlertPayload,
 } from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import type { RedisClient } from '../redis.js';
@@ -26,15 +27,6 @@ export type AlertResolvedJobData = {
 };
 
 const LOCK_TTL_SEC = 60;
-
-type BasePayload = {
-  instanceName: string;
-  projectName: string;
-  errorType?: ErrorType;
-  qrCodeBase64?: string;
-  pairingCode?: string;
-  resolved?: boolean;
-};
 
 function applySimpleTemplate(tpl: string, vars: Record<string, string>): string {
   return tpl.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => vars[key] ?? '');
@@ -117,7 +109,7 @@ export function createAlertWorker(connection: RedisClient) {
 
         const errorType = isResolved ? undefined : (job.data as AlertFailureJobData).errorType;
 
-        const payload: BasePayload = {
+        const payload: WebhookAlertPayload = {
           instanceName: number.instanceName,
           projectName: number.project.name,
           errorType,
