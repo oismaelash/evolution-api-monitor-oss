@@ -1,12 +1,21 @@
 import { z } from 'zod';
 
+/** Docker/compose often passes `KEY:` with no value → ""; Zod `.url().optional()` rejects "". */
+function emptyStringToUndefined(val: unknown): unknown {
+  if (val === '' || val === null || val === undefined) return undefined;
+  if (typeof val === 'string' && val.trim() === '') return undefined;
+  return val;
+}
+
+const optionalUrl = z.preprocess(emptyStringToUndefined, z.string().url().optional());
+
 /** Raw env including GitHub OAuth aliases (entrevistas-style names). */
 const rawEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   NEXTAUTH_SECRET: z.string().min(32),
-  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_URL: optionalUrl,
   ENCRYPTION_KEY: z.string().length(64).regex(/^[0-9a-fA-F]+$/),
   CLOUD_BILLING: z
     .enum(['true', 'false'])
@@ -24,7 +33,7 @@ const rawEnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   PAGUE_DEV_WEBHOOK_SECRET: z.string().optional(),
   MONITOR_STATUS_API_KEY: z.string().optional(),
-  MONITOR_STATUS_BASE_URL: z.string().url().optional(),
+  MONITOR_STATUS_BASE_URL: optionalUrl,
   /** Pilot Status API `templateId` (dashboard); default applied in worker if unset */
   MONITOR_STATUS_TEMPLATE_ID: z.string().optional(),
   PING_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).optional(),
@@ -41,7 +50,7 @@ const rawEnvSchema = z.object({
   STRIPE_PRICE_ID: z.string().optional(),
   BILLING_PRICE_PER_NUMBER_CENTS: z.coerce.number().int().positive().optional(),
   PAGUE_DEV_API_KEY: z.string().optional(),
-  PAGUE_DEV_BASE_URL: z.string().url().optional(),
+  PAGUE_DEV_BASE_URL: optionalUrl,
   BULL_BOARD_SECRET: z.string().optional(),
 })
   .superRefine((data, ctx) => {
