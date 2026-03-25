@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { prisma } from '@monitor/database';
+import type { NumberState } from '@monitor/shared';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { computeUptimeDisplayPercent } from '@/lib/uptime';
 
 function bucketHour(ts: Date): number {
   return Math.floor(ts.getTime() / (60 * 60 * 1000));
@@ -54,10 +56,10 @@ export default async function DashboardPage() {
     (
       await prisma.number.findMany({
         where: { project: { userId } },
-        select: { id: true, instanceName: true },
+        select: { id: true, instanceName: true, state: true },
         take: 20,
       })
-    ).map(async (n: { id: string; instanceName: string }) => {
+    ).map(async (n: { id: string; instanceName: string; state: NumberState }) => {
       const u24 = await prisma.healthCheck.groupBy({
         by: ['status'],
         where: { numberId: n.id, checkedAt: { gte: since } },
@@ -65,8 +67,7 @@ export default async function DashboardPage() {
       });
       const ok = u24.find((r) => r.status === 'HEALTHY')?._count._all ?? 0;
       const bad = u24.find((r) => r.status === 'UNHEALTHY')?._count._all ?? 0;
-      const tot = ok + bad;
-      const pct = tot === 0 ? 100 : Math.round((ok / tot) * 1000) / 10;
+      const pct = computeUptimeDisplayPercent(ok, bad, n.state);
       return { id: n.id, name: n.instanceName, pct };
     })
   );

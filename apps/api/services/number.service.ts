@@ -7,6 +7,7 @@ import {
   updateNumberSchema,
 } from '@monitor/shared';
 import { decryptFromStorage } from '@/lib/encryption';
+import { computeUptimeDisplayPercent } from '@/lib/uptime';
 import { BillingSyncService } from '@/services/billing-sync.service';
 
 async function ensureNumberOwned(userId: string, numberId: string) {
@@ -191,7 +192,7 @@ export const NumberService = {
   },
 
   async uptime(userId: string, numberId: string, period: '24h' | '7d' | '30d') {
-    await ensureNumberOwned(userId, numberId);
+    const n = await ensureNumberOwned(userId, numberId);
     const now = new Date();
     const ms =
       period === '24h' ? 24 * 60 * 60 * 1000 : period === '7d' ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
@@ -205,7 +206,7 @@ export const NumberService = {
     const healthy = rows.find((r: Row) => r.status === 'HEALTHY')?._count._all ?? 0;
     const unhealthy = rows.find((r: Row) => r.status === 'UNHEALTHY')?._count._all ?? 0;
     const total = healthy + unhealthy;
-    const percent = total === 0 ? 100 : Math.round((healthy / total) * 1000) / 10;
+    const percent = computeUptimeDisplayPercent(healthy, unhealthy, n.state);
     return { period, healthy, unhealthy, total, percent };
   },
 
