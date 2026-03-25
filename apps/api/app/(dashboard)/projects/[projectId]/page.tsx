@@ -9,6 +9,7 @@ import {
   ProjectConfigForm,
   type ProjectConfigFormInitial,
 } from '@/components/dashboard/project-config-form';
+import { DeleteProjectButton } from '@/components/dashboard/delete-project-button';
 import { SyncInstancesButton } from '@/components/dashboard/sync-instances-button';
 
 type Props = { params: { projectId: string } };
@@ -21,6 +22,7 @@ export default async function ProjectDetailPage({ params }: Props) {
     include: {
       config: true,
       numbers: { orderBy: { updatedAt: 'desc' }, take: 50 },
+      _count: { select: { numbers: true } },
     },
   });
   if (!project) notFound();
@@ -71,6 +73,18 @@ export default async function ProjectDetailPage({ params }: Props) {
           initialEvolutionUrl={project.evolutionUrl}
           initialAlertPhone={project.alertPhone}
         />
+        <div className="mt-10 border-t border-[var(--color-border)] pt-8">
+          <h3 className="mb-1 text-base font-medium text-[var(--color-text-primary)]">Danger zone</h3>
+          <p className="mb-4 text-sm text-[var(--color-text-muted)]">
+            Deleting this project removes it permanently and deletes every number registered under it
+            (database cascade). Health check jobs for those numbers are cleared first.
+          </p>
+          <DeleteProjectButton
+            projectId={project.id}
+            projectName={project.name}
+            numberCount={project._count.numbers}
+          />
+        </div>
       </section>
 
       {configInitial ? (
