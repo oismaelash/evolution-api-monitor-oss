@@ -1,95 +1,140 @@
-# evolution-api-monitor
+# Evolution API Monitor (OSS)
 
-SaaS + open-source platform to monitor WhatsApp instances connected via Evolution API (**Evolution API Monitor**).
+An open-source dashboard and background worker to monitor, manage, and track health checks for your Evolution API instances. This repository provides a clean, fast, and secure interface to keep an eye on all your connected numbers, instances, and configurations without any proprietary billing or authentication logic.
 
-## Requirements
+## 🚀 Features
 
-- Node.js 18+
-- npm
+- **Dashboard:** Clean, responsive UI to manage multiple Evolution API instances.
+- **Real-Time Health Checks:** Automated background workers (BullMQ + Redis) that periodically ping your instances.
+- **Uptime Monitoring:** Visual charts for 24h, 7-day, and 30-day uptime.
+- **Instance Synchronization:** Fetch and sync numbers directly from your Evolution API servers.
+- **Alerts:** Get notified (via Webhook, Email, etc.) when instances go offline.
+- **Multi-Project Management:** Group instances logically into different projects.
 
-## Development
+## 📋 Prerequisites
 
-### Local (Node)
+Make sure you have the following installed on your machine:
+- [Node.js](https://nodejs.org/en/) (v20 or higher)
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
+- [Git](https://git-scm.com/)
 
-From the repository root:
+---
 
-```bash
-npm install
-npm run dev
-```
+## 🐳 Quick Start (Localhost with Docker Compose - Recommended)
 
-Open [http://localhost:3000](http://localhost:3000) for the marketing landing (`apps/api`).
+The easiest way to get the project running locally is by using Docker Compose. This will automatically spin up PostgreSQL, Redis, the Web Dashboard (Next.js), and the Background Worker.
 
-**Before sign-in (OAuth) works**, PostgreSQL must have the Prisma schema applied. After Postgres is up and `DATABASE_URL` points at it, run from the repo root:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/oismaelash/evolution-api-monitor-oss.git
+   cd evolution-api-monitor-oss
+   ```
 
-```bash
-npm run db:migrate:deploy
-```
+2. **Configure Environment Variables:**
+   ```bash
+   cp .env.example .env
+   ```
+   *Note: The default `.env.example` is already pre-configured to work with the local docker-compose setup.*
 
-Other root scripts: `npm run build`, `npm run lint`, `npm run start`.
+3. **Start the Development Environment:**
+   ```bash
+   npm run dev:docker
+   # Or manually: docker compose -f docker-compose.dev.yml up -d --build
+   ```
 
-### Docker (hot reload)
+4. **Access the Dashboard:**
+   Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
 
-Requires Docker and Docker Compose v2. The compose file starts **PostgreSQL**, **Redis**, and the **api** service. Create a `.env` from `.env.example` (at minimum `NEXTAUTH_SECRET` and `ENCRYPTION_KEY`; `DATABASE_URL` / `REDIS_URL` are overridden for in-network services). The repo is bind-mounted; `node_modules` comes from the image.
+---
 
-```bash
-# build + start (foreground logs)
-npm run dev:docker
+## 💻 Local Development Setup (Manual)
 
-# or
-docker compose -f docker-compose.dev.yml up --build
-```
+If you prefer to run the Next.js app and the Worker directly on your host machine (for better debugging or IDE integration):
 
-Then open [http://localhost:3000](http://localhost:3000). Edit files under `apps/api` and packages—Next.js will reload.
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-On a **fresh Postgres volume**, apply migrations once (from the host, with `DATABASE_URL` matching your `.env` — for the default compose DB: `postgresql://postgres:postgres@localhost:5432/monitor_status?schema=public`):
+2. **Setup Environment Variables:**
+   ```bash
+   cp .env.example .env
+   ```
 
-```bash
-npm run db:migrate:deploy
-```
+3. **Start the Infrastructure (PostgreSQL & Redis):**
+   You can use docker-compose to start just the databases.
+   ```bash
+   docker compose -f docker-compose.dev.yml up -d db redis
+   ```
 
-`WATCHPACK_POLLING` and `CHOKIDAR_USEPOLLING` are enabled for reliable file watching on Docker Desktop / some WSL setups. If changes still do not reload, try `docker compose -f docker-compose.dev.yml up --build` after dependency changes (rebuild the image).
+4. **Run Database Migrations:**
+   ```bash
+   npm run db:migrate
+   ```
 
-## Environment
+5. **Start the Application:**
+   Open two terminal tabs.
+   
+   **Terminal 1 (Web API):**
+   ```bash
+   npm run dev
+   ```
+   
+   **Terminal 2 (Background Worker):**
+   ```bash
+   npm run dev:worker
+   ```
 
-Copy [`.env.example`](.env.example) to `.env` and set at least:
+The app will be available at `http://localhost:3000`.
 
-- `DATABASE_URL`, `REDIS_URL`, `NEXTAUTH_SECRET` (32+ chars), `ENCRYPTION_KEY` (64 hex chars, e.g. `openssl rand -hex 32`)
+---
 
-### OAuth (Google / GitHub)
+## 🚢 Production Deployment
 
-If you enable Google or GitHub sign-in, set `NEXTAUTH_URL` to the exact origin users open in the browser (including scheme and port), and register the callback URLs from `.env.example` in each provider’s console. For production behind a reverse proxy, set `NEXTAUTH_URL` to the public HTTPS URL the browser uses (not an internal hostname); NextAuth v4 relies on this for OAuth redirects.
+For production, you should use the `docker-compose.prod.yml` file. This setup optimizes the Next.js build and runs the worker in production mode.
 
-## Database
+1. Configure your `.env` file with secure, production-ready values (ensure you change the `ENCRYPTION_KEY` by running `openssl rand -hex 32`).
 
-After dependencies are installed, apply **existing** migrations (typical for local/Docker):
+2. Build and start the containers:
+   ```bash
+   docker compose -f docker-compose.prod.yml up -d --build
+   ```
 
-```bash
-npm run db:migrate:deploy
-```
+3. Run migrations inside the production container (only required on the first setup or after updates):
+   ```bash
+   docker compose -f docker-compose.prod.yml exec api npm run db:migrate:deploy
+   ```
 
-Use `npm run db:migrate` when you need to **create** a new migration during development (`prisma migrate dev`).
+---
 
-Apply migrations in production with `npm run db:migrate:deploy` or `prisma migrate deploy` from `packages/database`.
+## 🤝 How to Contribute
 
-## Worker (BullMQ)
+We welcome contributions from the community! If you'd like to improve the Evolution API Monitor, please follow these steps:
 
-Health checks and alerts run in `apps/worker` (requires Redis + DB):
+1. **Fork the repository** on GitHub.
+2. **Clone your fork locally:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/evolution-api-monitor-oss.git
+   ```
+3. **Create a new branch** for your feature or bug fix:
+   ```bash
+   git checkout -b feature/my-new-feature
+   ```
+4. **Make your changes** and commit them using conventional commits:
+   ```bash
+   git commit -m "feat: add new uptime metric"
+   ```
+5. **Push your branch** to your fork:
+   ```bash
+   git push origin feature/my-new-feature
+   ```
+6. **Open a Pull Request** against the `main` branch of this repository.
 
-```bash
-npm run dev:worker
-```
+### Coding Standards
+- The project is a monorepo built with npm workspaces.
+- We use **TypeScript** and **Next.js (App Router)**.
+- Please run `npm run lint` and `npm run test` before submitting your PR to ensure everything is working correctly.
 
-## Structure
+## 📄 License
 
-- `apps/api` — Next.js 14 (App Router): marketing, dashboard, REST API (`/api/*`)
-- `apps/worker` — BullMQ workers (health-check, restart, alert)
-- `packages/database` — Prisma schema and client
-- `packages/shared` — DTOs, env validation, Evolution client, crypto
-- `packages/config` — shared TypeScript / ESLint base
-- `docs/` — product and API reference documents
-
-## Domains (product)
-
-- Open source / marketing: [evolutionapi.online](https://evolutionapi.online)
-- Cloud: [cloud.evolutionapi.online](https://cloud.evolutionapi.online)
+This project is licensed under the MIT License - see the LICENSE file for details.
