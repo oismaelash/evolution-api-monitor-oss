@@ -36,7 +36,22 @@ const baseSchema = z.object({
   PAGUE_DEV_API_KEY: z.string().optional(),
   PAGUE_DEV_BASE_URL: z.string().url().optional(),
   BULL_BOARD_SECRET: z.string().optional(),
-});
+})
+  .superRefine((data, ctx) => {
+    const googleOAuth =
+      Boolean(data.GOOGLE_CLIENT_ID?.trim()) &&
+      Boolean(data.GOOGLE_CLIENT_SECRET?.trim());
+    const githubOAuth =
+      Boolean(data.GITHUB_ID?.trim()) && Boolean(data.GITHUB_SECRET?.trim());
+    if ((googleOAuth || githubOAuth) && !data.NEXTAUTH_URL?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          'NEXTAUTH_URL is required when Google or GitHub OAuth credentials are set',
+        path: ['NEXTAUTH_URL'],
+      });
+    }
+  });
 
 export type MonitorEnv = z.infer<typeof baseSchema> & {
   CLOUD_BILLING: boolean;

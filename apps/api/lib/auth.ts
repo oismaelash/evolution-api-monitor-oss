@@ -5,6 +5,19 @@ import GoogleProvider from 'next-auth/providers/google';
 import { prisma } from '@monitor/database';
 import { loadEnv, SubscriptionStatus } from '@monitor/shared';
 
+function oauthEmailFrom(
+  user: { email?: string | null },
+  profile: unknown
+): string | undefined {
+  const fromUser = user.email?.trim();
+  if (fromUser) return fromUser.toLowerCase();
+  if (profile && typeof profile === 'object' && profile !== null && 'email' in profile) {
+    const e = (profile as { email?: string | null }).email;
+    if (typeof e === 'string' && e.trim()) return e.trim().toLowerCase();
+  }
+  return undefined;
+}
+
 function buildOAuthProviders() {
   const env = loadEnv();
   const providers = [];
@@ -30,12 +43,13 @@ function buildOAuthProviders() {
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 },
   providers: buildOAuthProviders(),
+  debug: process.env.NODE_ENV === 'development',
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (account?.provider !== 'google' && account?.provider !== 'github') {
         return false;
       }
-      const email = user.email?.toLowerCase();
+      const email = oauthEmailFrom(user, profile);
       if (!email) return false;
       let dbUser = await prisma.user.findUnique({ where: { email } });
       if (!dbUser) {
@@ -58,9 +72,11 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
       if (account?.provider === 'google' || account?.provider === 'github') {
-        const email = (user?.email ?? token.email)?.toLowerCase();
+        const email =
+          oauthEmailFrom(user ?? { email: token.email }, profile) ??
+          (typeof token.email === 'string' ? token.email.toLowerCase() : undefined);
         if (email) {
           const dbUser = await prisma.user.findUnique({ where: { email } });
           if (dbUser) {
@@ -79,6 +95,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/login',
+    error: '/auth/error',
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
