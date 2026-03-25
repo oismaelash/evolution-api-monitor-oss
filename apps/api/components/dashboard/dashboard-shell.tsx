@@ -28,9 +28,14 @@ export function DashboardShell({
   return (
     <div className="flex min-h-screen">
       <aside className="w-60 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-        <div className="mb-6 flex items-center justify-between gap-2">
+        <div className="mb-6 space-y-3">
           <div className="text-sm font-semibold text-[var(--color-accent)]">Evolution Monitor</div>
-          <LanguageSwitcher className="flex shrink-0 items-center text-xs" />
+          <div>
+            <p className="mb-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              {t('Idioma', 'Language')}
+            </p>
+            <LanguageSwitcher />
+          </div>
         </div>
         <nav className="flex flex-col gap-1">
           {nav.map((item) => {
