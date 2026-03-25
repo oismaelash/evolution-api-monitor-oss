@@ -9,6 +9,9 @@ function emptyStringToUndefined(val: unknown): unknown {
 
 const optionalUrl = z.preprocess(emptyStringToUndefined, z.string().url().optional());
 
+/** Default public repo URL for marketing / self-host links (override via OPEN_SOURCE_REPO_URL). */
+const DEFAULT_OPEN_SOURCE_REPO_URL = 'https://github.com/oismaelash/evolution-api-monitor';
+
 /** Raw env including GitHub OAuth aliases (entrevistas-style names). */
 const rawEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -52,6 +55,15 @@ const rawEnvSchema = z.object({
   PAGUE_DEV_API_KEY: z.string().optional(),
   PAGUE_DEV_BASE_URL: optionalUrl,
   BULL_BOARD_SECRET: z.string().optional(),
+  /** Public Git (or other) URL for the open-source monitor repo — marketing links. */
+  OPEN_SOURCE_REPO_URL: z.preprocess(
+    (val) => {
+      const u = emptyStringToUndefined(val);
+      if (u === undefined) return DEFAULT_OPEN_SOURCE_REPO_URL;
+      return u;
+    },
+    z.string().url(),
+  ),
 })
   .superRefine((data, ctx) => {
     const googleOAuth =

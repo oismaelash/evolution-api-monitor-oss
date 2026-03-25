@@ -2,6 +2,8 @@ import Link from 'next/link';
 
 import { Cloud, Code } from 'iconsax-react';
 
+import { loadEnv } from '@monitor/shared';
+
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
 import { getServerTranslator } from '@/lib/i18n-server';
 
@@ -9,6 +11,7 @@ const DASHBOARD_HREF = '/dashboard';
 
 export async function MarketingHeader() {
   const t = await getServerTranslator();
+  const openSourceRepoUrl = loadEnv().OPEN_SOURCE_REPO_URL;
 
   return (
     <header className="border-b border-[var(--color-border)] py-8">
@@ -43,7 +46,7 @@ export async function MarketingHeader() {
             {t('Começar', 'Get started')}
           </Link>
           <a
-            href="https://github.com"
+            href={openSourceRepoUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 transition-colors hover:text-[var(--color-text-primary)]"

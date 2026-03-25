@@ -15,6 +15,7 @@ describe('integration smoke', () => {
     });
     expect(env.REDIS_URL).toBe('redis://127.0.0.1:6379');
     expect(env.CLOUD_BILLING).toBe(false);
+    expect(env.OPEN_SOURCE_REPO_URL).toBe('https://github.com/oismaelash/evolution-api-monitor');
   });
 
   it('merges GitHub OAuth aliases into GITHUB_ID / GITHUB_SECRET', () => {

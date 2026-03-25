@@ -1,12 +1,15 @@
+import { loadEnv } from '@monitor/shared';
+
 import { getServerTranslator } from '@/lib/i18n-server';
 
 export async function MarketingFooter() {
   const t = await getServerTranslator();
+  const openSourceRepoUrl = loadEnv().OPEN_SOURCE_REPO_URL;
 
   const links = [
     { label: t('Documentação', 'Documentation'), href: '/docs' },
     { label: t('Cloud', 'Cloud'), href: '/dashboard' },
-    { label: 'GitHub', href: 'https://github.com' },
+    { label: 'GitHub', href: openSourceRepoUrl },
     { label: t('Privacidade', 'Privacy'), href: '/privacy' },
     { label: t('Termos', 'Terms'), href: '/terms' },
   ] as const;

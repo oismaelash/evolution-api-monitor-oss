@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
 import { Monitor } from 'iconsax-react';
+import { loadEnv } from '@monitor/shared';
 
 import { getServerTranslator } from '@/lib/i18n-server';
 
 export async function MarketingHero() {
   const t = await getServerTranslator();
+  const openSourceRepoUrl = loadEnv().OPEN_SOURCE_REPO_URL;
 
   return (
     <section className="py-20 sm:py-28" aria-labelledby="hero-heading">
@@ -37,7 +39,7 @@ export async function MarketingHero() {
             {t('Começar na Cloud', 'Start on Cloud')}
           </Link>
           <a
-            href="https://github.com"
+            href={openSourceRepoUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-6 py-3 text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-accent)]"

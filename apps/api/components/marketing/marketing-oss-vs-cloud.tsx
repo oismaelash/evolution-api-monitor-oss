@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
 import { Cloud, Code } from 'iconsax-react';
+import { loadEnv } from '@monitor/shared';
 
 import { getServerTranslator } from '@/lib/i18n-server';
 
 export async function MarketingOssVsCloud() {
   const t = await getServerTranslator();
+  const openSourceRepoUrl = loadEnv().OPEN_SOURCE_REPO_URL;
 
   return (
     <section
@@ -37,12 +39,12 @@ export async function MarketingOssVsCloud() {
             )}
           </p>
           <a
-            href="https://github.com"
+            href={openSourceRepoUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-6 inline-block text-sm font-semibold text-[var(--color-accent)] hover:underline"
           >
-            {t('Repositório (placeholder) →', 'Repository (placeholder) →')}
+            {t('Ver repositório no GitHub →', 'View repository on GitHub →')}
           </a>
         </div>
         <div className="rounded-xl border border-[var(--color-accent)]/30 bg-[var(--color-surface)] p-8 ring-1 ring-[var(--color-accent)]/20">
