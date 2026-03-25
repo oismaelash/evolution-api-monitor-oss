@@ -1,5 +1,5 @@
 ---
-description: Após atividades importantes — commit com mensagem clara e push ao remote
+description: Após atividades importantes — commit em inglês, mensagem clara, push ao remote
 globs: **/*
 alwaysApply: true
 ---
@@ -23,7 +23,7 @@ Não é obrigatório commitar por cada arquivo editado em isolamento; o critéri
 
 1. `git status` — revisar o que mudou.
 2. `git add` apenas o necessário (evitar `.env`, secrets, artefatos gerados fora do esperado).
-3. `git commit -m "..."` com mensagem no imperativo, escopo claro (ex.: `fix(worker): classificar timeout como ErrorType`).
+3. `git commit -m "..."` com mensagem **em inglês**, no imperativo, escopo claro (ex.: `fix(worker): classify timeout as ErrorType`).
 4. `git push` para o branch atual (upstream configurado).
 
 ## Exceções e limites
@@ -34,5 +34,6 @@ Não é obrigatório commitar por cada arquivo editado em isolamento; o critéri
 
 ## Anti-padrões
 
+- Mensagens de commit em português ou outro idioma que não o inglês — o histórico do repositório usa inglês de forma consistente.
 - Deixar dias de alterações locais sem commit após uma entrega “pronta”.
 - Um único commit gigante com temas misturados quando dois commits separados deixariam o histórico legível.

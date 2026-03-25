@@ -27,7 +27,7 @@ Plataforma SaaS + Open Source para monitorar instâncias WhatsApp conectadas via
 5. Toda falha de job worker DEVE ser classificada como ErrorType enum
 6. Todo log DEVE ser structured JSON (nunca console.log com string)
 7. Redis lock OBRIGATÓRIO antes de qualquer operação de estado em Number
-8. Após atividade importante concluída: commit (mensagem clara) e `git push` — ver `011-git-commit-push.mdc`
+8. Após atividade importante concluída: commit (mensagem clara **em inglês**) e `git push` — ver `011-git-commit-push.mdc`
 
 ## Variáveis de ambiente críticas
 - DATABASE_URL, REDIS_URL, NEXTAUTH_SECRET, ENCRYPTION_KEY (obrigatórias em todos os ambientes)
