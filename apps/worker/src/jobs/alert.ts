@@ -93,7 +93,10 @@ export function createAlertWorker(connection: RedisClient) {
         const env = loadEnv();
         const timeouts = getEvolutionTimeoutsMs();
         const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const evo = new EvolutionClient(number.project.evolutionUrl, apiKey, timeouts);
+        const evo = new EvolutionClient(number.project.evolutionUrl, apiKey, {
+          ...timeouts,
+          flavor: number.project.evolutionFlavor,
+        });
 
         let qrBase64: string | undefined;
         let pairingCode: string | undefined;

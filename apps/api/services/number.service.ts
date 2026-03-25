@@ -2,8 +2,10 @@ import { prisma } from '@monitor/database';
 import {
   AppError,
   EvolutionClient,
+  EvolutionFlavor,
   addNumberSchema,
   buildPaginationMeta,
+  parseEvolutionInstanceNames,
   updateNumberSchema,
 } from '@monitor/shared';
 import { decryptFromStorage } from '@/lib/encryption';
@@ -19,31 +21,6 @@ async function ensureNumberOwned(userId: string, numberId: string) {
     throw new AppError('UNKNOWN', 'Number not found', 404);
   }
   return n;
-}
-
-function parseInstanceNames(raw: unknown): string[] {
-  const names: string[] = [];
-  const pushName = (o: unknown) => {
-    if (!o || typeof o !== 'object') return;
-    const r = o as Record<string, unknown>;
-    const n = r.instanceName ?? r.name;
-    if (typeof n === 'string' && n.length > 0) names.push(n);
-  };
-  if (Array.isArray(raw)) {
-    raw.forEach(pushName);
-    return [...new Set(names)];
-  }
-  if (raw && typeof raw === 'object') {
-    const r = raw as Record<string, unknown>;
-    if (Array.isArray(r.instance)) {
-      r.instance.forEach(pushName);
-    }
-    if (Array.isArray(r.instances)) {
-      r.instances.forEach(pushName);
-    }
-    pushName(raw);
-  }
-  return [...new Set(names)];
 }
 
 export const NumberService = {
@@ -76,9 +53,9 @@ export const NumberService = {
       throw new AppError('UNKNOWN', 'Project not found', 404);
     }
     const apiKey = decryptFromStorage(project.evolutionApiKey);
-    const client = new EvolutionClient(project.evolutionUrl, apiKey);
+    const client = new EvolutionClient(project.evolutionUrl, apiKey, { flavor: project.evolutionFlavor });
     const raw = await client.fetchInstances();
-    const names = parseInstanceNames(raw);
+    const names = parseEvolutionInstanceNames(raw);
     const existingRows =
       names.length === 0
         ? []
@@ -107,9 +84,9 @@ export const NumberService = {
     }
     const unique = [...new Set(instanceNames)];
     const apiKey = decryptFromStorage(project.evolutionApiKey);
-    const client = new EvolutionClient(project.evolutionUrl, apiKey);
+    const client = new EvolutionClient(project.evolutionUrl, apiKey, { flavor: project.evolutionFlavor });
     const raw = await client.fetchInstances();
-    const names = parseInstanceNames(raw);
+    const names = parseEvolutionInstanceNames(raw);
     const allowed = new Set(names);
     for (const instanceName of unique) {
       if (!allowed.has(instanceName)) {
@@ -217,7 +194,14 @@ export const NumberService = {
   },
 
   async restart(userId: string, numberId: string) {
-    await ensureNumberOwned(userId, numberId);
+    const n = await ensureNumberOwned(userId, numberId);
+    if (n.project.evolutionFlavor === EvolutionFlavor.EVOLUTION_GO) {
+      throw new AppError(
+        'UNKNOWN',
+        'Restart is not available for Evolution Go. Reconnect from your Evolution server if needed.',
+        400,
+      );
+    }
     const { enqueueManualRestart } = await import('@/lib/queues');
     await enqueueManualRestart(numberId);
     return { ok: true };

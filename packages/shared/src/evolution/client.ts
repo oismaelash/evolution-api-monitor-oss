@@ -1,4 +1,4 @@
-import { ErrorType } from '../enums.js';
+import { ErrorType, EvolutionFlavor } from '../enums.js';
 
 export type HealthOk = { ok: true; responseTimeMs: number; raw?: unknown };
 export type HealthErr = {
@@ -27,6 +27,13 @@ export function isConnectionClosedLikeHealthFailure(result: HealthErr): boolean 
 const DEFAULT_PING_MS = 5000;
 const DEFAULT_RESTART_MS = 10_000;
 
+export type EvolutionClientOptions = {
+  pingTimeoutMs?: number;
+  restartTimeoutMs?: number;
+  /** Defaults to Evolution API v2 (Node) routes. */
+  flavor?: EvolutionFlavor;
+};
+
 async function fetchWithTimeout(
   url: string,
   init: RequestInit | undefined,
@@ -53,18 +60,69 @@ export function classifyHttpError(status: number, bodyText: string): (typeof Err
   return ErrorType.UNKNOWN;
 }
 
+function headersApiKey(apiKey: string): Record<string, string> {
+  return {
+    apikey: apiKey,
+    'Content-Type': 'application/json',
+  };
+}
+
+function unwrapDataPayload(raw: unknown): Record<string, unknown> {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const o = raw as Record<string, unknown>;
+    if (o.data && typeof o.data === 'object' && o.data !== null && !Array.isArray(o.data)) {
+      return o.data as Record<string, unknown>;
+    }
+    return o;
+  }
+  return {};
+}
+
+function getBoolCaseInsensitive(obj: Record<string, unknown>, key: string): boolean | undefined {
+  const want = key.toLowerCase();
+  for (const [k, v] of Object.entries(obj)) {
+    if (k.toLowerCase() === want && typeof v === 'boolean') return v;
+  }
+  return undefined;
+}
+
+function goInstanceRows(raw: unknown): Record<string, unknown>[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((x): x is Record<string, unknown> => x !== null && typeof x === 'object' && !Array.isArray(x));
+  }
+  if (raw && typeof raw === 'object') {
+    const r = raw as Record<string, unknown>;
+    const list = r.data ?? r.instances ?? r.instance;
+    if (Array.isArray(list)) {
+      return list.filter(
+        (x): x is Record<string, unknown> => x !== null && typeof x === 'object' && !Array.isArray(x)
+      );
+    }
+  }
+  return [];
+}
+
+function dataUriToBase64(dataUri: string): string {
+  const m = /^data:image\/png;base64,(.+)$/i.exec(dataUri.trim());
+  if (m?.[1]) return m[1];
+  const comma = dataUri.indexOf('base64,');
+  if (comma !== -1) return dataUri.slice(comma + 7);
+  return dataUri;
+}
+
 export class EvolutionClient {
+  private readonly flavor: EvolutionFlavor;
+
   constructor(
     private readonly baseUrl: string,
     private readonly apiKey: string,
-    private readonly opts?: { pingTimeoutMs?: number; restartTimeoutMs?: number }
-  ) {}
+    private readonly opts?: EvolutionClientOptions
+  ) {
+    this.flavor = opts?.flavor ?? EvolutionFlavor.EVOLUTION_V2;
+  }
 
   private headers(): Record<string, string> {
-    return {
-      apikey: this.apiKey,
-      'Content-Type': 'application/json',
-    };
+    return headersApiKey(this.apiKey);
   }
 
   private url(path: string): string {
@@ -72,8 +130,10 @@ export class EvolutionClient {
   }
 
   async fetchInstances(): Promise<unknown> {
+    const path =
+      this.flavor === EvolutionFlavor.EVOLUTION_GO ? '/instance/all' : '/instance/fetchInstances';
     const res = await fetchWithTimeout(
-      this.url('/instance/fetchInstances'),
+      this.url(path),
       { headers: this.headers() },
       this.opts?.pingTimeoutMs ?? DEFAULT_PING_MS
     );
@@ -82,6 +142,43 @@ export class EvolutionClient {
       throw new Error(`fetchInstances failed: ${res.status} ${t}`);
     }
     return res.json() as Promise<unknown>;
+  }
+
+  /**
+   * Evolution Go: resolve instance token from GET /instance/all using global API key.
+   */
+  private async resolveGoInstanceToken(instanceName: string): Promise<{
+    token: string | null;
+    rawList: unknown;
+  }> {
+    const res = await fetchWithTimeout(
+      this.url('/instance/all'),
+      { headers: this.headers() },
+      this.opts?.pingTimeoutMs ?? DEFAULT_PING_MS
+    );
+    const text = await res.text();
+    let raw: unknown = {};
+    try {
+      raw = JSON.parse(text) as unknown;
+    } catch {
+      raw = { body: text };
+    }
+    if (!res.ok) {
+      const bodyText = typeof raw === 'object' && raw !== null ? JSON.stringify(raw) : text;
+      return {
+        token: null,
+        rawList: { status: res.status, body: raw, errorType: classifyHttpError(res.status, bodyText) },
+      };
+    }
+    const rows = goInstanceRows(raw);
+    for (const row of rows) {
+      const name = row.name ?? row.instanceName;
+      const token = row.token;
+      if (typeof name === 'string' && name === instanceName && typeof token === 'string' && token.length > 0) {
+        return { token, rawList: raw };
+      }
+    }
+    return { token: null, rawList: raw };
   }
 
   async getConnectionState(
@@ -145,9 +242,84 @@ export class EvolutionClient {
   }
 
   /**
-   * Dual health: connectionState open + setPresence success (201).
+   * Evolution Go: GET /instance/status with instance token as apikey.
+   */
+  private async checkHealthGo(instanceName: string): Promise<HealthResult> {
+    const started = Date.now();
+    try {
+      const { token, rawList } = await this.resolveGoInstanceToken(instanceName);
+      if (token === null) {
+        const errMeta = rawList as Record<string, unknown>;
+        const et = errMeta.errorType;
+        if (typeof et === 'string' && (Object.values(ErrorType) as string[]).includes(et)) {
+          return {
+            ok: false,
+            errorType: et as (typeof ErrorType)[keyof typeof ErrorType],
+            message: 'could not list instances',
+            raw: rawList,
+          };
+        }
+        return {
+          ok: false,
+          errorType: ErrorType.INSTANCE_NOT_FOUND,
+          message: `Evolution Go instance "${instanceName}" not found in /instance/all`,
+          raw: rawList,
+        };
+      }
+
+      const res = await fetchWithTimeout(
+        this.url('/instance/status'),
+        { headers: headersApiKey(token) },
+        this.opts?.pingTimeoutMs ?? DEFAULT_PING_MS
+      );
+      const text = await res.text();
+      let raw: unknown = {};
+      try {
+        raw = JSON.parse(text) as unknown;
+      } catch {
+        raw = { body: text };
+      }
+      if (!res.ok) {
+        const bodyText = typeof raw === 'object' && raw !== null ? JSON.stringify(raw) : text;
+        return {
+          ok: false,
+          errorType: classifyHttpError(res.status, bodyText),
+          message: 'Evolution Go /instance/status failed',
+          raw: { status: res.status, body: raw },
+        };
+      }
+      const data = unwrapDataPayload(raw);
+      const connected = getBoolCaseInsensitive(data, 'Connected');
+      const loggedIn = getBoolCaseInsensitive(data, 'LoggedIn');
+      const responseTimeMs = Date.now() - started;
+      if (connected === true && loggedIn === true) {
+        return { ok: true, responseTimeMs, raw: data };
+      }
+      return {
+        ok: false,
+        errorType: ErrorType.UNKNOWN,
+        message: `Evolution Go status not ready (Connected=${String(connected)}, LoggedIn=${String(loggedIn)})`,
+        raw: data,
+      };
+    } catch (e) {
+      const err = e as Error;
+      const name = err?.name ?? '';
+      const msg = err?.message ?? String(e);
+      if (name === 'AbortError' || msg.includes('aborted')) {
+        return { ok: false, errorType: ErrorType.NETWORK_ERROR, message: 'timeout', raw: { msg } };
+      }
+      return { ok: false, errorType: ErrorType.NETWORK_ERROR, message: msg, raw: { msg } };
+    }
+  }
+
+  /**
+   * Dual health (v2): connectionState open + setPresence success (201).
+   * Evolution Go: GET /instance/status with per-instance token.
    */
   async checkHealth(instanceName: string): Promise<HealthResult> {
+    if (this.flavor === EvolutionFlavor.EVOLUTION_GO) {
+      return this.checkHealthGo(instanceName);
+    }
     const started = Date.now();
     try {
       const cs = await this.getConnectionState(instanceName);
@@ -190,6 +362,9 @@ export class EvolutionClient {
   }
 
   async restart(instanceName: string): Promise<void> {
+    if (this.flavor === EvolutionFlavor.EVOLUTION_GO) {
+      throw new Error('Evolution Go does not expose instance restart; use reconnect or pairing in the Evolution server UI.');
+    }
     const enc = encodeURIComponent(instanceName);
     const res = await fetchWithTimeout(
       this.url(`/instance/restart/${enc}`),
@@ -202,7 +377,13 @@ export class EvolutionClient {
     }
   }
 
+  /**
+   * v2: GET /instance/connect/:name. Go: GET /instance/qr with instance token.
+   */
   async getConnect(instanceName: string): Promise<{ qrBase64?: string; pairingCode?: string; raw: unknown }> {
+    if (this.flavor === EvolutionFlavor.EVOLUTION_GO) {
+      return this.getConnectGo(instanceName);
+    }
     const enc = encodeURIComponent(instanceName);
     const res = await fetchWithTimeout(
       this.url(`/instance/connect/${enc}`),
@@ -217,6 +398,39 @@ export class EvolutionClient {
     if (raw.qrcode && typeof raw.qrcode === 'object' && raw.qrcode !== null) {
       const q = raw.qrcode as Record<string, unknown>;
       if (typeof q.base64 === 'string') qrBase64 = q.base64;
+    }
+    return { qrBase64, pairingCode, raw };
+  }
+
+  private async getConnectGo(instanceName: string): Promise<{
+    qrBase64?: string;
+    pairingCode?: string;
+    raw: unknown;
+  }> {
+    const { token, rawList } = await this.resolveGoInstanceToken(instanceName);
+    if (token === null) {
+      return { raw: rawList };
+    }
+    const res = await fetchWithTimeout(
+      this.url('/instance/qr'),
+      { headers: headersApiKey(token) },
+      this.opts?.pingTimeoutMs ?? DEFAULT_PING_MS
+    );
+    const raw = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const data = unwrapDataPayload(raw);
+    let qrBase64: string | undefined;
+    let pairingCode: string | undefined;
+    const qrcode =
+      (typeof data.Qrcode === 'string' && data.Qrcode) ||
+      (typeof (data as { qrcode?: string }).qrcode === 'string' && (data as { qrcode: string }).qrcode);
+    if (typeof qrcode === 'string' && qrcode.length > 0) {
+      qrBase64 = dataUriToBase64(qrcode);
+    }
+    const code =
+      (typeof data.Code === 'string' && data.Code) ||
+      (typeof (data as { code?: string }).code === 'string' && (data as { code: string }).code);
+    if (typeof code === 'string' && code.length > 0) {
+      pairingCode = code;
     }
     return { qrBase64, pairingCode, raw };
   }

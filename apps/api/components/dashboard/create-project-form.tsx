@@ -3,7 +3,12 @@
 import { ArrowDown2 } from 'iconsax-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { composedE164FromDdiFields, createProjectSchema, EvolutionFlavor } from '@monitor/shared';
+import {
+  composedE164FromDdiFields,
+  createProjectSchema,
+  EvolutionFlavor,
+  type EvolutionFlavor as EvolutionFlavorType,
+} from '@monitor/shared';
 import { useT } from '@/components/i18n/i18n-provider';
 import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { ProjectAlertPhoneSection } from '@/components/dashboard/project-alert-phone-section';
@@ -25,6 +30,7 @@ export function CreateProjectForm() {
   const [evolutionApiKey, setEvolutionApiKey] = useState('');
   const [alertDdi, setAlertDdi] = useState('');
   const [alertNational, setAlertNational] = useState('');
+  const [evolutionFlavor, setEvolutionFlavor] = useState<EvolutionFlavorType>(EvolutionFlavor.EVOLUTION_V2);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +56,7 @@ export function CreateProjectForm() {
     }
     const raw = {
       name: name.trim(),
-      evolutionFlavor: EvolutionFlavor.EVOLUTION_V2,
+      evolutionFlavor,
       evolutionUrl: evolutionUrl.trim(),
       evolutionApiKey: evolutionApiKey.trim(),
       alertPhone: alertResult === 'empty' ? undefined : alertResult,
@@ -130,7 +136,11 @@ export function CreateProjectForm() {
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <EvolutionFlavorFields idSuffix="create" />
+            <EvolutionFlavorFields
+              idSuffix="create"
+              flavor={evolutionFlavor}
+              onFlavorChange={setEvolutionFlavor}
+            />
           </div>
           <div className="sm:col-span-2">
             <FormLabelWithHelp

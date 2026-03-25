@@ -1,7 +1,13 @@
 import { Queue, Worker, type Job } from 'bullmq';
 import { randomUUID } from 'node:crypto';
 import { prisma } from '@monitor/database';
-import { EvolutionClient, LogLevel, NumberState, getEvolutionTimeoutsMs } from '@monitor/shared';
+import {
+  EvolutionClient,
+  EvolutionFlavor,
+  LogLevel,
+  NumberState,
+  getEvolutionTimeoutsMs,
+} from '@monitor/shared';
 import { acquireLock, releaseLock } from '../lock.js';
 import type { RedisClient } from '../redis.js';
 import { getRedis } from '../redis.js';
@@ -33,9 +39,16 @@ export function createRestartWorker(connection: RedisClient) {
         if (!number?.monitored || !number.project.config) {
           return;
         }
+        if (number.project.evolutionFlavor === EvolutionFlavor.EVOLUTION_GO) {
+          logJson('info', 'restart_skipped_evolution_go', { numberId });
+          return;
+        }
         const timeouts = getEvolutionTimeoutsMs();
         const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, timeouts);
+        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, {
+          ...timeouts,
+          flavor: number.project.evolutionFlavor,
+        });
         await client.restart(number.instanceName);
         await prisma.number.update({
           where: { id: numberId },

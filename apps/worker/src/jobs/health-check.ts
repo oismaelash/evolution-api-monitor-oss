@@ -4,6 +4,7 @@ import { prisma } from '@monitor/database';
 import {
   ErrorType,
   EvolutionClient,
+  EvolutionFlavor,
   FAILURES_BEFORE_RESTART,
   HealthStatus,
   LogLevel,
@@ -98,7 +99,10 @@ export function createHealthCheckWorker(connection: RedisClient) {
 
         const timeouts = getEvolutionTimeoutsMs();
         const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, timeouts);
+        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, {
+          ...timeouts,
+          flavor: number.project.evolutionFlavor,
+        });
 
         const result = await client.checkHealth(number.instanceName);
         const checkedAt = new Date();
@@ -189,6 +193,17 @@ export function createHealthCheckWorker(connection: RedisClient) {
           });
           const alertQueue = new Queue('alert', { connection: connection as never });
           await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
+          return;
+        }
+
+        if (number.project.evolutionFlavor === EvolutionFlavor.EVOLUTION_GO) {
+          await prisma.number.update({
+            where: { id: numberId },
+            data: { state: NumberState.ERROR as never, restartAttempts: 0 },
+          });
+          const alertQueue = new Queue('alert', { connection: connection as never });
+          await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
+          logJson('info', 'alert_enqueued_evolution_go_first_failure', { numberId, errorType: prismaEt });
           return;
         }
 

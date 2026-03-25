@@ -134,3 +134,12 @@ private parseQR(response: Response, body: unknown): QRResult {
 - SEMPRE usar `encodeURIComponent(instanceName)` na URL
 - instanceName pode ter espaços e caracteres especiais
 - O nome na Evolution é case-sensitive — guardar exatamente como vem da fetchInstances
+
+## Evolution Go (`EvolutionFlavor.EVOLUTION_GO`)
+
+Implementação real: `packages/shared/src/evolution/client.ts` (opção `flavor` no construtor).
+
+- **Listar instâncias**: `GET /instance/all` (não `/instance/fetchInstances`).
+- **Token por instância**: com a API key global, `GET /instance/all` → localizar `name` → usar `token` como header `apikey` para `GET /instance/status` e `GET /instance/qr`.
+- **Saúde**: `Connected` e `LoggedIn` verdadeiros no corpo (envelope `data`); sem `connectionState`/`setPresence` da v2.
+- **Restart**: não existe na API Go — `restart()` falha; worker `restart` ignora Go; health-check alerta na **primeira** falha (sem fila restart).

@@ -2,10 +2,10 @@
 name: evolution-api-integration
 description: >-
   Integração Evolution API via EvolutionClient no worker/servidor: header apikey, instance name URL-encoded,
-  health check duplo (connectionState open + setPresence), timeouts, parsing defensivo. Proibido chamar
-  Evolution do browser. Evolution Go: paths /instance/all, /instance/qr, /instance/status (ver seção no SKILL).
-  Índice oficial: docs.evolutionfoundation.com.br/llms.txt. Use ao implementar health-check, restart, QR,
-  fetchInstances, ou regra 009-evolution-api.
+  v2 health duplo (connectionState open + setPresence); Evolution Go (flavor) usa /instance/all + token por
+  instância, /instance/status, /instance/qr; Go alerta na primeira falha sem restart. Proibido chamar
+  Evolution do browser. Índice oficial: docs.evolutionfoundation.com.br/llms.txt. Use ao implementar
+  health-check, restart, QR, fetchInstances, ou regra 009-evolution-api.
 ---
 
 # Evolution API — integração
@@ -67,3 +67,9 @@ Documentação de página:
 ### Outras páginas úteis (mesmo índice)
 
 - [Getting started](https://docs.evolutionfoundation.com.br/evolution-go/getting-started.md), [Installation](https://docs.evolutionfoundation.com.br/evolution-go/installation.md), [Create a new instance](https://docs.evolutionfoundation.com.br/evolution-go/create-a-new-instance.md), [Connect / Disconnect / Logout](https://docs.evolutionfoundation.com.br/evolution-go/connect-to-instance.md) (links no `llms.txt` sob `evolution-go/`).
+
+### Comportamento no Monitor (implementação)
+
+- `Project.evolutionFlavor`: `EVOLUTION_V2` (Node) vs `EVOLUTION_GO`. `EvolutionClient` em `packages/shared` recebe `flavor` nas opções do construtor.
+- **Go**: `GET /instance/all` com API key global → localizar linha com `name` = `instanceName` → usar `token` como `apikey` em `GET /instance/status` e `GET /instance/qr`. Saudável quando `Connected` e `LoggedIn` são verdadeiros no payload (parsing defensivo de chaves).
+- **Go não tem restart na API**: `restart()` lança erro; worker `restart` ignora projetos Go; health-check **não** enfileira restart para Go — na **primeira** falha de saúde já enfileira **alerta** (sem `FAILURES_BEFORE_RESTART` / `maxRetries`).

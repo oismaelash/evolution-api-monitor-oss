@@ -7,15 +7,15 @@ const fieldId = (suffix: string) => `evolution-flavor-${suffix}`;
 
 export function EvolutionFlavorFields({
   idSuffix = 'default',
-  initialFlavor = EvolutionFlavor.EVOLUTION_V2,
+  flavor,
+  onFlavorChange,
 }: {
   idSuffix?: string;
-  initialFlavor?: EvolutionFlavorType;
+  flavor: EvolutionFlavorType;
+  onFlavorChange: (value: EvolutionFlavorType) => void;
 }) {
   const t = useT();
   const groupName = `evolution-flavor-${idSuffix}`;
-  const v2Checked = initialFlavor === EvolutionFlavor.EVOLUTION_V2;
-  const goChecked = initialFlavor === EvolutionFlavor.EVOLUTION_GO;
   return (
     <fieldset className="space-y-3">
       <legend className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -23,8 +23,8 @@ export function EvolutionFlavorFields({
       </legend>
       <p className="text-sm text-[var(--color-text-muted)]">
         {t(
-          'Escolha a linha do produto instalada no seu servidor. Só Evolution API v2 é suportada por enquanto.',
-          'Choose which Evolution product line your server runs. Only Evolution API v2 is supported for now.',
+          'Escolha a linha do produto instalada no seu servidor. Evolution Go usa outra API; alertas disparam na primeira falha de conexão (sem reinício automático).',
+          'Choose which Evolution product line your server runs. Evolution Go uses a different API; alerts fire on the first connection failure (no automatic restart).',
         )}
       </p>
       <div className="space-y-2">
@@ -37,7 +37,8 @@ export function EvolutionFlavorFields({
             type="radio"
             name={groupName}
             value={EvolutionFlavor.EVOLUTION_V2}
-            defaultChecked={v2Checked}
+            checked={flavor === EvolutionFlavor.EVOLUTION_V2}
+            onChange={() => onFlavorChange(EvolutionFlavor.EVOLUTION_V2)}
             className="mt-0.5"
           />
           <span>
@@ -54,16 +55,15 @@ export function EvolutionFlavorFields({
         </label>
         <label
           htmlFor={fieldId(`${idSuffix}-go`)}
-          className="flex cursor-not-allowed items-start gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5 opacity-60"
-          title={t('Em breve', 'Coming soon')}
+          className="flex cursor-pointer items-start gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2.5"
         >
           <input
             id={fieldId(`${idSuffix}-go`)}
             type="radio"
             name={groupName}
             value={EvolutionFlavor.EVOLUTION_GO}
-            defaultChecked={goChecked}
-            disabled
+            checked={flavor === EvolutionFlavor.EVOLUTION_GO}
+            onChange={() => onFlavorChange(EvolutionFlavor.EVOLUTION_GO)}
             className="mt-0.5"
           />
           <span>
@@ -71,7 +71,10 @@ export function EvolutionFlavorFields({
               {t('Evolution Go', 'Evolution Go')}
             </span>
             <span className="block text-xs text-[var(--color-text-muted)]">
-              {t('Disponível em breve.', 'Coming soon.')}
+              {t(
+                'Implementação Go (documentação Evolution Foundation).',
+                'Go implementation (Evolution Foundation docs).',
+              )}
             </span>
           </span>
         </label>

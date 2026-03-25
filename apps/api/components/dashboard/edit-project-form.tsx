@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   composedE164FromDdiFields,
-  EvolutionFlavor,
   updateProjectSchema,
   type EvolutionFlavor as EvolutionFlavorType,
 } from '@monitor/shared';
@@ -43,11 +42,16 @@ export function EditProjectForm({
   const [evolutionApiKey, setEvolutionApiKey] = useState('');
   const [alertDdi, setAlertDdi] = useState(initialAlertDdi);
   const [alertNational, setAlertNational] = useState(initialAlertNational);
+  const [evolutionFlavor, setEvolutionFlavor] = useState(initialEvolutionFlavor);
 
   useEffect(() => {
     setAlertDdi(initialAlertDdi);
     setAlertNational(initialAlertNational);
   }, [initialAlertDdi, initialAlertNational]);
+
+  useEffect(() => {
+    setEvolutionFlavor(initialEvolutionFlavor);
+  }, [initialEvolutionFlavor]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,7 +78,7 @@ export function EditProjectForm({
     }
     const body: Record<string, unknown> = {
       name: name.trim(),
-      evolutionFlavor: EvolutionFlavor.EVOLUTION_V2,
+      evolutionFlavor,
       evolutionUrl: evolutionUrl.trim(),
       alertPhone: alertResult === 'empty' ? null : alertResult,
     };
@@ -112,7 +116,11 @@ export function EditProjectForm({
 
   return (
     <form onSubmit={(e) => void onSubmit(e)} className="space-y-4">
-      <EvolutionFlavorFields idSuffix={projectId} initialFlavor={initialEvolutionFlavor} />
+      <EvolutionFlavorFields
+        idSuffix={projectId}
+        flavor={evolutionFlavor}
+        onFlavorChange={setEvolutionFlavor}
+      />
       <div>
         <FormLabelWithHelp
           htmlFor={`edit-name-${projectId}`}

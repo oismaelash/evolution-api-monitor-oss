@@ -3,11 +3,11 @@ import { z } from 'zod';
 import { EvolutionFlavor } from '../enums.js';
 import { e164PhoneSchema } from '../phone-e164.js';
 
-const evolutionFlavorCreateSchema = z.literal(EvolutionFlavor.EVOLUTION_V2);
+const evolutionFlavorSchema = z.nativeEnum(EvolutionFlavor);
 
 export const createProjectSchema = z.object({
   name: z.string().min(1).max(200),
-  evolutionFlavor: evolutionFlavorCreateSchema.default(EvolutionFlavor.EVOLUTION_V2),
+  evolutionFlavor: evolutionFlavorSchema.default(EvolutionFlavor.EVOLUTION_V2),
   evolutionUrl: z.string().url(),
   evolutionApiKey: z.string().min(1),
   alertPhone: z.preprocess(
@@ -23,7 +23,7 @@ export const createProjectSchema = z.object({
 
 export const updateProjectSchema = z.object({
   name: z.string().min(1).max(200).optional(),
-  evolutionFlavor: evolutionFlavorCreateSchema.optional(),
+  evolutionFlavor: evolutionFlavorSchema.optional(),
   evolutionUrl: z.string().url().optional(),
   evolutionApiKey: z.string().min(1).optional(),
   alertPhone: z.preprocess(
