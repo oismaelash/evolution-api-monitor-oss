@@ -51,7 +51,7 @@ export function DeleteProjectButton({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMsg(apiErrorMessage(data));
+        setMsg(apiErrorMessage(data, t));
         return;
       }
       router.push('/projects');

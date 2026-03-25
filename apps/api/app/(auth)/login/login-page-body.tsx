@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import {
-  AUTH_ERROR_HINTS,
-  normalizeAuthErrorParam,
-} from '@/lib/auth-error-messages';
+
+import { useT } from '@/components/i18n/i18n-provider';
+import { LanguageSwitcher } from '@/components/i18n/language-switcher';
+import { AUTH_ERROR_HINTS, normalizeAuthErrorParam } from '@/lib/auth-error-messages';
 
 function GoogleLogo({ className }: { className?: string }) {
   return (
@@ -40,20 +40,26 @@ function GitHubLogo({ className }: { className?: string }) {
 }
 
 export function LoginPageBody() {
+  const t = useT();
   const searchParams = useSearchParams();
   const code = normalizeAuthErrorParam(searchParams.get('error'));
   const hint = code ? AUTH_ERROR_HINTS[code] ?? AUTH_ERROR_HINTS.Default : null;
   const origin =
     typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-  const hintResolved =
-    hint?.replaceAll('{origin}', origin) ?? null;
+  const hintResolved = hint ? t(hint.pt, hint.en).replaceAll('{origin}', origin) : null;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4">
+      <div className="mb-6 flex w-full max-w-md justify-end">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-8">
-        <h1 className="mb-2 text-xl font-semibold">Sign in</h1>
+        <h1 className="mb-2 text-xl font-semibold">{t('Entrar', 'Sign in')}</h1>
         <p className="mb-6 text-sm text-[var(--color-text-muted)]">
-          Use your Google or GitHub account to access the dashboard.
+          {t(
+            'Use sua conta Google ou GitHub para acessar o painel.',
+            'Use your Google or GitHub account to access the dashboard.',
+          )}
         </p>
         {code ? (
           <div
@@ -73,7 +79,7 @@ export function LoginPageBody() {
             className="flex items-center justify-center gap-3 rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
           >
             <GoogleLogo className="h-5 w-5 shrink-0" />
-            Continue with Google
+            {t('Continuar com Google', 'Continue with Google')}
           </button>
           <button
             type="button"
@@ -81,12 +87,12 @@ export function LoginPageBody() {
             className="flex items-center justify-center gap-3 rounded-md border border-[var(--color-border)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)]"
           >
             <GitHubLogo className="h-5 w-5 shrink-0" />
-            Continue with GitHub
+            {t('Continuar com GitHub', 'Continue with GitHub')}
           </button>
         </div>
         <p className="mt-6 text-center text-sm text-[var(--color-text-muted)]">
           <Link href="/" className="text-[var(--color-accent)] hover:underline">
-            Back to home
+            {t('Voltar ao início', 'Back to home')}
           </Link>
         </p>
       </div>

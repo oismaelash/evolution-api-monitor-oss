@@ -69,7 +69,7 @@ export function ProjectConfigForm({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMsg(apiErrorMessage(data));
+        setMsg(apiErrorMessage(data, t));
         return;
       }
       setOk(t('Configurações de monitoramento salvas.', 'Monitoring settings saved.'));

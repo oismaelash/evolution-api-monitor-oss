@@ -35,7 +35,7 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         error?: unknown;
       };
       if (!res.ok) {
-        setPreviewError(apiErrorMessage(data));
+        setPreviewError(apiErrorMessage(data, t));
         return;
       }
       const list = Array.isArray(data.instances) ? data.instances : [];
@@ -91,7 +91,7 @@ export function SyncInstancesButton({ projectId }: { projectId: string }) {
         error?: unknown;
       };
       if (!res.ok) {
-        setMsg(apiErrorMessage(data));
+        setMsg(apiErrorMessage(data, t));
         return;
       }
       const synced = data.synced ?? 0;

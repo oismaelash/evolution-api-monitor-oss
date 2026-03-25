@@ -124,7 +124,7 @@ export function ProjectAlertsForm({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setMsg(apiErrorMessage(data));
+        setMsg(apiErrorMessage(data, t));
         return;
       }
       setSmtpPass('');

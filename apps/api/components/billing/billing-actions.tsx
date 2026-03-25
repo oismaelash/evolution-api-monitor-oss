@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { apiErrorMessage } from '@/components/dashboard/api-error-message';
 import { useT } from '@/components/i18n/i18n-provider';
 
 export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) {
@@ -15,7 +16,7 @@ export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) 
       const res = await fetch('/api/billing/checkout', { method: 'POST' });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok) {
-        setErr(data.error ?? t('Falha no checkout', 'Checkout failed'));
+        setErr(apiErrorMessage(data, t));
         return;
       }
       if (data.url) {
@@ -35,7 +36,7 @@ export function BillingActions({ billingEnabled }: { billingEnabled: boolean }) 
       const res = await fetch('/api/billing/portal', { method: 'POST' });
       const data = (await res.json()) as { url?: string; error?: string };
       if (!res.ok) {
-        setErr(data.error ?? t('Falha no portal', 'Portal failed'));
+        setErr(apiErrorMessage(data, t));
         return;
       }
       if (data.url) {

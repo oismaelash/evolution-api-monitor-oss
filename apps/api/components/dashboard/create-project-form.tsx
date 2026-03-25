@@ -46,7 +46,7 @@ export function CreateProjectForm() {
       });
       const data = (await res.json().catch(() => ({}))) as { id?: string; error?: unknown };
       if (!res.ok) {
-        setMsg(apiErrorMessage(data));
+        setMsg(apiErrorMessage(data, t));
         return;
       }
       if (data.id) {

@@ -1,15 +1,12 @@
 import { Suspense } from 'react';
+
+import { LoginLoadingFallback } from '@/components/auth/login-loading-fallback';
+
 import { LoginPageBody } from './login-page-body';
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-[var(--color-text-muted)]">
-          Loading…
-        </div>
-      }
-    >
+    <Suspense fallback={<LoginLoadingFallback />}>
       <LoginPageBody />
     </Suspense>
   );
