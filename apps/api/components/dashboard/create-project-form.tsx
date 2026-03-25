@@ -90,7 +90,7 @@ export function CreateProjectForm() {
     <form
       id="create-project"
       onSubmit={(e) => void onSubmit(e)}
-      className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
+      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]"
     >
       <button
         type="button"
@@ -98,7 +98,7 @@ export function CreateProjectForm() {
         aria-expanded={open}
         aria-controls="create-project-panel"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-[var(--color-bg)]/40 sm:px-6"
+        className={`relative z-0 flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-[var(--color-bg)]/40 sm:px-6 ${open ? 'rounded-t-lg' : 'rounded-lg'}`}
       >
         <span className="text-lg font-medium text-[var(--color-text-primary)]">
           {t('Novo projeto', 'New project')}
@@ -116,7 +116,11 @@ export function CreateProjectForm() {
         role="region"
         aria-labelledby="create-project-heading"
         hidden={!open}
-        className={open ? 'border-t border-[var(--color-border)] px-6 pb-6 pt-4' : undefined}
+        className={
+          open
+            ? 'relative z-20 rounded-b-lg border-t border-[var(--color-border)] px-6 pb-6 pt-4'
+            : undefined
+        }
       >
         <p className="mb-6 text-sm text-[var(--color-text-muted)]">
           {t(
