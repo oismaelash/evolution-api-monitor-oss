@@ -11,9 +11,16 @@ COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/worker/package.json ./apps/worker/
 COPY packages/config/package.json ./packages/config/
+COPY packages/config/tsconfig.base.json ./packages/config/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/database/prisma ./packages/database/prisma
+COPY packages/shared/tsconfig.json ./packages/shared/
+COPY packages/database/tsconfig.json ./packages/database/
+
+# We also need src files for shared/database because postinstall builds them
+COPY packages/shared/src ./packages/shared/src
+COPY packages/database/src ./packages/database/src
 
 # npm install (não npm ci): lockfile pode estar fora de sync com package.json dos workspaces
 RUN npm install
@@ -22,34 +29,9 @@ FROM deps AS builder
 WORKDIR /app
 COPY . .
 
-ARG BULL_BOARD_SECRET
-ENV BULL_BOARD_SECRET=$BULL_BOARD_SECRET
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-ARG ENCRYPTION_KEY
-ENV ENCRYPTION_KEY=$ENCRYPTION_KEY
-ARG MONITOR_STATUS_API_KEY
-ENV MONITOR_STATUS_API_KEY=$MONITOR_STATUS_API_KEY
-ARG MONITOR_STATUS_BASE_URL
-ENV MONITOR_STATUS_BASE_URL=$MONITOR_STATUS_BASE_URL
-ARG MONITOR_STATUS_TEMPLATE_ID
-ENV MONITOR_STATUS_TEMPLATE_ID=$MONITOR_STATUS_TEMPLATE_ID
-ARG NODE_ENV
-ENV NODE_ENV=$NODE_ENV
-ARG OPEN_SOURCE_REPO_URL
-ENV OPEN_SOURCE_REPO_URL=$OPEN_SOURCE_REPO_URL
-ARG PING_TIMEOUT_MS
-ENV PING_TIMEOUT_MS=$PING_TIMEOUT_MS
-ARG POSTGRES_DB
-ENV POSTGRES_DB=$POSTGRES_DB
-ARG POSTGRES_PASSWORD
-ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-ARG POSTGRES_USER
-ENV POSTGRES_USER=$POSTGRES_USER
-ARG REDIS_URL
-ENV REDIS_URL=$REDIS_URL
-ARG RESTART_TIMEOUT_MS
-ENV RESTART_TIMEOUT_MS=$RESTART_TIMEOUT_MS
+# Pass build args to Next.js
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN npm run build
 
@@ -63,10 +45,19 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-COPY --from=builder /app ./
+COPY --from=builder /app/apps/api/.next/standalone ./
+COPY --from=builder /app/apps/api/.next/static ./apps/api/.next/static
+COPY --from=builder /app/apps/api/public ./apps/api/public
+COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
+COPY --from=builder /app/apps/worker/package.json ./apps/worker/
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+
+RUN npm prune --omit=dev
 
 RUN chown -R node:node /app
 USER node
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["node", "apps/api/server.js"]

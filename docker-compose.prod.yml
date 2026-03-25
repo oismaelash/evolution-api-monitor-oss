@@ -54,7 +54,7 @@ services:
     networks: [backend]
     image: ghcr.io/${GHCR_USERNAME:-oismaelash}/${GHCR_IMAGE_NAME:-evolution-api-monitor-oss}:${GHCR_IMAGE_VERSION:-latest}
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
     depends_on:
       postgres:
         condition: service_healthy
@@ -70,8 +70,8 @@ services:
       - '${API_PORT:-3000}:3000'
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
+      REDIS_URL: redis://redis:6379
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
       MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
@@ -87,18 +87,18 @@ services:
   worker:
     networks: [backend, egress]
     image: ghcr.io/${GHCR_USERNAME:-oismaelash}/${GHCR_IMAGE_NAME:-evolution-api-monitor-oss}:${GHCR_IMAGE_VERSION:-latest}
-    command: ["npm", "run", "start", "--workspace=worker"]
+    command: ["node", "apps/worker/dist/index.js"]
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
+      REDIS_URL: redis://redis:6379
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
       MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
       MONITOR_STATUS_TEMPLATE_ID: ${MONITOR_STATUS_TEMPLATE_ID:-}
-      PING_TIMEOUT_MS: ${PING_TIMEOUT_MS:-}
-      RESTART_TIMEOUT_MS: ${RESTART_TIMEOUT_MS:-}
+      PING_TIMEOUT_MS: ${PING_TIMEOUT_MS:-5000}
+      RESTART_TIMEOUT_MS: ${RESTART_TIMEOUT_MS:-10000}
     depends_on:
       postgres:
         condition: service_healthy
