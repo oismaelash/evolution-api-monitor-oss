@@ -55,7 +55,8 @@ services:
       - .:/app
       - /app/node_modules
     working_dir: /app
-    command: npm run dev --workspace=api
+    # Apply migrations so OAuth signIn can create users (fresh volumes start empty).
+    command: sh -c "npm run db:migrate:deploy && npm run dev --workspace=api"
 
 volumes:
   monitor_pgdata:

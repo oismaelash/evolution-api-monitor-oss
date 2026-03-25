@@ -3,7 +3,7 @@ export const AUTH_ERROR_HINTS: Record<string, string> = {
   OAuthSignin:
     'Could not start sign-in with the provider. Check client ID and secret in your environment.',
   OAuthCallback:
-    'OAuth callback failed. Set NEXTAUTH_URL to the exact origin you use (e.g. http://localhost:3000). In Google Cloud, add redirect URI: {origin}/api/auth/callback/google',
+    'OAuth callback failed. Use the same host as NEXTAUTH_URL (prefer http://localhost:3000, not 127.0.0.1). Ensure NEXTAUTH_URL uses http:// when you browse over HTTP (Secure cookies are skipped on plain HTTP). In Google Cloud, add redirect URI: {origin}/api/auth/callback/google',
   OAuthCreateAccount: 'Could not create the user account after OAuth.',
   OAuthAccountNotLinked:
     'This OAuth account is not linked to an existing user.',

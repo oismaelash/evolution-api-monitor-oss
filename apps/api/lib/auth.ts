@@ -57,6 +57,8 @@ function isGoogleEmailVerified(profile: unknown): boolean {
 export const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 },
   providers: buildOAuthProviders(),
+  /** Must match the real browser connection: Secure cookies are not stored on HTTP. */
+  useSecureCookies: process.env.NODE_ENV === 'production',
   debug: process.env.NODE_ENV === 'development',
   callbacks: {
     async signIn({ user, account, profile }) {
