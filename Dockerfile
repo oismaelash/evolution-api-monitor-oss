@@ -13,6 +13,7 @@ COPY apps/worker/package.json ./apps/worker/
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
+COPY packages/database/prisma ./packages/database/prisma
 
 # npm install (não npm ci): lockfile pode estar fora de sync com package.json dos workspaces
 RUN npm install

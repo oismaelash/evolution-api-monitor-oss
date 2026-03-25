@@ -3,12 +3,15 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/worker/package.json ./apps/worker/
 COPY packages/config/package.json ./packages/config/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
+COPY packages/database/prisma ./packages/database/prisma
 
 RUN npm ci
 
