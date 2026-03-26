@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { randomBytes } from 'node:crypto';
 
 /** Docker/compose often passes `KEY:` with no value → ""; Zod `.url().optional()` rejects "". */
 function emptyStringToUndefined(val: unknown): unknown {
@@ -19,7 +20,10 @@ const rawEnvSchema = z.object({
   REDIS_URL: z.string().min(1),
   NEXTAUTH_SECRET: z.string().min(32).optional(),
   NEXTAUTH_URL: optionalUrl,
-  ENCRYPTION_KEY: z.string().length(64).regex(/^[0-9a-fA-F]+$/),
+  ENCRYPTION_KEY: z.preprocess(
+    emptyStringToUndefined,
+    z.string().length(64).regex(/^[0-9a-fA-F]+$/).optional(),
+  ),
   CLOUD_BILLING: z
     .enum(['true', 'false'])
     .optional()
@@ -113,7 +117,8 @@ const rawEnvSchema = z.object({
 
 export const baseSchema = rawEnvSchema;
 
-export type MonitorEnv = z.infer<typeof baseSchema> & {
+export type MonitorEnv = Omit<z.infer<typeof baseSchema>, 'ENCRYPTION_KEY'> & {
+  ENCRYPTION_KEY: string;
   CLOUD_BILLING: boolean;
   CLOUD_ADVANCED_ALERTS: boolean;
   CLOUD_EXPONENTIAL_RETRY: boolean;
@@ -126,7 +131,14 @@ export function loadEnv(overrides?: Record<string, string | undefined>): Monitor
     return cached;
   }
   const merged = { ...process.env, ...overrides } as Record<string, string | undefined>;
-  cached = baseSchema.parse(merged) as MonitorEnv;
+  const parsed = baseSchema.parse(merged) as z.infer<typeof baseSchema>;
+
+  let key = parsed.ENCRYPTION_KEY;
+  if (!key) {
+    key = randomBytes(32).toString('hex');
+  }
+
+  cached = { ...(parsed as Omit<z.infer<typeof baseSchema>, 'ENCRYPTION_KEY'>), ENCRYPTION_KEY: key } as MonitorEnv;
   return cached;
 }
 
