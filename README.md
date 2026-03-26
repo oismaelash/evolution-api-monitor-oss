@@ -13,9 +13,8 @@ An open-source dashboard and background worker to monitor, manage, and track hea
 
 ## 📸 Screenshots
 
-<img src="apps/api/public/brand/screenshots/Screenshot%20from%202026-03-26%2009-44-20.png" alt="Dashboard" style="max-width: 100%;" />
-
 <img src="apps/api/public/brand/screenshots/screencapture-custom-skdlddxw-s749b2c-iluminapp-dashboard-2026-03-26-09_43_54.png" alt="Dashboard" style="max-width: 100%;" />
+
 
 <img src="apps/api/public/brand/screenshots/screencapture-custom-skdlddxw-s749b2c-iluminapp-projects-2026-03-26-09_45_12.png" alt="Projects" style="max-width: 100%;" />
 
@@ -30,6 +29,10 @@ An open-source dashboard and background worker to monitor, manage, and track hea
 <img src="apps/api/public/brand/screenshots/screencapture-custom-skdlddxw-s749b2c-iluminapp-projects-cmn72358j0001sbd1z8nzexwd-2026-03-26-09_45_58.png" alt="Project details" style="max-width: 100%;" />
 
 <img src="apps/api/public/brand/screenshots/screencapture-custom-skdlddxw-s749b2c-iluminapp-projects-cmn72358j0001sbd1z8nzexwd-2026-03-26-09_46_07.png" alt="Project details" style="max-width: 100%;" />
+
+
+<img src="apps/api/public/brand/screenshots/Screenshot%20from%202026-03-26%2009-44-20.png" alt="Dashboard" style="max-width: 100%;" />
+
 
 ## 📋 Prerequisites
 
