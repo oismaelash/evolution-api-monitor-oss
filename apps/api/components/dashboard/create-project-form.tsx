@@ -110,7 +110,7 @@ export function CreateProjectForm() {
         return;
       }
       if (data.id) {
-        router.push(`/projects/${data.id}`);
+        router.push(`/projects/${data.id}?tab=numbers`);
         router.refresh();
         return;
       }

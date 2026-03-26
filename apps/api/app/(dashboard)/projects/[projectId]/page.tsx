@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowDown2 } from 'iconsax-react';
 import { prisma } from '@monitor/database';
 import { getServerTranslator } from '@/lib/i18n-server';
 import { formatNumberStateLabel } from '@/lib/number-state-label';
@@ -10,6 +9,10 @@ import {
   ProjectConfigForm,
   type ProjectConfigFormInitial,
 } from '@/components/dashboard/project-config-form';
+import {
+  ProjectAlertsForm,
+  type ProjectAlertsFormInitial,
+} from '@/components/dashboard/project-alerts-form';
 import { DeleteNumberButton } from '@/components/dashboard/delete-number-button';
 import { DeleteProjectButton } from '@/components/dashboard/delete-project-button';
 import { SyncInstancesButton } from '@/components/dashboard/sync-instances-button';
@@ -51,6 +54,27 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
       }
     : null;
 
+  const alertsInitial: ProjectAlertsFormInitial | null = cfg
+    ? {
+        alertCooldown: cfg.alertCooldown,
+        alertChannels: [...cfg.alertChannels],
+        alertTemplate: cfg.alertTemplate,
+        whatsappSender: cfg.whatsappSender,
+        alertEmail: cfg.alertEmail,
+        smtpFrom: cfg.smtpFrom,
+        smtpHost: cfg.smtpHost,
+        smtpPort: cfg.smtpPort,
+        smtpUser: cfg.smtpUser,
+        webhookUrl: cfg.webhookUrl,
+        numbers: project.numbers.map((n) => ({
+          id: n.id,
+          instanceName: n.instanceName,
+          phoneNumber: n.phoneNumber,
+          state: n.state,
+        })),
+      }
+    : null;
+
   return (
     <div>
       <div className="mb-6">
@@ -84,6 +108,16 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             {t('Conexão', 'Connection')}
           </Link>
           <Link
+            href={`/projects/${project.id}?tab=numbers`}
+            className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+              tab === 'numbers'
+                ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
+                : 'border-transparent text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text-primary)]'
+            }`}
+          >
+            {t('Números', 'Numbers')}
+          </Link>
+          <Link
             href={`/projects/${project.id}?tab=monitoring`}
             className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
               tab === 'monitoring'
@@ -94,14 +128,14 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             {t('Monitoramento', 'Monitoring')}
           </Link>
           <Link
-            href={`/projects/${project.id}?tab=numbers`}
+            href={`/projects/${project.id}?tab=alerts`}
             className={`whitespace-nowrap border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
-              tab === 'numbers'
+              tab === 'alerts'
                 ? 'border-[var(--color-accent)] text-[var(--color-accent)]'
                 : 'border-transparent text-[var(--color-text-muted)] hover:border-[var(--color-border)] hover:text-[var(--color-text-primary)]'
             }`}
           >
-            {t('Números', 'Numbers')}
+            {t('Configurações de alerta', 'Alert settings')}
           </Link>
         </nav>
       </div>
@@ -157,18 +191,6 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
               'Health checks and retry behaviour. Open the section for alert channels, SMTP, webhook, and templates.',
             )}
           </p>
-          
-          <div className="mb-6">
-            <Link
-              href={`/projects/${project.id}/alerts`}
-              className="inline-flex items-center justify-center rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-accent-text)] transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
-            >
-              {t('Configurações de alerta', 'Alert settings')}
-            </Link>
-            <p className="mt-3 text-sm text-[var(--color-text-muted)]">
-              {t('Canais, SMTP, webhook e modelos.', 'Channels, SMTP, webhook, and templates.')}
-            </p>
-          </div>
           <ProjectConfigForm projectId={project.id} initial={configInitial} />
         </div>
       )}
@@ -242,7 +264,21 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
           </div>
         </div>
       )}
+
+      {tab === 'alerts' && alertsInitial && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+          <h2 className="mb-1 text-lg font-medium text-[var(--color-text-primary)]">
+            {t('Configurações de alerta', 'Alert settings')}
+          </h2>
+          <p className="mb-6 text-sm text-[var(--color-text-muted)]">
+            {t(
+              'Escolha canais, cooldown, SMTP e webhook. O agendamento e retry dos health checks fica em Monitoramento.',
+              'Choose channels, cooldown, SMTP and webhook. Health-check scheduling and retry stays under Monitoring.',
+            )}
+          </p>
+          <ProjectAlertsForm projectId={project.id} initial={alertsInitial} />
+        </div>
+      )}
     </div>
   );
 }
-
