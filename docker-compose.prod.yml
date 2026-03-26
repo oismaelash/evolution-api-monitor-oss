@@ -72,11 +72,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
       REDIS_URL: redis://redis:6379
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2}
-      MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
-      MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
-      MONITOR_STATUS_TEMPLATE_ID: ${MONITOR_STATUS_TEMPLATE_ID:-}
-      BULL_BOARD_SECRET: ${BULL_BOARD_SECRET:-}
-      OPEN_SOURCE_REPO_URL: ${OPEN_SOURCE_REPO_URL:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -95,11 +90,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-monitor_status}?schema=public
       REDIS_URL: redis://redis:6379
       ENCRYPTION_KEY: ${ENCRYPTION_KEY:-a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2}
-      MONITOR_STATUS_API_KEY: ${MONITOR_STATUS_API_KEY:-}
-      MONITOR_STATUS_BASE_URL: ${MONITOR_STATUS_BASE_URL:-}
-      MONITOR_STATUS_TEMPLATE_ID: ${MONITOR_STATUS_TEMPLATE_ID:-}
-      PING_TIMEOUT_MS: ${PING_TIMEOUT_MS:-5000}
-      RESTART_TIMEOUT_MS: ${RESTART_TIMEOUT_MS:-10000}
     depends_on:
       postgres:
         condition: service_healthy
