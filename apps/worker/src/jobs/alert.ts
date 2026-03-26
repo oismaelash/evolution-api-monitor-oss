@@ -41,7 +41,7 @@ function renderMessage(
   if (advanced && template && template.trim().length > 0) {
     const strVars: Record<string, string> = {};
     for (const [k, v] of Object.entries(vars)) {
-      strVars[k] = v == null ? '' : String(v);
+      strVars[k] = String(v);
     }
     try {
       return applySimpleTemplate(template, strVars);
@@ -57,86 +57,83 @@ function decryptSmtpPass(cipher: string | null | undefined): string | undefined 
   return decryptProjectSecret(cipher);
 }
 
-export function createAlertWorker(connection: RedisClient) {
-  return new Worker(
-    'alert',
-    async (job: Job<AlertFailureJobData | AlertResolvedJobData>) => {
-      const isResolved = job.name === 'alert-resolved';
-      const numberId = job.data.numberId;
-      const redis = getRedis();
-      const lockVal = randomUUID();
-      const lockKey = `number:${numberId}:lock`;
-      const got = await acquireLock(redis, lockKey, LOCK_TTL_SEC, lockVal);
-      if (!got) {
-        logJson('warn', 'alert_lock_busy', { numberId, isResolved });
+export async function processAlertJob(job: Job<AlertFailureJobData | AlertResolvedJobData>) {
+  const isResolved = job.name === 'alert-resolved';
+  const numberId = job.data.numberId;
+  const redis = getRedis();
+  const lockVal = randomUUID();
+  const lockKey = `number:${numberId}:lock`;
+  const got = await acquireLock(redis, lockKey, LOCK_TTL_SEC, lockVal);
+  if (!got) {
+    logJson('warn', 'alert_lock_busy', { numberId, isResolved });
+    return;
+  }
+  try {
+    const number = await prisma.number.findUnique({
+      where: { id: numberId },
+      include: { project: { include: { config: true } } },
+    });
+    if (!number?.project.config) {
+      return;
+    }
+    const cfg = number.project.config;
+
+    if (!isResolved) {
+      const cooldownKey = `alert:cooldown:${numberId}`;
+      const setOk = await redis.set(cooldownKey, '1', 'EX', cfg.alertCooldown, 'NX');
+      if (setOk !== 'OK') {
+        logJson('info', 'alert_skipped_cooldown', { numberId });
         return;
       }
+    }
+
+    const env = loadEnv();
+    const timeouts = getEvolutionTimeoutsMs();
+    const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
+    const evo = new EvolutionClient(number.project.evolutionUrl, apiKey, {
+      ...timeouts,
+      flavor: number.project.evolutionFlavor,
+    });
+
+    let qrBase64: string | undefined;
+    let pairingCode: string | undefined;
+    if (!isResolved) {
       try {
-        const number = await prisma.number.findUnique({
-          where: { id: numberId },
-          include: { project: { include: { config: true } } },
-        });
-        if (!number?.project.config) {
-          return;
-        }
-        const cfg = number.project.config;
+        const conn = await evo.getConnect(number.instanceName);
+        qrBase64 = conn.qrBase64;
+        pairingCode = conn.pairingCode;
+      } catch {
+        // optional QR
+      }
+    }
 
-        if (!isResolved) {
-          const cooldownKey = `alert:cooldown:${numberId}`;
-          const setOk = await redis.set(cooldownKey, '1', 'EX', cfg.alertCooldown, 'NX');
-          if (setOk !== 'OK') {
-            logJson('info', 'alert_skipped_cooldown', { numberId });
-            return;
-          }
-        }
+    const errorType = isResolved ? undefined : (job.data as AlertFailureJobData).errorType;
 
-        const env = loadEnv();
-        const timeouts = getEvolutionTimeoutsMs();
-        const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const evo = new EvolutionClient(number.project.evolutionUrl, apiKey, {
-          ...timeouts,
-          flavor: number.project.evolutionFlavor,
-        });
+    const payload: WebhookAlertPayload = {
+      instanceName: number.instanceName,
+      projectName: number.project.name,
+      errorType,
+      qrCodeBase64: qrBase64,
+      pairingCode,
+      resolved: isResolved,
+    };
 
-        let qrBase64: string | undefined;
-        let pairingCode: string | undefined;
-        if (!isResolved) {
-          try {
-            const conn = await evo.getConnect(number.instanceName);
-            qrBase64 = conn.qrBase64;
-            pairingCode = conn.pairingCode;
-          } catch {
-            // optional QR
-          }
-        }
+    const advanced = env.CLOUD_ADVANCED_ALERTS === true;
+    const vars = {
+      instanceName: number.instanceName,
+      projectName: number.project.name,
+      errorType: errorType ?? '',
+      qrCodeBase64: qrBase64 ?? '',
+      pairingCode: pairingCode ?? '',
+      timestamp: new Date().toISOString(),
+      resolved: isResolved,
+    };
 
-        const errorType = isResolved ? undefined : (job.data as AlertFailureJobData).errorType;
-
-        const payload: WebhookAlertPayload = {
-          instanceName: number.instanceName,
-          projectName: number.project.name,
-          errorType,
-          qrCodeBase64: qrBase64,
-          pairingCode,
-          resolved: isResolved,
-        };
-
-        const advanced = env.CLOUD_ADVANCED_ALERTS === true;
-        const vars = {
-          instanceName: number.instanceName,
-          projectName: number.project.name,
-          errorType: errorType ?? '',
-          qrCodeBase64: qrBase64 ?? '',
-          pairingCode: pairingCode ?? '',
-          timestamp: new Date().toISOString(),
-          resolved: isResolved,
-        };
-
-        const defaultFailureText = `${number.project.name}: ${number.instanceName} — ${errorType}. Reconnect if needed.`;
-        const defaultResolvedText = `${number.project.name}: ${number.instanceName} is healthy again.`;
-        const monitorMessage = isResolved
-          ? defaultResolvedText
-          : renderMessage(advanced, cfg.alertTemplate, vars, defaultFailureText);
+    const defaultFailureText = `${number.project.name}: ${number.instanceName} — ${errorType}. Reconnect if needed.`;
+    const defaultResolvedText = `${number.project.name}: ${number.instanceName} is healthy again.`;
+    const monitorMessage = isResolved
+      ? defaultResolvedText
+      : renderMessage(advanced, cfg.alertTemplate, vars, defaultFailureText);
 
         const pilotStatusTemplateId =
           env.MONITOR_STATUS_TEMPLATE_ID?.trim() || 'default';
@@ -144,7 +141,7 @@ export function createAlertWorker(connection: RedisClient) {
         const channels = cfg.alertChannels;
         const channelsSent: string[] = [];
 
-        for (const ch of channels) {
+    for (const ch of channels) {
           if (ch === AlertChannel.MONITOR_STATUS) {
             const dest = number.project.alertPhone ?? '';
             if (!dest) {
@@ -154,16 +151,15 @@ export function createAlertWorker(connection: RedisClient) {
 
             const e164Dest = dest.startsWith('+') ? dest : `+${dest.replace(/^\+/, '')}`;
 
-            // Check if user selected a custom whatsapp sender from their own instances
-            if (cfg.whatsappSender && cfg.whatsappSender !== 'pilot_status') {
+            const whatsappSender = (cfg as any).whatsappSender as string | null | undefined;
+            if (whatsappSender && whatsappSender !== 'pilot_status') {
               try {
-                // Find the sender number
                 const senderNumber = await prisma.number.findUnique({
-                  where: { id: cfg.whatsappSender },
+                  where: { id: whatsappSender },
                 });
                 
                 if (!senderNumber || senderNumber.state !== 'CONNECTED') {
-                  logJson('warn', 'alert_custom_sender_not_connected', { numberId, senderId: cfg.whatsappSender });
+                  logJson('warn', 'alert_custom_sender_not_connected', { numberId, senderId: whatsappSender });
                   continue;
                 }
 
@@ -344,43 +340,44 @@ export function createAlertWorker(connection: RedisClient) {
               logJson('error', 'alert_webhook_failed', { numberId, message: err.message });
             }
           }
-        }
+    }
 
-        if (!isResolved) {
-          await prisma.number.update({
-            where: { id: numberId },
-            data: { lastAlertSentAt: new Date() },
-          });
-          await prisma.log.create({
-            data: {
-              numberId,
-              projectId: number.projectId,
-              level: LogLevel.WARN as never,
-              event: 'alert_sent',
-              errorType: errorType as never,
-              meta: { channels: channelsSent },
-            },
-          });
-        } else {
-          logJson('info', 'alert_resolved', { numberId, channels: channelsSent });
-          await prisma.log.create({
-            data: {
-              numberId,
-              projectId: number.projectId,
-              level: LogLevel.INFO as never,
-              event: 'alert_resolved',
-              meta: { channels: channelsSent },
-            },
-          });
-        }
-      } catch (e) {
-        const err = e as Error;
-        logJson('error', 'alert_job_failed', { numberId, message: err.message });
-        throw e;
-      } finally {
-        await releaseLock(redis, lockKey, lockVal);
-      }
-    },
-    { connection: connection as never }
-  );
+    if (!isResolved) {
+      await prisma.number.update({
+        where: { id: numberId },
+        data: { lastAlertSentAt: new Date() },
+      });
+      await prisma.log.create({
+        data: {
+          numberId,
+          projectId: number.projectId,
+          level: LogLevel.WARN as never,
+          event: 'alert_sent',
+          errorType: errorType as never,
+          meta: { channels: channelsSent },
+        },
+      });
+    } else {
+      logJson('info', 'alert_resolved', { numberId, channels: channelsSent });
+      await prisma.log.create({
+        data: {
+          numberId,
+          projectId: number.projectId,
+          level: LogLevel.INFO as never,
+          event: 'alert_resolved',
+          meta: { channels: channelsSent },
+        },
+      });
+    }
+  } catch (e) {
+    const err = e as Error;
+    logJson('error', 'alert_job_failed', { numberId, message: err.message });
+    throw e;
+  } finally {
+    await releaseLock(redis, lockKey, lockVal);
+  }
+}
+
+export function createAlertWorker(connection: RedisClient) {
+  return new Worker('alert', processAlertJob, { connection: connection as never });
 }

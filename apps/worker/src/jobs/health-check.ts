@@ -59,217 +59,219 @@ function shouldSkipHealthForBilling(
 export function createHealthCheckWorker(connection: RedisClient) {
   return new Worker<HealthCheckJobData>(
     'health-check',
-    async (job: Job<HealthCheckJobData>) => {
-      const { numberId } = job.data;
-      const redis = getRedis();
-      const lockVal = randomUUID();
-      const lockKey = `number:${numberId}:lock`;
-      const got = await acquireLock(redis, lockKey, LOCK_TTL_SEC, lockVal);
-      if (!got) {
-        logJson('warn', 'health_check_lock_busy', { numberId });
-        return;
-      }
-      try {
-        const number = await prisma.number.findUnique({
-          where: { id: numberId },
-          include: { project: { include: { config: true } } },
-        });
-        if (!number?.monitored) {
-          logJson('debug', 'health_check_skipped_not_monitored', { numberId });
-          return;
-        }
-        const config = number.project.config;
-        if (!config) {
-          logJson('error', 'health_check_missing_config', {
-            numberId,
-            projectId: number.projectId,
-          });
-          return;
-        }
+    async (job: Job<HealthCheckJobData>) => processHealthCheck(job, connection),
+    { connection: connection as never }
+  );
+}
 
-        const env = loadEnv();
-        const sub = await prisma.subscription.findUnique({
-          where: { userId: number.project.userId },
-          select: { status: true, currentPeriodEnd: true, pastDueGraceEndsAt: true },
-        });
-        if (shouldSkipHealthForBilling(env.CLOUD_BILLING, sub)) {
-          logJson('info', 'health_check_skipped_billing', { numberId, status: sub?.status });
-          return;
-        }
+export async function processHealthCheck(job: Job<HealthCheckJobData>, connection: RedisClient) {
+  const { numberId } = job.data;
+  const redis = getRedis();
+  const lockVal = randomUUID();
+  const lockKey = `number:${numberId}:lock`;
+  const got = await acquireLock(redis, lockKey, LOCK_TTL_SEC, lockVal);
+  if (!got) {
+    logJson('warn', 'health_check_lock_busy', { numberId });
+    return;
+  }
+  try {
+    const number = await prisma.number.findUnique({
+      where: { id: numberId },
+      include: { project: { include: { config: true } } },
+    });
+    if (!number?.monitored) {
+      logJson('debug', 'health_check_skipped_not_monitored', { numberId });
+      return;
+    }
+    const config = number.project.config;
+    if (!config) {
+      logJson('error', 'health_check_missing_config', {
+        numberId,
+        projectId: number.projectId,
+      });
+      return;
+    }
 
-        const timeouts = getEvolutionTimeoutsMs();
-        const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
-        const client = new EvolutionClient(number.project.evolutionUrl, apiKey, {
-          ...timeouts,
-          flavor: number.project.evolutionFlavor,
-        });
+    const env = loadEnv();
+    const sub = await prisma.subscription.findUnique({
+      where: { userId: number.project.userId },
+      select: { status: true, currentPeriodEnd: true, pastDueGraceEndsAt: true },
+    });
+    if (shouldSkipHealthForBilling(env.CLOUD_BILLING, sub)) {
+      logJson('info', 'health_check_skipped_billing', { numberId, status: sub?.status });
+      return;
+    }
 
-        const result = await client.checkHealth(number.instanceName);
-        const checkedAt = new Date();
+    const timeouts = getEvolutionTimeoutsMs();
+    const apiKey = decryptProjectSecret(number.project.evolutionApiKey);
+    const client = new EvolutionClient(number.project.evolutionUrl, apiKey, {
+      ...timeouts,
+      flavor: number.project.evolutionFlavor,
+    });
 
-        if (result.ok) {
-          const shouldNotifyResolved =
-            number.lastAlertSentAt != null &&
-            (!number.lastHealthyAt || number.lastHealthyAt < number.lastAlertSentAt);
-          await prisma.$transaction([
-            prisma.healthCheck.create({
-              data: {
-                numberId,
-                status: HealthStatus.HEALTHY as never,
-                responseTimeMs: result.responseTimeMs,
-                rawResponse: result.raw as object,
-                checkedAt,
-              },
-            }),
-            prisma.number.update({
-              where: { id: numberId },
-              data: {
-                state: NumberState.CONNECTED as never,
-                failureCount: 0,
-                restartAttempts: 0,
-                lastHealthyAt: checkedAt,
-                lastCheckedAt: checkedAt,
-              },
-            }),
-            prisma.log.create({
-              data: {
-                numberId,
-                projectId: number.projectId,
-                level: LogLevel.INFO as never,
-                event: 'health_check_ok',
-                meta: { responseTimeMs: result.responseTimeMs },
-              },
-            }),
-          ]);
-          if (shouldNotifyResolved) {
-            const alertQueue = new Queue('alert', { connection: connection as never });
-            await alertQueue.add(
-              'alert-resolved',
-              { numberId },
-              { attempts: 2, removeOnComplete: true }
-            );
-            logJson('info', 'alert_resolved_enqueued', { numberId });
-          }
-          return;
-        }
+    const result = await client.checkHealth(number.instanceName);
+    const checkedAt = new Date();
 
-        const prismaEt = prismaErrorFromString(result.errorType);
-        await prisma.healthCheck.create({
+    if (result.ok) {
+      const shouldNotifyResolved =
+        number.lastAlertSentAt != null &&
+        (!number.lastHealthyAt || number.lastHealthyAt < number.lastAlertSentAt);
+      await prisma.$transaction([
+        prisma.healthCheck.create({
           data: {
             numberId,
-            status: HealthStatus.UNHEALTHY as never,
-            errorType: prismaEt as never,
-            errorMessage: result.message,
+            status: HealthStatus.HEALTHY as never,
+            responseTimeMs: result.responseTimeMs,
             rawResponse: result.raw as object,
             checkedAt,
           },
-        });
-
-        const newCount = number.failureCount + 1;
-        await prisma.number.update({
+        }),
+        prisma.number.update({
           where: { id: numberId },
           data: {
-            failureCount: newCount,
-            state: NumberState.DISCONNECTED as never,
+            state: NumberState.CONNECTED as never,
+            failureCount: 0,
+            restartAttempts: 0,
+            lastHealthyAt: checkedAt,
             lastCheckedAt: checkedAt,
           },
-        });
-
-        await prisma.log.create({
+        }),
+        prisma.log.create({
           data: {
             numberId,
             projectId: number.projectId,
-            level: LogLevel.WARN as never,
-            event: 'health_check_failed',
-            errorType: prismaEt as never,
-            meta: { failureCount: newCount, restartAttempts: number.restartAttempts },
+            level: LogLevel.INFO as never,
+            event: 'health_check_ok',
+            meta: { responseTimeMs: result.responseTimeMs },
           },
-        });
-
-        if (prismaEt === ErrorType.AUTH_ERROR || prismaEt === ErrorType.INSTANCE_NOT_FOUND) {
-          await prisma.number.update({
-            where: { id: numberId },
-            data: { state: NumberState.ERROR as never, restartAttempts: 0 },
-          });
-          const alertQueue = new Queue('alert', { connection: connection as never });
-          await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
-          return;
-        }
-
-        if (number.project.evolutionFlavor === EvolutionFlavor.EVOLUTION_GO) {
-          await prisma.number.update({
-            where: { id: numberId },
-            data: { state: NumberState.ERROR as never, restartAttempts: 0 },
-          });
-          const alertQueue = new Queue('alert', { connection: connection as never });
-          await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
-          logJson('info', 'alert_enqueued_evolution_go_first_failure', { numberId, errorType: prismaEt });
-          return;
-        }
-
-        const closedLike = isConnectionClosedLikeHealthFailure(result);
-        if (newCount < FAILURES_BEFORE_RESTART && !closedLike) {
-          return;
-        }
-        if (closedLike && newCount < FAILURES_BEFORE_RESTART) {
-          logJson('info', 'health_check_connection_closed_fast_restart', {
-            numberId,
-            failureCount: newCount,
-            message: result.message,
-          });
-        }
-
-        const restartAttempts = number.restartAttempts;
-        if (restartAttempts >= config.maxRetries) {
-          await prisma.number.update({
-            where: { id: numberId },
-            data: { state: NumberState.ERROR as never },
-          });
-          const alertQueue = new Queue('alert', { connection: connection as never });
-          await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
-          return;
-        }
-
-        const nextRestartAttempts = restartAttempts + 1;
-        await prisma.number.update({
-          where: { id: numberId },
-          data: { restartAttempts: nextRestartAttempts },
-        });
-
-        const useJitter = env.CLOUD_EXPONENTIAL_RETRY;
-        const strategy = useJitter
-          ? RetryStrategyConst.EXPONENTIAL_JITTER
-          : (config.retryStrategy as (typeof RetryStrategyConst)[keyof typeof RetryStrategyConst]);
-        const delayMs = computeDelayMs({
-          retryStrategy: strategy,
-          retryDelayMs: config.retryDelay * 1000,
-          attempt: nextRestartAttempts,
-        });
-
-        const restartQueue = new Queue('restart', { connection: connection as never });
-        await restartQueue.add(
-          'restart',
+        }),
+      ]);
+      if (shouldNotifyResolved) {
+        const alertQueue = new Queue('alert', { connection: connection as never });
+        await alertQueue.add(
+          'alert-resolved',
           { numberId },
-          { delay: delayMs, jobId: `restart:${numberId}:${Date.now()}` }
+          { attempts: 2, removeOnComplete: true }
         );
-        logJson('info', 'restart_enqueued', {
-          numberId,
-          delayMs,
-          failureCount: newCount,
-          restartAttempt: nextRestartAttempts,
-        });
-      } catch (e) {
-        const err = e as Error;
-        logJson('error', 'health_check_job_failed', {
-          numberId,
-          message: err.message,
-          stack: err.stack,
-        });
-        throw e;
-      } finally {
-        await releaseLock(redis, lockKey, lockVal);
+        logJson('info', 'alert_resolved_enqueued', { numberId });
       }
-    },
-    { connection: connection as never }
-  );
+      return;
+    }
+
+    const prismaEt = prismaErrorFromString(result.errorType);
+    await prisma.healthCheck.create({
+      data: {
+        numberId,
+        status: HealthStatus.UNHEALTHY as never,
+        errorType: prismaEt as never,
+        errorMessage: result.message,
+        rawResponse: result.raw as object,
+        checkedAt,
+      },
+    });
+
+    const newCount = number.failureCount + 1;
+    await prisma.number.update({
+      where: { id: numberId },
+      data: {
+        failureCount: newCount,
+        state: NumberState.DISCONNECTED as never,
+        lastCheckedAt: checkedAt,
+      },
+    });
+
+    await prisma.log.create({
+      data: {
+        numberId,
+        projectId: number.projectId,
+        level: LogLevel.WARN as never,
+        event: 'health_check_failed',
+        errorType: prismaEt as never,
+        meta: { failureCount: newCount, restartAttempts: number.restartAttempts },
+      },
+    });
+
+    if (prismaEt === ErrorType.AUTH_ERROR || prismaEt === ErrorType.INSTANCE_NOT_FOUND) {
+      await prisma.number.update({
+        where: { id: numberId },
+        data: { state: NumberState.ERROR as never, restartAttempts: 0 },
+      });
+      const alertQueue = new Queue('alert', { connection: connection as never });
+      await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
+      return;
+    }
+
+    if (number.project.evolutionFlavor === EvolutionFlavor.EVOLUTION_GO) {
+      await prisma.number.update({
+        where: { id: numberId },
+        data: { state: NumberState.ERROR as never, restartAttempts: 0 },
+      });
+      const alertQueue = new Queue('alert', { connection: connection as never });
+      await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
+      logJson('info', 'alert_enqueued_evolution_go_first_failure', { numberId, errorType: prismaEt });
+      return;
+    }
+
+    const closedLike = isConnectionClosedLikeHealthFailure(result);
+    if (newCount < FAILURES_BEFORE_RESTART && !closedLike) {
+      return;
+    }
+    if (closedLike && newCount < FAILURES_BEFORE_RESTART) {
+      logJson('info', 'health_check_connection_closed_fast_restart', {
+        numberId,
+        failureCount: newCount,
+        message: result.message,
+      });
+    }
+
+    const restartAttempts = number.restartAttempts;
+    if (restartAttempts >= config.maxRetries) {
+      await prisma.number.update({
+        where: { id: numberId },
+        data: { state: NumberState.ERROR as never },
+      });
+      const alertQueue = new Queue('alert', { connection: connection as never });
+      await alertQueue.add('alert', { numberId, errorType: prismaEt }, { attempts: 3 });
+      return;
+    }
+
+    const nextRestartAttempts = restartAttempts + 1;
+    await prisma.number.update({
+      where: { id: numberId },
+      data: { restartAttempts: nextRestartAttempts },
+    });
+
+    const useJitter = env.CLOUD_EXPONENTIAL_RETRY;
+    const strategy = useJitter
+      ? RetryStrategyConst.EXPONENTIAL_JITTER
+      : (config.retryStrategy as (typeof RetryStrategyConst)[keyof typeof RetryStrategyConst]);
+    const delayMs = computeDelayMs({
+      retryStrategy: strategy,
+      retryDelayMs: config.retryDelay * 1000,
+      attempt: nextRestartAttempts,
+    });
+
+    const restartQueue = new Queue('restart', { connection: connection as never });
+    await restartQueue.add(
+      'restart',
+      { numberId },
+      { delay: delayMs, jobId: `restart:${numberId}:${Date.now()}` }
+    );
+    logJson('info', 'restart_enqueued', {
+      numberId,
+      delayMs,
+      failureCount: newCount,
+      restartAttempt: nextRestartAttempts,
+    });
+  } catch (e) {
+    const err = e as Error;
+    logJson('error', 'health_check_job_failed', {
+      numberId,
+      message: err.message,
+      stack: err.stack,
+    });
+    throw e;
+  } finally {
+    await releaseLock(redis, lockKey, lockVal);
+  }
 }

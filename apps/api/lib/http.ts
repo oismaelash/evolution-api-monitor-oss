@@ -3,8 +3,14 @@ import { ZodError } from 'zod';
 import { AppError } from '@monitor/shared';
 
 export function toErrorResponse(e: unknown): NextResponse {
-  if (e instanceof ZodError) {
-    return NextResponse.json({ error: e.flatten() }, { status: 400 });
+  const isZodLike =
+    e instanceof ZodError ||
+    (e != null &&
+      typeof e === 'object' &&
+      (e as any).name === 'ZodError' &&
+      typeof (e as any).flatten === 'function');
+  if (isZodLike) {
+    return NextResponse.json({ error: (e as ZodError).flatten() }, { status: 400 });
   }
   if (e instanceof AppError) {
     return NextResponse.json(
