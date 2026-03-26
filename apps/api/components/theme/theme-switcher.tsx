@@ -9,7 +9,8 @@ export function ThemeSwitcher({ isCollapsed = false }: { isCollapsed?: boolean }
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    setMounted(true);
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
   if (!mounted) {

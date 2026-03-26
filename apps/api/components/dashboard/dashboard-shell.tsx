@@ -37,16 +37,19 @@ export function DashboardShell({
   // Load collapse state from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
-    if (saved !== null) {
-      setIsCollapsed(saved === 'true');
-    }
-
-    const checkMobile = () => {
+    const id = requestAnimationFrame(() => {
+      if (saved !== null) {
+        setIsCollapsed(saved === 'true');
+      }
       setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
+    });
+
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener('resize', checkMobile);
+    };
   }, []);
 
   const toggleCollapse = () => {

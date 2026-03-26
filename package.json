@@ -9,7 +9,7 @@
   "scripts": {
     "postinstall": "npm run build --workspace=@monitor/shared && npm run build --workspace=@monitor/database",
     "test:all": "vitest run",
-    "push": "npm run test:all && bash scripts/push-ghcr.sh",
+    "push": "npm run push:checks && bash scripts/push-ghcr.sh",
     "dev": "npm run dev --workspace=api",
     "dev:worker": "npm run dev --workspace=worker",
     "dev:docker": "docker compose -f docker-compose.dev.yml up -d --build",

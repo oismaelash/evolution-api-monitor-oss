@@ -8,8 +8,8 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const event = parseCustomerWebhook(body);
 
-        const data = event.data as any;
-        const messageId = data.messageId;
+        const data = event.data as Record<string, unknown>;
+        const messageId = typeof data.messageId === 'string' ? data.messageId : undefined;
 
         if (!messageId) {
             return NextResponse.json({ error: 'Missing messageId' }, { status: 400 });
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ ok: true, note: 'Alert not found' });
         }
 
-        const eventKind = event.event as string;
+        const eventKind = String(event.event);
         if (eventKind === 'message.delivered' || eventKind === 'message.read') {
             await prisma.alert.update({
                 where: { id: alert.id },
@@ -41,9 +41,10 @@ export async function POST(req: NextRequest) {
         }
 
         if (event.event === 'message.failed') {
+            const errorMessage = typeof data.errorMessage === 'string' ? data.errorMessage : undefined;
             await prisma.alert.update({
                 where: { id: alert.id },
-                data: { deliveryError: data.errorMessage || 'Unknown error' },
+                data: { deliveryError: errorMessage || 'Unknown error' },
             });
 
             await prisma.log.create({
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
                     projectId: alert.number.projectId,
                     level: LogLevel.ERROR as never,
                     event: 'alert_delivery_failed',
-                    meta: { messageId, error: data.errorMessage },
+                    meta: { messageId, error: errorMessage },
                 },
             });
         }
