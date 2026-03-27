@@ -10,7 +10,8 @@ import {
   EmptyWallet, 
   ArrowLeft2, 
   ArrowRight2,
-  Global
+  Global,
+  Whatsapp
 } from 'iconsax-react';
 
 import { LanguageSwitcher } from '@/components/i18n/language-switcher';
@@ -58,6 +59,10 @@ export function DashboardShell({
     localStorage.setItem('sidebar-collapsed', String(newState));
   };
 
+  const supportMessage = encodeURIComponent(
+    t('Olá, preciso de suporte com o Evolution Monitor', 'Hello, I need support with Evolution Monitor')
+  );
+
   const nav = [
     { 
       href: '/dashboard', 
@@ -73,6 +78,12 @@ export function DashboardShell({
       href: '/logs', 
       label: t('Logs', 'Logs'),
       icon: DocumentText
+    },
+    {
+      href: `https://wa.me/5511967435133?text=${supportMessage}`,
+      label: t('Suporte', 'Support'),
+      icon: Whatsapp,
+      external: true
     },
   ];
 
@@ -124,13 +135,15 @@ export function DashboardShell({
         {/* Navigation */}
         <nav className="flex flex-col gap-1.5 flex-1">
           {nav.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = !item.external && (pathname === item.href || pathname.startsWith(`${item.href}/`));
             const Icon = item.icon;
             
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
                 className={`group relative flex items-center transition-all duration-200 border
                   ${isCollapsed ? 'h-11 w-11 justify-center rounded-xl' : 'gap-3 rounded-xl px-3 py-2.5'}
                   ${active
