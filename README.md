@@ -2,6 +2,10 @@
 
 An open-source dashboard and background worker to monitor, manage, and track health checks for your Evolution API instances. This repository provides a clean, fast, and secure interface to keep an eye on all your connected numbers, instances, and configurations without any proprietary billing or authentication logic.
 
+## ☁️ Cloud Version (Fully Managed)
+
+Looking for a hassle-free setup? Check out our **[Evolution API Monitor Cloud](https://evolutionapi.online)**! It is a fully managed solution that saves you manual installation time and conserves your VPS resources, so you can focus entirely on managing your instances.
+
 ## 🚀 Features
 
 - **Dashboard:** Clean, responsive UI to manage multiple Evolution API instances.
