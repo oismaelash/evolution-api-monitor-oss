@@ -74,6 +74,32 @@ The easiest way to get the project running locally is by using Docker Compose. T
 
 ---
 
+## 🔐 Dashboard access password (self-hosted OSS)
+
+The OSS build protects the dashboard and internal APIs with an **access lock** (cookie-based session after you authenticate). This is separate from Evolution API keys: it only controls who can open the monitor UI and call `/api/*` from the browser.
+
+### How it works
+
+- **Lock enabled by default:** unless you set `APP_ACCESS_LOCK=false`, visitors must unlock the app first.
+- **Signing secret (required when the lock is on):** set a stable **`ENCRYPTION_KEY`** (64 hex characters, see `.env.example`) or **`NEXTAUTH_SECRET`** (at least 32 characters) in the environment. Without one of these, the app shows a configuration message on `/access` instead of a working login.
+- **Two ways to set the password:**
+  1. **`OSS_ACCESS_PASSWORD` in `.env`:** if set, you always see a single “enter password” screen. Type the **same value** as in the environment variable. Nothing is stored in the database for this mode; the value never belongs in git—only in your server or secrets manager.
+  2. **No `OSS_ACCESS_PASSWORD`:** on the **first** visit you choose a password in the UI (minimum 8 characters); it is stored as a **hash** in the database for the built-in OSS user. On later visits you enter that password to get a session cookie.
+
+If both an env password and a database password exist, **the environment password takes precedence** for unlocking.
+
+### Disabling the lock
+
+Set **`APP_ACCESS_LOCK=false`** in `.env` (for example in CI, or when you later use full cloud auth). Then the middleware no longer enforces the gate.
+
+### Operational notes
+
+- Session cookies are **httpOnly** and last **7 days**; closing the browser does not clear them until they expire or you clear site data.
+- There is no “forgot password” flow in OSS: for env mode, change `OSS_ACCESS_PASSWORD` or `APP_ACCESS_LOCK`; for UI mode, reset the user’s `passwordHash` in the database or switch to env-based password.
+- See **`.env.example`** for `APP_ACCESS_LOCK`, `OSS_ACCESS_PASSWORD`, and encryption-related variables.
+
+---
+
 ## 💻 Local Development Setup (Manual)
 
 If you prefer to run the Next.js app and the Worker directly on your host machine (for better debugging or IDE integration):
@@ -120,7 +146,7 @@ The app will be available at `http://localhost:3000`.
 
 For production, you should use the `docker-compose.prod.yml` file. This setup optimizes the Next.js build and runs the worker in production mode.
 
-1. Configure your `.env` file with secure, production-ready values (ensure you change the `ENCRYPTION_KEY` by running `openssl rand -hex 32`).
+1. Configure your `.env` file with secure, production-ready values (ensure you change the `ENCRYPTION_KEY` by running `openssl rand -hex 32`). Keep **`ENCRYPTION_KEY`** stable across restarts if you use the dashboard access lock (see **Dashboard access password (self-hosted OSS)** above). Optionally set **`OSS_ACCESS_PASSWORD`** or rely on the first-time UI password flow.
 
 2. Build and start the containers:
    ```bash
