@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./oss-access-process-env": {
+      "types": "./dist/oss-access-process-env.d.ts",
+      "import": "./dist/oss-access-process-env.js"
     }
   },
   "scripts": {

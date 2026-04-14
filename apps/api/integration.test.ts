@@ -12,6 +12,7 @@ describe('integration smoke', () => {
       REDIS_URL: 'redis://127.0.0.1:6379',
       NEXTAUTH_SECRET: 'x'.repeat(32),
       ENCRYPTION_KEY: 'a'.repeat(64),
+      APP_ACCESS_LOCK: 'false',
     });
     expect(env.REDIS_URL).toBe('redis://127.0.0.1:6379');
     expect(env.CLOUD_BILLING).toBe(false);
@@ -25,6 +26,7 @@ describe('integration smoke', () => {
       NEXTAUTH_SECRET: 'x'.repeat(32),
       NEXTAUTH_URL: 'http://localhost:3000',
       ENCRYPTION_KEY: 'a'.repeat(64),
+      APP_ACCESS_LOCK: 'false',
       GITHUB_CLIENT_ID: 'gh-id',
       GITHUB_CLIENT_SECRET: 'gh-secret',
     });

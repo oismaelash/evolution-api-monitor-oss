@@ -1,5 +1,9 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig } from 'vitest/config';
-import { URL } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
@@ -10,9 +14,13 @@ export default defineConfig({
     testTimeout: 30000,
     hookTimeout: 30000,
     alias: {
-      '@': new URL('./apps/api', import.meta.url).pathname,
-      '@monitor/shared': new URL('./packages/shared/src/index.ts', import.meta.url).pathname,
-      '@monitor/database': new URL('./packages/database/src/index.ts', import.meta.url).pathname,
+      '@': path.join(__dirname, 'apps/api'),
+      '@monitor/shared': path.join(__dirname, 'packages/shared/src/index.ts'),
+      '@monitor/shared/oss-access-process-env': path.join(
+        __dirname,
+        'packages/shared/src/oss-access-process-env.ts',
+      ),
+      '@monitor/database': path.join(__dirname, 'packages/database/src/index.ts'),
     },
   },
 });

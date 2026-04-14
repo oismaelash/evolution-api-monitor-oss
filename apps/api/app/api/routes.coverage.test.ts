@@ -52,6 +52,7 @@ async function resetDb() {
 describe('API routes coverage', () => {
   beforeAll(async () => {
     process.env.ENCRYPTION_KEY = 'a'.repeat(64);
+    process.env.APP_ACCESS_LOCK = 'false';
     await ensureOssUser('USER');
   });
 

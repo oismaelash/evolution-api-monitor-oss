@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { randomBytes } from 'node:crypto';
 
+import {
+  getOssAccessCookieSecretFromProcessEnv,
+  isOssAccessLockEnforcedFromProcessEnv,
+  isOssAccessLockMisconfiguredFromProcessEnv,
+} from './oss-access-process-env.js';
+
 /** Docker/compose often passes `KEY:` with no value → ""; Zod `.url().optional()` rejects "". */
 function emptyStringToUndefined(val: unknown): unknown {
   if (val === '' || val === null || val === undefined) return undefined;
@@ -91,6 +97,16 @@ const rawEnvSchema = z.object({
     },
     z.string().url(),
   ),
+  /** When not `false`, OSS dashboard/API require unlock cookie (if cookie signing secret exists in process.env). */
+  APP_ACCESS_LOCK: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v !== 'false'),
+  /**
+   * Optional OSS access password from env (user types the same value).
+   * When set, DB `passwordHash` is ignored for unlock (env takes precedence).
+   */
+  OSS_ACCESS_PASSWORD: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
 })
   .superRefine((data, ctx) => {
     const googleOAuth =
@@ -137,6 +153,7 @@ export type MonitorEnv = Omit<z.infer<typeof baseSchema>, 'ENCRYPTION_KEY'> & {
   CLOUD_BILLING: boolean;
   CLOUD_ADVANCED_ALERTS: boolean;
   CLOUD_EXPONENTIAL_RETRY: boolean;
+  APP_ACCESS_LOCK: boolean;
 };
 
 let cached: MonitorEnv | null = null;
@@ -153,7 +170,10 @@ export function loadEnv(overrides?: Record<string, string | undefined>): Monitor
     key = randomBytes(32).toString('hex');
   }
 
-  cached = { ...(parsed as Omit<z.infer<typeof baseSchema>, 'ENCRYPTION_KEY'>), ENCRYPTION_KEY: key } as MonitorEnv;
+  cached = {
+    ...(parsed as Omit<z.infer<typeof baseSchema>, 'ENCRYPTION_KEY'>),
+    ENCRYPTION_KEY: key,
+  } as MonitorEnv;
   return cached;
 }
 
@@ -172,4 +192,25 @@ export function getEvolutionTimeoutsMs(): { pingTimeoutMs: number; restartTimeou
 /** WhatsApp OTP login is enabled when Pilot Status API key is configured (template id has a default). */
 export function isWhatsAppOtpLoginConfigured(env: MonitorEnv): boolean {
   return Boolean(env.MONITOR_STATUS_API_KEY?.trim());
+}
+
+export {
+  getOssAccessCookieSecretFromProcessEnv,
+  isOssAccessLockEnforcedFromProcessEnv,
+  isOssAccessLockMisconfiguredFromProcessEnv,
+};
+
+/** True when lock is on in config and a signing secret exists in process.env (middleware + API agree). */
+export function isOssAccessLockEnforced(
+  env: MonitorEnv,
+  processEnv: Record<string, string | undefined> = process.env as Record<string, string | undefined>,
+): boolean {
+  if (!env.APP_ACCESS_LOCK) {
+    return false;
+  }
+  return getOssAccessCookieSecretFromProcessEnv(processEnv) !== undefined;
+}
+
+export function isOssAccessPasswordFromEnv(env: MonitorEnv): boolean {
+  return Boolean(env.OSS_ACCESS_PASSWORD?.trim());
 }

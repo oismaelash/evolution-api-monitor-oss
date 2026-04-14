@@ -16,7 +16,18 @@ describe('env', () => {
     const env = loadEnv(validBaseEnv);
     expect(env.DATABASE_URL).toBe('postgresql://x');
     expect(env.CLOUD_BILLING).toBe(false);
+    expect(env.APP_ACCESS_LOCK).toBe(true);
     expect(env.OPEN_SOURCE_REPO_URL).toBe('https://github.com/oismaelash/evolution-api-monitor');
+  });
+
+  it('parses APP_ACCESS_LOCK false and optional OSS_ACCESS_PASSWORD', () => {
+    resetEnvCacheForTests();
+    const off = loadEnv({ ...validBaseEnv, APP_ACCESS_LOCK: 'false' });
+    expect(off.APP_ACCESS_LOCK).toBe(false);
+
+    resetEnvCacheForTests();
+    const withPwd = loadEnv({ ...validBaseEnv, OSS_ACCESS_PASSWORD: 'from-env' });
+    expect(withPwd.OSS_ACCESS_PASSWORD).toBe('from-env');
   });
 
   it('returns cached env if no overrides', () => {
