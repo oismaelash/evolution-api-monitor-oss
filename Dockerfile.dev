@@ -14,7 +14,11 @@ COPY packages/shared ./packages/shared
 COPY packages/database ./packages/database
 
 # postinstall builds @monitor/shared and @monitor/database
-RUN npm ci
+# fetch-retries helps flaky registry connections (ECONNRESET during large installs)
+RUN npm config set fetch-retries 5 \
+  && npm config set fetch-retry-mintimeout 20000 \
+  && npm config set fetch-retry-maxtimeout 120000 \
+  && npm ci
 
 EXPOSE 3000
 
