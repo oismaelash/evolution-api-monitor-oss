@@ -13,7 +13,7 @@
     "@monitor/shared": "*",
     "@pilot-status/sdk": "^0.1.2",
     "@types/bcryptjs": "^2.4.6",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "^2.4.3",
     "bullmq": "^5.34.5",
     "iconsax-react": "^0.0.8",
     "ioredis": "^5.4.1",

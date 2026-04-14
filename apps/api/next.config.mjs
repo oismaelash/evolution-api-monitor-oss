@@ -7,6 +7,8 @@ const monorepoRoot = path.join(__dirname, '../..');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  /** CJS package; avoid Turbopack/SSR bundle resolution issues (bcryptjs v3 is ESM-only). */
+  serverExternalPackages: ['bcryptjs'],
   transpilePackages: ['@monitor/shared', '@monitor/database'],
   output: 'standalone',
   // Standalone Docker: trace files from monorepo root (moved out of experimental in Next 16)
