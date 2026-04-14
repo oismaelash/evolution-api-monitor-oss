@@ -43,16 +43,13 @@ const rawEnvSchema = z.object({
     z.string().length(64).regex(/^[0-9a-fA-F]+$/).optional(),
   ),
   CLOUD_BILLING: z
-    .enum(['true', 'false'])
-    .optional()
+    .preprocess(emptyStringToUndefined, z.enum(['true', 'false']).optional())
     .transform((v) => v === 'true'),
   CLOUD_ADVANCED_ALERTS: z
-    .enum(['true', 'false'])
-    .optional()
+    .preprocess(emptyStringToUndefined, z.enum(['true', 'false']).optional())
     .transform((v) => v === 'true'),
   CLOUD_EXPONENTIAL_RETRY: z
-    .enum(['true', 'false'])
-    .optional()
+    .preprocess(emptyStringToUndefined, z.enum(['true', 'false']).optional())
     .transform((v) => v === 'true'),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
@@ -84,7 +81,14 @@ const rawEnvSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string().optional(),
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_PRICE_ID: z.string().optional(),
-  BILLING_PRICE_PER_NUMBER_CENTS: z.coerce.number().int().positive().optional(),
+  /** Empty string from Docker Compose must not coerce to 0 (fails .positive()). */
+  BILLING_PRICE_PER_NUMBER_CENTS: z.preprocess((val) => {
+    const u = emptyStringToUndefined(val);
+    if (u === undefined) return undefined;
+    const n = typeof u === 'number' ? u : Number(String(u).trim());
+    if (!Number.isFinite(n) || n < 1) return undefined;
+    return Math.trunc(n);
+  }, z.number().int().positive().optional()),
   PAGUE_DEV_API_KEY: z.string().optional(),
   PAGUE_DEV_BASE_URL: optionalUrl,
   BULL_BOARD_SECRET: z.string().optional(),
@@ -99,8 +103,7 @@ const rawEnvSchema = z.object({
   ),
   /** When not `false`, OSS dashboard/API require unlock cookie (if cookie signing secret exists in process.env). */
   APP_ACCESS_LOCK: z
-    .enum(['true', 'false'])
-    .optional()
+    .preprocess(emptyStringToUndefined, z.enum(['true', 'false']).optional())
     .transform((v) => v !== 'false'),
   /**
    * Optional OSS access password from env (user types the same value).

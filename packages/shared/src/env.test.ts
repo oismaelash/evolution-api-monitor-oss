@@ -30,6 +30,17 @@ describe('env', () => {
     expect(withPwd.OSS_ACCESS_PASSWORD).toBe('from-env');
   });
 
+  it('treats empty APP_ACCESS_LOCK and BILLING_PRICE_PER_NUMBER_CENTS as unset (Docker Compose empty values)', () => {
+    resetEnvCacheForTests();
+    const env = loadEnv({
+      ...validBaseEnv,
+      APP_ACCESS_LOCK: '',
+      BILLING_PRICE_PER_NUMBER_CENTS: '',
+    });
+    expect(env.APP_ACCESS_LOCK).toBe(true);
+    expect(env.BILLING_PRICE_PER_NUMBER_CENTS).toBeUndefined();
+  });
+
   it('returns cached env if no overrides', () => {
     const env1 = loadEnv(validBaseEnv);
     const env2 = loadEnv();
