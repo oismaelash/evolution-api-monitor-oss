@@ -7,6 +7,11 @@ export async function setup() {
   // Set env vars for tests
   process.env.DATABASE_URL = 'postgresql://test_user:test_password@localhost:5433/test_db?schema=public';
   process.env.REDIS_URL = 'redis://localhost:6380';
+  // Stable crypto + disable OSS access gate before any test file calls loadEnv() (order-independent).
+  process.env.ENCRYPTION_KEY =
+    process.env.ENCRYPTION_KEY ?? 'a'.repeat(64);
+  process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET ?? 'x'.repeat(32);
+  process.env.APP_ACCESS_LOCK = 'false';
   
   // Run migrations
   console.log('Running database migrations...');

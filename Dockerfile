@@ -23,7 +23,16 @@ COPY packages/shared/src ./packages/shared/src
 COPY packages/database/src ./packages/database/src
 
 # npm install (não npm ci): lockfile pode estar fora de sync com package.json dos workspaces
-RUN npm install
+# --ignore-scripts: evita ETXTBSY no postinstall do esbuild (vitest) em overlay Docker.
+# Reproduz o que o postinstall da raiz faria + postinstall do database (prisma generate).
+# Retries/timeouts: registry pode falhar por rede lenta ou timeout no build remoto.
+RUN npm config set fetch-retries 10 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && sh -c 'for i in 1 2 3; do npm install --ignore-scripts && exit 0; echo "npm install failed, retry $i/3 in 25s"; sleep 25; done; exit 1' \
+    && npm run generate --workspace=@monitor/database \
+    && npm run build --workspace=@monitor/shared \
+    && npm run build --workspace=@monitor/database
 
 FROM deps AS builder
 WORKDIR /app

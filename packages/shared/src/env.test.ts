@@ -4,6 +4,8 @@ import { loadEnv, resetEnvCacheForTests, getEvolutionTimeoutsMs, isWhatsAppOtpLo
 describe('env', () => {
   beforeEach(() => {
     resetEnvCacheForTests();
+    // vitest globalSetup sets APP_ACCESS_LOCK=false for integration tests; clear so "unset" → default true applies.
+    delete process.env.APP_ACCESS_LOCK;
   });
 
   const validBaseEnv = {
