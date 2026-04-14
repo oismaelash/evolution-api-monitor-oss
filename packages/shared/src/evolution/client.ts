@@ -1,4 +1,5 @@
 import { ErrorType, EvolutionFlavor } from '../enums.js';
+import { parseEvolutionInstanceTokenByName } from './parse-instances.js';
 
 export type HealthOk = { ok: true; responseTimeMs: number; raw?: unknown };
 export type HealthErr = {
@@ -86,22 +87,6 @@ function getBoolCaseInsensitive(obj: Record<string, unknown>, key: string): bool
   return undefined;
 }
 
-function goInstanceRows(raw: unknown): Record<string, unknown>[] {
-  if (Array.isArray(raw)) {
-    return raw.filter((x): x is Record<string, unknown> => x !== null && typeof x === 'object' && !Array.isArray(x));
-  }
-  if (raw && typeof raw === 'object') {
-    const r = raw as Record<string, unknown>;
-    const list = r.data ?? r.instances ?? r.instance;
-    if (Array.isArray(list)) {
-      return list.filter(
-        (x): x is Record<string, unknown> => x !== null && typeof x === 'object' && !Array.isArray(x)
-      );
-    }
-  }
-  return [];
-}
-
 function dataUriToBase64(dataUri: string): string {
   const m = /^data:image\/png;base64,(.+)$/i.exec(dataUri.trim());
   if (m?.[1]) return m[1];
@@ -170,15 +155,27 @@ export class EvolutionClient {
         rawList: { status: res.status, body: raw, errorType: classifyHttpError(res.status, bodyText) },
       };
     }
-    const rows = goInstanceRows(raw);
-    for (const row of rows) {
-      const name = row.name ?? row.instanceName;
-      const token = row.token;
-      if (typeof name === 'string' && name === instanceName && typeof token === 'string' && token.length > 0) {
-        return { token, rawList: raw };
-      }
+    const token = parseEvolutionInstanceTokenByName(raw, instanceName);
+    if (token !== null) {
+      return { token, rawList: raw };
     }
     return { token: null, rawList: raw };
+  }
+
+  /**
+   * Resolves per-instance API token using global project key (v2: fetchInstances; Go: instance/all).
+   */
+  async resolveInstanceToken(instanceName: string): Promise<string | null> {
+    if (this.flavor === EvolutionFlavor.EVOLUTION_GO) {
+      const { token } = await this.resolveGoInstanceToken(instanceName);
+      return token;
+    }
+    try {
+      const raw = await this.fetchInstances();
+      return parseEvolutionInstanceTokenByName(raw, instanceName);
+    } catch {
+      return null;
+    }
   }
 
   async getConnectionState(
@@ -361,14 +358,16 @@ export class EvolutionClient {
     }
   }
 
-  async restart(instanceName: string): Promise<void> {
+  async restart(instanceName: string, opts?: { instanceApiKey?: string }): Promise<void> {
     if (this.flavor === EvolutionFlavor.EVOLUTION_GO) {
       throw new Error('Evolution Go does not expose instance restart; use reconnect or pairing in the Evolution server UI.');
     }
     const enc = encodeURIComponent(instanceName);
+    const apiKey =
+      opts?.instanceApiKey !== undefined && opts.instanceApiKey.length > 0 ? opts.instanceApiKey : this.apiKey;
     const res = await fetchWithTimeout(
       this.url(`/instance/restart/${enc}`),
-      { method: 'POST', headers: this.headers() },
+      { method: 'POST', headers: headersApiKey(apiKey) },
       this.opts?.restartTimeoutMs ?? DEFAULT_RESTART_MS
     );
     if (!res.ok) {

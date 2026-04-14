@@ -317,6 +317,41 @@ describe('EvolutionClient', () => {
     expect(fetchSpy.mock.calls[0]![0]).toBe('http://test/instance/restart/inst');
   });
 
+  it('restart v2 sends per-instance apikey when instanceApiKey is provided', async () => {
+    const fetchSpy = vi.fn().mockResolvedValue({ ok: true });
+    (globalThis as any).fetch = fetchSpy;
+    await v2Client.restart('inst', { instanceApiKey: 'per-instance-key' });
+    const init = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(init?.headers).toMatchObject({ apikey: 'per-instance-key' });
+  });
+
+  it('resolveInstanceToken returns token for v2 from fetchInstances payload', async () => {
+    (globalThis as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ instances: [{ instanceName: 'my', token: 'tok99' }] }),
+      text: async () => '',
+    });
+    await expect(v2Client.resolveInstanceToken('my')).resolves.toBe('tok99');
+  });
+
+  it('resolveInstanceToken v2 returns null when fetchInstances fails', async () => {
+    (globalThis as any).fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => 'err',
+    });
+    await expect(v2Client.resolveInstanceToken('x')).resolves.toBeNull();
+  });
+
+  it('resolveInstanceToken delegates to Go instance list', async () => {
+    (globalThis as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => JSON.stringify([{ name: 'g', token: 'gt' }]),
+    });
+    await expect(goClient.resolveInstanceToken('g')).resolves.toBe('gt');
+  });
+
   it('restart handles non-ok response', async () => {
     (globalThis as any).fetch = vi.fn().mockResolvedValue({ ok: false, status: 500, text: async () => 'error' });
     await expect(v2Client.restart('inst')).rejects.toThrow(/restart failed/);

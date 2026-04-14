@@ -39,17 +39,19 @@ describe('Worker: Restart Job', () => {
         instanceName: 'test-restart-instance',
         state: 'CONNECTED',
         monitored: true,
+        evolutionInstanceApiKey: encryptProjectSecret('instance-token'),
       },
     });
     numberId = num.id;
   });
 
   it('restarts instance, updates state, logs, and enqueues follow-up', async () => {
-    (globalThis as any).fetch = vi.fn().mockResolvedValue({
+    const fetchSpy = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       text: async () => '',
     });
+    (globalThis as any).fetch = fetchSpy;
     const addSpy = vi.spyOn(Queue.prototype, 'add').mockResolvedValue({} as any);
 
     const connection = new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: null });
@@ -60,6 +62,61 @@ describe('Worker: Restart Job', () => {
     const updated = await prisma.number.findUnique({ where: { id: numberId } });
     expect(updated?.state).toBe('RESTARTING');
     expect(addSpy).toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const restartInit = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(restartInit?.headers).toMatchObject({ apikey: 'instance-token' });
+  });
+
+  it('resolves instance token via fetchInstances when not stored, persists and restarts', async () => {
+    await prisma.number.update({
+      where: { id: numberId },
+      data: { evolutionInstanceApiKey: null },
+    });
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => [{ instanceName: 'test-restart-instance', token: 'resolved-tok' }],
+        text: async () => '',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: async () => '',
+      });
+    (globalThis as any).fetch = fetchSpy;
+    vi.spyOn(Queue.prototype, 'add').mockResolvedValue({} as any);
+
+    const connection = new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: null });
+    const job = { data: { numberId }, id: 'job-resolve-1' } as any;
+    await processRestartJob(job, connection as any);
+    await connection.quit();
+
+    const persisted = await prisma.number.findUnique({ where: { id: numberId } });
+    expect(persisted?.evolutionInstanceApiKey).toBeTruthy();
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const restartInit = fetchSpy.mock.calls[1]?.[1] as RequestInit | undefined;
+    expect(restartInit?.headers).toMatchObject({ apikey: 'resolved-tok' });
+  });
+
+  it('throws when instance token cannot be resolved', async () => {
+    await prisma.number.update({
+      where: { id: numberId },
+      data: { evolutionInstanceApiKey: null },
+    });
+    (globalThis as any).fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => [{ instanceName: 'other', token: 'x' }],
+      text: async () => '',
+    });
+    const connection = new Redis(process.env.REDIS_URL!, { maxRetriesPerRequest: null });
+    const job = { data: { numberId }, id: 'job-noresolve-1' } as any;
+    await expect(processRestartJob(job, connection as any)).rejects.toThrow(
+      /Could not resolve Evolution per-instance token/,
+    );
+    await connection.quit();
   });
 
   it('skips when lock is busy', async () => {

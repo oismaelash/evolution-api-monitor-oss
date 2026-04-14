@@ -6,9 +6,10 @@ import {
   addNumberSchema,
   buildPaginationMeta,
   parseEvolutionInstanceNames,
+  parseEvolutionInstanceTokenByName,
   updateNumberSchema,
 } from '@monitor/shared';
-import { decryptFromStorage } from '@/lib/encryption';
+import { decryptFromStorage, encryptForStorage } from '@/lib/encryption';
 import { computeUptimeDisplayPercent } from '@/lib/uptime';
 
 async function ensureNumberOwned(userId: string, numberId: string) {
@@ -99,12 +100,29 @@ export const NumberService = {
     let created = 0;
     const createdIds: string[] = [];
     for (const instanceName of unique) {
+      const tokenPlain = parseEvolutionInstanceTokenByName(raw, instanceName);
+      const encryptedInstanceKey =
+        tokenPlain !== null && tokenPlain.length > 0 ? encryptForStorage(tokenPlain) : null;
+
       const existing = await prisma.number.findUnique({
         where: { projectId_instanceName: { projectId, instanceName } },
       });
-      if (existing) continue;
+      if (existing) {
+        if (encryptedInstanceKey !== null) {
+          await prisma.number.update({
+            where: { id: existing.id },
+            data: { evolutionInstanceApiKey: encryptedInstanceKey },
+          });
+        }
+        continue;
+      }
       const row = await prisma.number.create({
-        data: { projectId, instanceName, monitored: true },
+        data: {
+          projectId,
+          instanceName,
+          monitored: true,
+          ...(encryptedInstanceKey !== null ? { evolutionInstanceApiKey: encryptedInstanceKey } : {}),
+        },
       });
       createdIds.push(row.id);
       created += 1;

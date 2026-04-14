@@ -135,6 +135,13 @@ private parseQR(response: Response, body: unknown): QRResult {
 - instanceName pode ter espaços e caracteres especiais
 - O nome na Evolution é case-sensitive — guardar exatamente como vem da fetchInstances
 
+## Evolution v2 — token por instância no restart
+
+- `GET /instance/fetchInstances` com a **API key global** do projeto retorna linhas com `instanceName`/`name` e **`token`** por instância.
+- No monitor: persistir o token cifrado em **`Number.evolutionInstanceApiKey`** ao aplicar sync (`NumberService.applySyncFromEvolution`); atualizar o campo quando o sync for refeito e o token vier na lista.
+- **`POST /instance/restart/:name`**: usar o **token da instância** no header `apikey`, não a key global. `EvolutionClient.restart(instanceName, { instanceApiKey })` e `resolveInstanceToken(instanceName)` (v2: `fetchInstances` + parse) em `packages/shared/src/evolution/client.ts`.
+- Worker `restart`: se não houver token no DB, resolver com `resolveInstanceToken`, persistir, depois reiniciar; se ainda não houver token, falhar com erro explícito (não usar key global no restart).
+
 ## Evolution Go (`EvolutionFlavor.EVOLUTION_GO`)
 
 Implementação real: `packages/shared/src/evolution/client.ts` (opção `flavor` no construtor).

@@ -1,5 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { parseEvolutionInstanceNames } from './parse-instances.js';
+import { parseEvolutionInstanceNames, parseEvolutionInstanceTokenByName } from './parse-instances.js';
+
+describe('parseEvolutionInstanceTokenByName', () => {
+  it('returns token from root array by instanceName', () => {
+    const raw = [{ instanceName: 'a', token: 't1' }];
+    expect(parseEvolutionInstanceTokenByName(raw, 'a')).toBe('t1');
+    expect(parseEvolutionInstanceTokenByName(raw, 'b')).toBeNull();
+  });
+
+  it('returns token from data array by name', () => {
+    const raw = { data: [{ name: 'n1', token: 'tok' }] };
+    expect(parseEvolutionInstanceTokenByName(raw, 'n1')).toBe('tok');
+  });
+
+  it('returns token from instances envelope', () => {
+    const raw = { instances: [{ instanceName: 'x', token: 'xt' }] };
+    expect(parseEvolutionInstanceTokenByName(raw, 'x')).toBe('xt');
+  });
+
+  it('is case-sensitive on instance name', () => {
+    const raw = [{ instanceName: 'Case', token: 'c' }];
+    expect(parseEvolutionInstanceTokenByName(raw, 'case')).toBeNull();
+  });
+
+  it('returns null when token missing or empty', () => {
+    expect(parseEvolutionInstanceTokenByName([{ instanceName: 'a' }], 'a')).toBeNull();
+    expect(parseEvolutionInstanceTokenByName([{ instanceName: 'a', token: '' }], 'a')).toBeNull();
+  });
+});
 
 describe('parseEvolutionInstanceNames', () => {
   it('collects names from Evolution Go data array', () => {

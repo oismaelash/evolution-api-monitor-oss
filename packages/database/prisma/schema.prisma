@@ -170,6 +170,8 @@ model Number {
   id             String       @id @default(cuid())
   projectId      String
   instanceName   String
+  /// Encrypted per-instance Evolution token (fetchInstances); v2 restart apikey.
+  evolutionInstanceApiKey String? @db.Text
   phoneNumber    String?
   label          String?
   state          NumberState  @default(UNKNOWN)

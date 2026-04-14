@@ -12,7 +12,7 @@ import { acquireLock, releaseLock } from '../lock.js';
 import type { RedisClient } from '../redis.js';
 import { getRedis } from '../redis.js';
 import { logJson } from '../logger.js';
-import { decryptProjectSecret } from '../decrypt.js';
+import { decryptProjectSecret, encryptProjectSecret } from '../decrypt.js';
 
 export type RestartJobData = { numberId: string };
 
@@ -54,7 +54,32 @@ export async function processRestartJob(job: Job<RestartJobData>, connection: Re
       ...timeouts,
       flavor: number.project.evolutionFlavor,
     });
-    await client.restart(number.instanceName);
+
+    let instanceApiKey: string | null = null;
+    if (number.evolutionInstanceApiKey) {
+      try {
+        instanceApiKey = decryptProjectSecret(number.evolutionInstanceApiKey);
+      } catch {
+        logJson('warn', 'restart_instance_key_decrypt_failed', { numberId });
+      }
+    }
+    if (instanceApiKey === null || instanceApiKey.length === 0) {
+      const resolved = await client.resolveInstanceToken(number.instanceName);
+      if (resolved === null || resolved.length === 0) {
+        logJson('error', 'restart_instance_token_unresolved', {
+          numberId,
+          instanceName: number.instanceName,
+        });
+        throw new Error('Could not resolve Evolution per-instance token for restart');
+      }
+      instanceApiKey = resolved;
+      await prisma.number.update({
+        where: { id: numberId },
+        data: { evolutionInstanceApiKey: encryptProjectSecret(resolved) },
+      });
+    }
+
+    await client.restart(number.instanceName, { instanceApiKey });
     await prisma.number.update({
       where: { id: numberId },
       data: { state: NumberState.RESTARTING as never },

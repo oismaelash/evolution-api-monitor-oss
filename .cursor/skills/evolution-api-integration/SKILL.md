@@ -21,6 +21,12 @@ description: >-
 - Sempre **`encodeURIComponent(instanceName)`** nos paths.
 - Usar **`fetchWithTimeout`** (ou padrão do repo) com limites distintos (ping vs restart vs QR).
 
+## Evolution v2 (Node) — restart
+
+- Listagem: `GET /instance/fetchInstances` com API key **global** do projeto.
+- Cada instância pode trazer um campo **`token`**: persistir cifrado em `Number.evolutionInstanceApiKey` no sync; o job de **restart** usa esse token no header **`apikey`** em `POST /instance/restart/<instanceName>` (não a key global).
+- Se o token não estiver salvo (ex.: número manual), o worker resolve via `fetchInstances` + parse e grava antes do restart.
+
 ## Health check duplo
 
 Para considerar saudável: **`connectionState`** com estado `open` **e** **`setPresence`** bem-sucedido (conforme implementação atual em `health-checker`). Ambos falham → classificar `errorType` apropriado.

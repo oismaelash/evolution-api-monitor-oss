@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { prisma } from '@monitor/database';
-import { encryptForStorage } from '@/lib/encryption';
+import { decryptFromStorage, encryptForStorage } from '@/lib/encryption';
 import { EvolutionClient, resetEnvCacheForTests } from '@monitor/shared';
 import { DashboardService } from '@/services/dashboard.service';
 import { LogService } from '@/services/log.service';
@@ -222,7 +222,10 @@ describe('API routes coverage', () => {
 
   it('GET/POST /api/projects/[projectId]/numbers/sync previews, validates and applies', async () => {
     const { GET, POST } = await import('./projects/[projectId]/numbers/sync/route');
-    vi.spyOn(EvolutionClient.prototype as any, 'fetchInstances').mockResolvedValue([{ instanceName: 'a' }, { instanceName: 'b' }] as any);
+    vi.spyOn(EvolutionClient.prototype as any, 'fetchInstances').mockResolvedValue([
+      { instanceName: 'a', token: 'tok-a' },
+      { instanceName: 'b', token: 'tok-b' },
+    ] as any);
 
     const project = await prisma.project.create({
       data: {
@@ -244,6 +247,21 @@ describe('API routes coverage', () => {
 
     const resApply = await POST({ json: async () => ({ instanceNames: ['b'] }) } as any, { params: Promise.resolve({ projectId: project.id }) } as any);
     expect(resApply.status).toBe(200);
+
+    const numB = await prisma.number.findUnique({
+      where: { projectId_instanceName: { projectId: project.id, instanceName: 'b' } },
+    });
+    expect(numB?.evolutionInstanceApiKey).toBeTruthy();
+    expect(decryptFromStorage(numB?.evolutionInstanceApiKey ?? '')).toBe('tok-b');
+
+    const resApplyRefreshA = await POST({ json: async () => ({ instanceNames: ['a'] }) } as any, {
+      params: Promise.resolve({ projectId: project.id }),
+    } as any);
+    expect(resApplyRefreshA.status).toBe(200);
+    const numA = await prisma.number.findUnique({
+      where: { projectId_instanceName: { projectId: project.id, instanceName: 'a' } },
+    });
+    expect(decryptFromStorage(numA?.evolutionInstanceApiKey ?? '')).toBe('tok-a');
 
     const resGet404 = await GET({} as any, { params: Promise.resolve({ projectId: 'missing' }) } as any);
     expect(resGet404.status).toBe(404);
