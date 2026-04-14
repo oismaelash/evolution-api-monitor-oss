@@ -68,6 +68,20 @@ describe('env', () => {
     expect(custom.restartTimeoutMs).toBe(2000);
   });
 
+  it('treats empty or zero Evolution timeout env as unset (Docker compose ${VAR:-})', () => {
+    resetEnvCacheForTests();
+    loadEnv({
+      ...validBaseEnv,
+      PING_TIMEOUT_MS: '',
+      RESTART_TIMEOUT_MS: '   ',
+    });
+    expect(getEvolutionTimeoutsMs()).toEqual({ pingTimeoutMs: 5000, restartTimeoutMs: 10_000 });
+
+    resetEnvCacheForTests();
+    loadEnv({ ...validBaseEnv, PING_TIMEOUT_MS: '0', RESTART_TIMEOUT_MS: '-1' });
+    expect(getEvolutionTimeoutsMs()).toEqual({ pingTimeoutMs: 5000, restartTimeoutMs: 10_000 });
+  });
+
   it('isWhatsAppOtpLoginConfigured checks MONITOR_STATUS_API_KEY', () => {
     const noAuth = loadEnv(validBaseEnv);
     expect(isWhatsAppOtpLoginConfigured(noAuth)).toBe(false);

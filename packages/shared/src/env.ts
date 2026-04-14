@@ -8,6 +8,18 @@ function emptyStringToUndefined(val: unknown): unknown {
   return val;
 }
 
+/**
+ * Docker Compose often sets `PING_TIMEOUT_MS: ${VAR:-}` → empty string when VAR is unset.
+ * `z.coerce.number()` turns "" into 0, which must not fail `.positive()` — treat as unset (use code defaults).
+ */
+function evolutionTimeoutMsPreprocess(val: unknown): unknown {
+  const u = emptyStringToUndefined(val);
+  if (u === undefined) return undefined;
+  const n = typeof u === 'number' ? u : Number(String(u).trim());
+  if (!Number.isFinite(n) || n < 1) return undefined;
+  return Math.trunc(n);
+}
+
 const optionalUrl = z.preprocess(emptyStringToUndefined, z.string().url().optional());
 
 /** Default public repo URL for marketing / self-host links (override via OPEN_SOURCE_REPO_URL). */
@@ -51,8 +63,11 @@ const rawEnvSchema = z.object({
     },
     z.string().min(1),
   ),
-  PING_TIMEOUT_MS: z.coerce.number().int().positive().max(120_000).optional(),
-  RESTART_TIMEOUT_MS: z.coerce.number().int().positive().max(300_000).optional(),
+  PING_TIMEOUT_MS: z.preprocess(evolutionTimeoutMsPreprocess, z.number().int().positive().max(120_000).optional()),
+  RESTART_TIMEOUT_MS: z.preprocess(
+    evolutionTimeoutMsPreprocess,
+    z.number().int().positive().max(300_000).optional(),
+  ),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   /** NextAuth default naming */
